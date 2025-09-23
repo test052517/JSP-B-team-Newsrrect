@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsrrect - AI 정보 검증 플랫폼</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#5d74f8',
+                        'primary-dark': '#4c63e7',
+                        'primary-light': '#7d8ff9'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-center items-center h-16 relative">
+                <!-- Logo - Centered -->
+                <div class="flex-shrink-0">
+                    <h1 class="text-2xl font-bold text-primary">Newsrrect</h1>
+                </div>
+                
+                <!-- User Menu - Absolute positioned right -->
+                <div class="absolute right-0 flex items-center space-x-4">
+                    <a href="Login.html" class="text-primary hover:text-primary-dark text-sm font-medium">
+                        로그인
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-center space-x-20 py-4">
+                <a href="InfoBoard.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">정보 검증 게시판</a>
+                <a href="CommuBoard.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">소통 게시판</a>
+                <a href="MyPage.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">마이 페이지</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Popular Verification Posts Section -->
+        <section class="mb-12">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-primary mb-4">오늘의 인기 검증 게시물</h2>
+            </div>
+            
+            <!-- Featured Post Carousel -->
+            <div class="relative bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div class="py-8 px-8">
+                    <div class="text-center">
+                        <div class="bg-gray-100 rounded-lg p-12">
+                            <h3 class="text-2xl font-bold text-primary mb-4">제목</h3>
+                            <p class="text-gray-600">간략한 내용</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Navigation Arrows -->
+                <button class="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center hover:bg-primary hover:border-primary hover:shadow-lg hover:scale-110 transition-all duration-300 ease-in-out group">
+                    <svg class="w-5 h-5 text-gray-600 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <button class="absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center hover:bg-primary hover:border-primary hover:shadow-lg hover:scale-110 transition-all duration-300 ease-in-out group">
+                    <svg class="w-5 h-5 text-gray-600 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- Statistics Section -->
+        <section class="mb-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Today's Upload Statistics -->
+                <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200 text-center">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">금일 업로드 정보 검증글</h3>
+                    <div class="text-4xl font-bold text-primary mb-2">34,567</div>
+                    <div class="text-gray-900">건</div>
+                </div>
+                
+                <!-- Total Upload Statistics -->
+                <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200 text-center">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">전체 업로드 정보 검증글</h3>
+                    <div class="text-4xl font-bold text-primary mb-2">1,234,567</div>
+                    <div class="text-gray-900">건</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Board Previews Section -->
+        <section class="mb-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Information Verification Board -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-semibold text-primary">정보 검증 게시판</h3>
+                            <button class="w-8 h-8 bg-primary bg-opacity-10 rounded-full flex items-center justify-center hover:bg-primary hover:bg-opacity-20 transition-colors">
+                                <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="bg-gray-100 rounded-lg h-64 flex items-center justify-center">
+                            <p class="text-primary">게시판 내용이 여기에 표시됩니다</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Communication Board -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-semibold text-primary">소통 게시판</h3>
+                            <button class="w-8 h-8 bg-primary bg-opacity-10 rounded-full flex items-center justify-center hover:bg-primary hover:bg-opacity-20 transition-colors">
+                                <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="bg-gray-100 rounded-lg h-64 flex items-center justify-center">
+                            <p class="text-primary">게시판 내용이 여기에 표시됩니다</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Newsrrect</h4>
+                    <p class="text-gray-400 text-sm">AI 생성 정보를 검증하고 거짓 정보를 구분하는 신뢰할 수 있는 플랫폼입니다.</p>
+                </div>
+                <div>
+                    <h5 class="font-medium mb-4">검증 도구</h5>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white">텍스트 검증</a></li>
+                        <li><a href="#" class="hover:text-white">이미지 검증</a></li>
+                        <li><a href="#" class="hover:text-white">비디오 검증</a></li>
+                        <li><a href="#" class="hover:text-white">출처 검증</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-medium mb-4">서비스</h5>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white">API 서비스</a></li>
+                        <li><a href="#" class="hover:text-white">구독 서비스</a></li>
+                        <li><a href="#" class="hover:text-white">알림 설정</a></li>
+                        <li><a href="#" class="hover:text-white">고객 지원</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-medium mb-4">연락처</h5>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li>이메일: info@newsrrect.com</li>
+                        <li>전화: 02-1234-5678</li>
+                        <li>주소: 서울시 강남구</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
+                <p>&copy; 2024 Newsrrect. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
