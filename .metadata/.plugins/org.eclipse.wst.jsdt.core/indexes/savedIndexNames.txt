@@ -1,0 +1,8 @@
+INDEX VERSION 1.4+C:\Newrrect\.metadata\.plugins\org.eclipse.wst.jsdt.core\indexes
+1912140158.index
+1853127418.index
+3738085459.index
+157061019.index
+1411371473.index
+2420211399.index
+2565603882.index

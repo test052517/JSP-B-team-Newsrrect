@@ -1,0 +1,9 @@
+[2025-09-04 14:33:34] [info]  [ 6808] Apache Commons Daemon procrun (1.4.1.0 64-bit) started.
+[2025-09-04 14:33:34] [info]  [ 6808] Running Service 'Tomcat9'...
+[2025-09-04 14:33:34] [info]  [14384] Starting service...
+[2025-09-04 14:33:35] [info]  [14384] Service started in 1190 milliseconds.
+[2025-09-04 14:43:26] [info]  [ 6808] Service SERVICE_CONTROL_STOP signalled.
+[2025-09-04 14:43:26] [info]  [12648] Stopping service...
+[2025-09-04 14:43:27] [info]  [12648] Service stop thread completed.
+[2025-09-04 14:43:27] [info]  [ 6808] Run service finished.
+[2025-09-04 14:43:27] [info]  [ 6808] Apache Commons Daemon procrun finished.

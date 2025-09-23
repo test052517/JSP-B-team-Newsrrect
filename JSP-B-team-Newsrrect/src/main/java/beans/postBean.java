@@ -1,0 +1,82 @@
+package beans;
+
+public class postBean {
+	private int postId;
+    private int userId;
+    private String type;
+    private String title;
+    private String content;
+    private String status;
+    private int viewCount;
+    private String createdAt;
+    private Integer attachmentFileId;
+    private int reportCount;
+    private int recommandCount;
+    
+	public int getPostId() {
+		return postId;
+	}
+	public void setPostId(int postId) {
+		this.postId = postId;
+	}
+	public int getUserId() {
+		return userId;
+	}
+	public void setUserId(int userId) {
+		this.userId = userId;
+	}
+	public String getType() {
+		return type;
+	}
+	public void setType(String type) {
+		this.type = type;
+	}
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	public String getContent() {
+		return content;
+	}
+	public void setContent(String content) {
+		this.content = content;
+	}
+	public String getStatus() {
+		return status;
+	}
+	public void setStatus(String status) {
+		this.status = status;
+	}
+	public int getViewCount() {
+		return viewCount;
+	}
+	public void setViewCount(int viewCount) {
+		this.viewCount = viewCount;
+	}
+	public String getCreatedAt() {
+		return createdAt;
+	}
+	public void setCreatedAt(String createdAt) {
+		this.createdAt = createdAt;
+	}
+	public Integer getAttachmentFileId() {
+		return attachmentFileId;
+	}
+	public void setAttachmentFileId(Integer attachmentFileId) {
+		this.attachmentFileId = attachmentFileId;
+	}
+	public int getReportCount() {
+		return reportCount;
+	}
+	public void setReportCount(int reportCount) {
+		this.reportCount = reportCount;
+	}
+	public int getRecommandCount() {
+		return recommandCount;
+	}
+	public void setRecommandCount(int recommandCount) {
+		this.recommandCount = recommandCount;
+	}
+}
