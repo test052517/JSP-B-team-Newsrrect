@@ -1,6 +1,0 @@
-INDEX VERSION 1.4+C:\JSP-B-team-Newsrrect\.metadata\.plugins\org.eclipse.wst.jsdt.core\indexes
-1853127418.index
-3708141453.index
-1394414799.index
-166574471.index
-1553706746.index
