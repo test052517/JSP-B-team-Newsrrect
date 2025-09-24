@@ -1,6 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="mgr.PostMgr" %>
-<%@ page import="beans.postBean" %>
+<%@ page import="beans.PostBean" %>
 
 
 <jsp:useBean id="postMgr" class="mgr.PostMgr" scope="page" />
@@ -17,7 +17,7 @@
     }
     
     // postMgr 객체를 사용하여 getPostByPostID() 메서드를 호출합니다.
-    postBean post = postMgr.getPostByPostID(postId);
+    PostBean post = postMgr.getPostByPostID(postId);
     
     if (post != null) {
 %>
