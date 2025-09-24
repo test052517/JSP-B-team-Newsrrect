@@ -6,144 +6,107 @@ CREATE TABLE `user` (
     `user_id` INT AUTO_INCREMENT PRIMARY KEY,
     `email` VARCHAR(255) UNIQUE NOT NULL,
     `password` VARCHAR(255) NOT NULL,
-    `role` ENUM('관리자', '사용자') NOT NULL,
+    `role` ENUM('관리자', '사용자') NOT NULL DEFAULT '사용자',
     `nickname` VARCHAR(100) UNIQUE NOT NULL,
     `created_at` VARCHAR(19) NOT NULL,
-    `is_active` INT(1) NOT NULL,
-    `point` INT NOT NULL,
-    `image` BLOB,
-    `attend` VARCHAR(19) NOT NULL,
-    `introduce` TEXT
+    `is_active` INT(1) NOT NULL DEFAULT 1,
+    `ban_count` INT NOT NULL DEFAULT 0,
+    `report_count` INT NOT NULL DEFAULT 0,
+    `point` INT NOT NULL DEFAULT 0,
+    `attend` VARCHAR(19),
+    `introduce` TEXT(1000)
 );
 
--- 2. attachment 테이블
-CREATE TABLE `attachment` (
-    `attachmentFile_id` INT AUTO_INCREMENT PRIMARY KEY,
-    `file` BLOB NOT NULL
-);
-
--- 3. post 테이블
+-- 2. post 테이블
 CREATE TABLE `post` (
     `post_id` INT AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT NOT NULL,
     `type` ENUM('정보', '소통') NOT NULL,
     `title` VARCHAR(300) NOT NULL,
     `content` LONGTEXT NOT NULL,
-    `status` ENUM('비공개', '공개', '신고 처리 중') NOT NULL,
-    `view_count` INT NOT NULL,
+    `status` ENUM('비공개', '공개', '신고 처리 중', '삭제') NOT NULL,
+    `view_count` INT NOT NULL DEFAULT 0,
     `created_at` VARCHAR(19) NOT NULL,
-    `attachmentFile_id` INT,
-    `report_count` INT NOT NULL,
-    `recommand_count` INT NOT NULL,
-    INDEX (status),
-    FOREIGN KEY (`user_id`) REFERENCES `user`(`user_id`),
-    FOREIGN KEY (`attachmentFile_id`) REFERENCES `attachment`(`attachmentFile_id`)
+    `report_count` INT NOT NULL DEFAULT 0,
+    `recommand_count` INT NOT NULL DEFAULT 0,
+    INDEX idx_status (status),
+    INDEX idx_type (type),
+    INDEX idx_created_at (created_at)
 );
 
--- 4. comment 테이블
+-- 3. comment 테이블
 CREATE TABLE `comment` (
     `comment_id` INT AUTO_INCREMENT PRIMARY KEY,
     `post_id` INT NOT NULL,
     `user_id` INT NOT NULL,
     `type` ENUM('정보', '소통') NOT NULL,
-    `layer` INT NOT NULL,
-    `content` LONGTEXT NOT NULL,
-    `judgment` ENUM('참', '거짓', '모호'),
-    `upvotes` INT NOT NULL,
+    `layer` INT NOT NULL DEFAULT 0,
+    `parent_comment_id` INT NULL,
+    `content` TEXT NOT NULL,
+    `judgment` ENUM('참', '거짓', '모호') NULL,
+    `status` ENUM('비공개', '공개', '신고 처리 중', '삭제') NOT NULL,
+    `upvotes` INT NOT NULL DEFAULT 0,
     `created_at` VARCHAR(19) NOT NULL,
-    `attachmentFile_id` INT,
-    `report_count` INT NOT NULL,
-    INDEX (judgment),
-    FOREIGN KEY (`post_id`) REFERENCES `post`(`post_id`),
-    FOREIGN KEY (`user_id`) REFERENCES `user`(`user_id`),
-    FOREIGN KEY (`attachmentFile_id`) REFERENCES `attachment`(`attachmentFile_id`)
+    `report_count` INT NOT NULL DEFAULT 0,
+    INDEX idx_judgment (judgment),
+    INDEX idx_post_id (post_id),
+    INDEX idx_created_at (created_at)
 );
 
--- 6. post_report 테이블 (수정됨)
 CREATE TABLE `post_report` (
     `reportPost_id` INT AUTO_INCREMENT PRIMARY KEY,
-    `title` VARCHAR(300) NOT NULL,
     `post_id` INT NOT NULL,
-    `type` ENUM('정보', '소통') NOT NULL,
-    `reason` VARCHAR(255),
-    `attachment_id` INT,
-    `reported_id` INT NOT NULL,
-    FOREIGN KEY (`post_id`) REFERENCES `post`(`post_id`),
-    FOREIGN KEY (`reported_id`) REFERENCES `user`(`user_id`),
-    FOREIGN KEY (`attachment_id`) REFERENCES `attachment`(`attachmentFile_id`)
+    `reporter_id` INT NOT NULL,
+    `reason` VARCHAR(500),
+    INDEX idx_post_id (post_id),
+    INDEX idx_reporter_id (reporter_id)
 );
 
--- 7. comment_report 테이블 (수정됨)
 CREATE TABLE `comment_report` (
     `reportComment_id` INT AUTO_INCREMENT PRIMARY KEY,
     `comment_id` INT NOT NULL,
-    `type` ENUM('정보', '소통') NOT NULL,
-    `reason` VARCHAR(255),
-    `attachment_id` INT,
-    `reported_id` INT NOT NULL,
-    FOREIGN KEY (`comment_id`) REFERENCES `comment`(`comment_id`),
-    FOREIGN KEY (`reported_id`) REFERENCES `user`(`user_id`),
-    FOREIGN KEY (`attachment_id`) REFERENCES `attachment`(`attachmentFile_id`)
+    `reporter_id` INT NOT NULL,
+    `reason` VARCHAR(500), 
+    INDEX idx_comment_id (comment_id),
+    INDEX idx_reporter_id (reporter_id)
 );
 
--- 8. post_report_user 테이블 (수정됨)
-CREATE TABLE `post_report_user` (
-    `reportUser_ID` INT AUTO_INCREMENT PRIMARY KEY,
-    `log_id` INT NOT NULL,
-    `nickname` VARCHAR(100) NOT NULL,
-    `user_id` INT NOT NULL,
-    `reportPost_id` INT NOT NULL,
-    FOREIGN KEY (`user_id`) REFERENCES `user`(`user_id`),
-    FOREIGN KEY (`nickname`) REFERENCES `user`(`nickname`),
-    FOREIGN KEY (`log_id`) REFERENCES `post_report`(`reportPost_id`),
-    FOREIGN KEY (`reportPost_id`) REFERENCES `post_report`(`reportPost_id`)
-);
 
--- 9. comment_report_user 테이블 (수정됨)
-CREATE TABLE `comment_report_user` (
-    `reportUser_ID` INT AUTO_INCREMENT PRIMARY KEY,
-    `log_id` INT NOT NULL,
-    `nickname` VARCHAR(100) NOT NULL,
-    `user_id` INT NOT NULL,
-    `reportComment_id` INT NOT NULL,
-    FOREIGN KEY (`user_id`) REFERENCES `user`(`user_id`),
-    FOREIGN KEY (`nickname`) REFERENCES `user`(`nickname`),
-    FOREIGN KEY (`log_id`) REFERENCES `comment_report`(`reportComment_id`),
-    FOREIGN KEY (`reportComment_id`) REFERENCES `comment_report`(`reportComment_id`)
-);
 
--- 10. deleted_posts 테이블 (수정됨)
-CREATE TABLE `deleted_posts` (
-    `deleted_id` INT AUTO_INCREMENT PRIMARY KEY,
-    `post_id` INT NOT NULL,
-    `user_id` INT NOT NULL,
-    `type` ENUM('정보', '소통') NOT NULL,
-    `title` VARCHAR(300) NOT NULL,
-    `content` LONGTEXT NOT NULL,
-    `reason` VARCHAR(500) NOT NULL,
-    FOREIGN KEY (`post_id`) REFERENCES `post`(`post_id`),
-    FOREIGN KEY (`user_id`) REFERENCES `user`(`user_id`)
-);
 
--- 11. deleted_comment 테이블 (수정됨)
-CREATE TABLE `deleted_comment` (
-    `deletedComment_id` INT AUTO_INCREMENT PRIMARY KEY,
-    `comment_id` INT NOT NULL,
-    `user_id` INT NOT NULL,
-    `type` ENUM('정보', '소통') NOT NULL,
-    `content` LONGTEXT NOT NULL,
-    `reason` VARCHAR(500) NOT NULL,
-    FOREIGN KEY (`comment_id`) REFERENCES `comment`(`comment_id`),
-    FOREIGN KEY (`user_id`) REFERENCES `user`(`user_id`)
-);
-
--- 12. ban 테이블
+-- 11. ban 테이블
 CREATE TABLE `ban` (
     `ban_id` INT AUTO_INCREMENT PRIMARY KEY,
-    `ban_user` INT NOT NULL,
-    `nickname` VARCHAR(100) NOT NULL,
-    `reason` VARCHAR(255),
-    `ban_date` VARCHAR(19),
-    FOREIGN KEY (`ban_user`) REFERENCES `user`(`user_id`),
-    FOREIGN KEY (`nickname`) REFERENCES `user`(`nickname`)
+    `banned_user_id` INT NOT NULL,
+    `reason` VARCHAR(500),
+    `ban_end_date` VARCHAR(19) NULL,
+    INDEX idx_banned_user (banned_user_id)
 );
+
+-- ============================================
+-- 외래키(FK) 제약조건 추가
+-- ============================================
+
+-- post 테이블 FK
+ALTER TABLE `post`
+    ADD CONSTRAINT `fk_post_user` FOREIGN KEY (`user_id`) REFERENCES `user`(`user_id`) ON DELETE CASCADE;
+
+-- comment 테이블 FK
+ALTER TABLE `comment`
+    ADD CONSTRAINT `fk_comment_post` FOREIGN KEY (`post_id`) REFERENCES `post`(`post_id`) ON DELETE CASCADE,
+    ADD CONSTRAINT `fk_comment_user` FOREIGN KEY (`user_id`) REFERENCES `user`(`user_id`) ON DELETE CASCADE,
+    ADD CONSTRAINT `fk_comment_parent` FOREIGN KEY (`parent_comment_id`) REFERENCES `comment`(`comment_id`) ON DELETE CASCADE;
+
+-- post_report 테이블 FK
+ALTER TABLE `post_report`
+    ADD CONSTRAINT `fk_post_report_post` FOREIGN KEY (`post_id`) REFERENCES `post`(`post_id`) ON DELETE CASCADE,
+    ADD CONSTRAINT `fk_post_report_reporter` FOREIGN KEY (`reporter_id`) REFERENCES `user`(`user_id`) ON DELETE CASCADE;
+
+-- comment_report 테이블 FK
+ALTER TABLE `comment_report`
+    ADD CONSTRAINT `fk_comment_report_comment` FOREIGN KEY (`comment_id`) REFERENCES `comment`(`comment_id`) ON DELETE CASCADE,
+    ADD CONSTRAINT `fk_comment_report_reporter` FOREIGN KEY (`reporter_id`) REFERENCES `user`(`user_id`) ON DELETE CASCADE;
+
+-- ban 테이블 FK
+ALTER TABLE `ban`
+    ADD CONSTRAINT `fk_ban_banned_user` FOREIGN KEY (`banned_user_id`) REFERENCES `user`(`user_id`) ON DELETE CASCADE;
