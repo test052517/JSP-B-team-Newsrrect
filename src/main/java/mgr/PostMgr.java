@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import beans.postBean;
+
 public class PostMgr {
 		DBConnectionMgr pool;
 		
@@ -48,34 +50,37 @@ public class PostMgr {
 		    }
 		}
 		
-	    public ResultSet viewPostByPostID(int postid) {
-	        Connection con = null;
-	        PreparedStatement pstmt = null;
-	        ResultSet rs = null;
 
-	        try {
-	            con = pool.getConnection();
-	            String sql = "SELECT * FROM post WHERE post_id = ?";
-	            pstmt = con.prepareStatement(sql);
-	            pstmt.setInt(1, postid);
-	            rs = pstmt.executeQuery();
-	            
-	            // ResultSet을 호출하는 곳으로 전달하기 위해 여기서 바로 반환합니다.
-	            return rs;
-
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	            // 오류가 발생하면 자원을 정리하고 null을 반환합니다.
-	            try {
-	                if (rs != null) rs.close();
-	                if (pstmt != null) pstmt.close();
-	                if (con != null) con.close();
-	            } catch (Exception ex) {
-	                ex.printStackTrace();
-	            }
-	        }
-	        return null;
-	    }
 		
 		
+		public postBean getPostByPostID(int postId) {
+		    Connection con = null;
+		    PreparedStatement pstmt = null;
+		    ResultSet rs = null;
+		    postBean bean = null; // 데이터를 담을 객체를 초기값 null로 설정
+
+		    try {
+		        con = pool.getConnection();
+		        String sql = "SELECT title, content FROM post WHERE post_id = ?";
+		        pstmt = con.prepareStatement(sql);
+		        pstmt.setInt(1, postId);
+		        rs = pstmt.executeQuery();
+
+		        if (rs.next()) {
+		            // 결과가 있을 때만 객체를 생성하여 데이터를 담습니다.
+		            bean = new postBean(); 
+		            bean.setPostId(postId);
+		            bean.setTitle(rs.getString("title"));
+		            bean.setContent(rs.getString("content"));
+		        }
+
+		    } catch (Exception e) {
+		        e.printStackTrace();
+		        bean = null; // 오류 발생 시 명시적으로 null 반환
+		    } finally {
+		        // 자원을 반드시 해제합니다.
+		        pool.freeConnection(con, pstmt, rs);
+		    }
+		    return bean; // 데이터가 없거나 오류 발생 시 null이 반환됩니다.
+		}
 }
