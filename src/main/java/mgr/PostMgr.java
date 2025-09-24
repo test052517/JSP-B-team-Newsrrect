@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-import beans.postBean;
+import beans.PostBean;
 
 public class PostMgr {
 		DBConnectionMgr pool;
@@ -53,11 +53,11 @@ public class PostMgr {
 
 		
 		
-		public postBean getPostByPostID(int postId) {
+		public PostBean getPostByPostID(int postId) {
 		    Connection con = null;
 		    PreparedStatement pstmt = null;
 		    ResultSet rs = null;
-		    postBean bean = null; // 데이터를 담을 객체를 초기값 null로 설정
+		    PostBean bean = null; // 데이터를 담을 객체를 초기값 null로 설정
 
 		    try {
 		        con = pool.getConnection();
@@ -68,7 +68,7 @@ public class PostMgr {
 
 		        if (rs.next()) {
 		            // 결과가 있을 때만 객체를 생성하여 데이터를 담습니다.
-		            bean = new postBean(); 
+		            bean = new PostBean(); 
 		            bean.setPostId(postId);
 		            bean.setTitle(rs.getString("title"));
 		            bean.setContent(rs.getString("content"));
