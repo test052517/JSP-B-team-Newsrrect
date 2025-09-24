@@ -53,6 +53,7 @@ CREATE TABLE `comment` (
     INDEX idx_created_at (created_at)
 );
 
+-- 4. post_report 테이블
 CREATE TABLE `post_report` (
     `reportPost_id` INT AUTO_INCREMENT PRIMARY KEY,
     `post_id` INT NOT NULL,
@@ -62,6 +63,7 @@ CREATE TABLE `post_report` (
     INDEX idx_reporter_id (reporter_id)
 );
 
+-- 5. comment_report 테이블
 CREATE TABLE `comment_report` (
     `reportComment_id` INT AUTO_INCREMENT PRIMARY KEY,
     `comment_id` INT NOT NULL,
@@ -71,10 +73,7 @@ CREATE TABLE `comment_report` (
     INDEX idx_reporter_id (reporter_id)
 );
 
-
-
-
--- 11. ban 테이블
+-- 6. ban 테이블
 CREATE TABLE `ban` (
     `ban_id` INT AUTO_INCREMENT PRIMARY KEY,
     `banned_user_id` INT NOT NULL,

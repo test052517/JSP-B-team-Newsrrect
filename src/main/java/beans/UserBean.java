@@ -1,17 +1,17 @@
 package beans;
 
-import java.sql.Blob;
+public class UserBean{
 
-public class userBean {
-	private int userId;
+    private int userId;
     private String email;
     private String password;
     private String role;
     private String nickname;
     private String createdAt;
     private int isActive;
+    private int banCount;
+    private int reportCount;
     private int point;
-    private Blob image;
     private String attend;
     private String introduce;
     
@@ -57,17 +57,23 @@ public class userBean {
 	public void setIsActive(int isActive) {
 		this.isActive = isActive;
 	}
+	public int getBanCount() {
+		return banCount;
+	}
+	public void setBanCount(int banCount) {
+		this.banCount = banCount;
+	}
+	public int getReportCount() {
+		return reportCount;
+	}
+	public void setReportCount(int reportCount) {
+		this.reportCount = reportCount;
+	}
 	public int getPoint() {
 		return point;
 	}
 	public void setPoint(int point) {
 		this.point = point;
-	}
-	public Blob getImage() {
-		return image;
-	}
-	public void setImage(Blob image) {
-		this.image = image;
 	}
 	public String getAttend() {
 		return attend;

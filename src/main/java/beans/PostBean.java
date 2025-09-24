@@ -1,24 +1,18 @@
 package beans;
 
-public class commentBean {
-	private int commentId;
+public class PostBean{
+
     private int postId;
     private int userId;
     private String type;
-    private int layer;
+    private String title;
     private String content;
-    private String judgment;
-    private int upvotes;
+    private String status;
+    private int viewCount;
     private String createdAt;
-    private Integer attachmentFileId;
     private int reportCount;
+    private int recommandCount;
     
-	public int getCommentId() {
-		return commentId;
-	}
-	public void setCommentId(int commentId) {
-		this.commentId = commentId;
-	}
 	public int getPostId() {
 		return postId;
 	}
@@ -37,11 +31,11 @@ public class commentBean {
 	public void setType(String type) {
 		this.type = type;
 	}
-	public int getLayer() {
-		return layer;
+	public String getTitle() {
+		return title;
 	}
-	public void setLayer(int layer) {
-		this.layer = layer;
+	public void setTitle(String title) {
+		this.title = title;
 	}
 	public String getContent() {
 		return content;
@@ -49,17 +43,17 @@ public class commentBean {
 	public void setContent(String content) {
 		this.content = content;
 	}
-	public String getJudgment() {
-		return judgment;
+	public String getStatus() {
+		return status;
 	}
-	public void setJudgment(String judgment) {
-		this.judgment = judgment;
+	public void setStatus(String status) {
+		this.status = status;
 	}
-	public int getUpvotes() {
-		return upvotes;
+	public int getViewCount() {
+		return viewCount;
 	}
-	public void setUpvotes(int upvotes) {
-		this.upvotes = upvotes;
+	public void setViewCount(int viewCount) {
+		this.viewCount = viewCount;
 	}
 	public String getCreatedAt() {
 		return createdAt;
@@ -67,16 +61,17 @@ public class commentBean {
 	public void setCreatedAt(String createdAt) {
 		this.createdAt = createdAt;
 	}
-	public Integer getAttachmentFileId() {
-		return attachmentFileId;
-	}
-	public void setAttachmentFileId(Integer attachmentFileId) {
-		this.attachmentFileId = attachmentFileId;
-	}
 	public int getReportCount() {
 		return reportCount;
 	}
 	public void setReportCount(int reportCount) {
 		this.reportCount = reportCount;
 	}
+	public int getRecommandCount() {
+		return recommandCount;
+	}
+	public void setRecommandCount(int recommandCount) {
+		this.recommandCount = recommandCount;
+	}
+
 }
