@@ -1,54 +1,61 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+
 /* Font Definitions */
 @font-face {
     font-family: 'Aggravo';
-    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SBAggroM.woff') format('woff');
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SBAggroM.woff') format('woff'),
+         url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SBAggroM.woff2') format('woff2');
     font-weight: 500;
     font-display: swap;
 }
 
 @font-face {
     font-family: 'Paperozi';
-    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-4Regular.woff2') format('woff2');
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-4Regular.woff2') format('woff2'),
+         url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-4Regular.woff') format('woff');
     font-weight: 400;
     font-display: swap;
 }
 
 @font-face {
     font-family: 'Paperozi';
-    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2');
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2'),
+         url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff') format('woff');
     font-weight: 500;
     font-display: swap;
 }
 
 @font-face {
     font-family: 'Paperozi';
-    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-6SemiBold.woff2') format('woff2');
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-6SemiBold.woff2') format('woff2'),
+         url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-6SemiBold.woff') format('woff');
     font-weight: 600;
     font-display: swap;
 }
 
 /* Global Font Classes */
 .font-newsrrect {
-    font-family: 'Aggravo', sans-serif;
+    font-family: 'Aggravo', 'Noto Sans KR', sans-serif;
 }
 
 .font-paperozi-regular {
-    font-family: 'Paperozi', sans-serif;
+    font-family: 'Paperozi', 'Noto Sans KR', sans-serif;
     font-weight: 400;
 }
 
 .font-paperozi-medium {
-    font-family: 'Paperozi', sans-serif;
+    font-family: 'Paperozi', 'Noto Sans KR', sans-serif;
     font-weight: 500;
 }
 
 .font-paperozi-semibold {
-    font-family: 'Paperozi', sans-serif;
+    font-family: 'Paperozi', 'Noto Sans KR', sans-serif;
     font-weight: 600;
 }
 
 /* Default body font */
 body {
-    font-family: 'Paperozi', sans-serif;
+    font-family: 'Paperozi', 'Noto Sans KR', sans-serif;
     font-weight: 400;
 }
