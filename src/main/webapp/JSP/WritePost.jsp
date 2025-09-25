@@ -83,7 +83,7 @@
         // 헤더와 푸터 로드
         document.addEventListener('DOMContentLoaded', function() {
             // 헤더 로드
-            fetch('../Common/Header.html')
+            fetch('../Html/Common/Header.html')
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('header').innerHTML = html;
@@ -100,7 +100,7 @@
                 });
             
             // 푸터 로드
-            fetch('../Common/Footer.html')
+            fetch('../Html/Common/Footer.html')
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('footer').innerHTML = html;
