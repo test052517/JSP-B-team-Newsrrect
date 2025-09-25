@@ -63,8 +63,8 @@
         <!-- Write Form -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="p-6">
-                <!-- 폼 전송을 위해 action, method, enctype 속성을 추가합니다. -->
-                <form class="space-y-6" action="WritePostProc.jsp" method="post" enctype="multipart/form-data">
+                <!-- 폼 전송을 위해 action, method, enctype, id 속성을 추가합니다. -->
+                <form id="writeForm" class="space-y-6" action="WritePostProc.jsp" method="post" enctype="multipart/form-data">
                     <!-- Title Input -->
                     <div>
                         <label for="title" class="block text-sm font-medium text-gray-900 mb-2">제목</label>
@@ -74,8 +74,13 @@
                     <!-- Content Input -->
                     <div>
                         <label for="content" class="block text-sm font-medium text-gray-900 mb-2">내용</label>
-                        <%-- 기존 textarea를 SmartEditor include로 대체합니다. --%>
-                        <%@ include file="/se2/SmartEditor.jsp" %>
+                        <%-- 
+                          include 태그를 div로 감싸고 CSS 클래스를 적용하여 정렬과 크기를 조절할 수 있습니다.
+                          예: w-full (너비 100%), mx-auto (가운데 정렬) 
+                        --%>
+                        <div class="w-full, mx-auto">
+                            <%@ include file="/se2/SmartEditor.jsp" %>
+                        </div>
                     </div>
                     
                     <!-- File Upload -->
@@ -89,7 +94,8 @@
                         <button type="button" onclick="location.href='CommuBoard.html'" class="px-6 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors font-medium">
                             취소
                         </button>
-                        <button type="submit" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors font-medium">
+                        <!-- type을 "button"으로 변경하고 onclick 이벤트를 추가합니다. -->
+                        <button type="button" onclick="submitContents()" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors font-medium">
                             작성
                         </button>
                     </div>
@@ -138,6 +144,34 @@
             </div>
         </div>
     </footer>
+
+    <script>
+        function submitContents() {
+            // SmartEditor의 내용을 실제 textarea(ir1)에 업데이트합니다.
+            oEditors.getById["ir1"].exec("UPDATE_CONTENTS_FIELD", []);
+
+            // 제목이 비어있는지 확인
+            const title = document.getElementById("title").value;
+            if (title.trim() === "") {
+                alert("제목을 입력해주세요.");
+                document.getElementById("title").focus();
+                return;
+            }
+
+            // 내용이 비어있는지 확인 (SmartEditor가 생성하는 실제 내용을 기준으로)
+            const content = document.getElementById("ir1").value;
+            // HTML 태그를 제거하고 순수 텍스트만으로 비어있는지 검사할 수 있습니다.
+            // "<p>&nbsp;</p>" 와 같은 기본값만 있는 경우를 체크합니다.
+            if (content === "" || content === "<p>&nbsp;</p>" || content === "<p><br></p>") {
+                alert("내용을 입력해주세요.");
+                oEditors.getById["ir1"].exec("FOCUS");
+                return;
+            }
+
+            // 폼을 전송합니다.
+            document.getElementById("writeForm").submit();
+        }
+    </script>
 </body>
 </html>
 
