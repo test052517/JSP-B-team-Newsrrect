@@ -37,21 +37,19 @@
         <!-- Write Form -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="p-6">
-                <form class="space-y-6">
+                <%-- ★★★ 수정 1: form 태그 id 오타 수정 (writeFrom -> writeForm) 및 속성 추가 ★★★ --%>
+                <form id="writeForm" action="WritePostProc.jsp" method="post" enctype="multipart/form-data" class="space-y-6">
                     <!-- Title Input -->
                     <div>
                         <label for="title" class="block text-sm font-medium text-gray-900 mb-2">제목</label>
-                        <input type="text" id="title" name="title" class="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="제목을 입력하세요">
+                        <input type="text" id="title" name="title" class="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="제목을 입력하세요" required>
                     </div>
                     
                    <!-- Content Input -->
                     <div>
                         <label for="content" class="block text-sm font-medium text-gray-900 mb-2">내용</label>
-                        <%-- 
-                          include 태그를 div로 감싸고 CSS 클래스를 적용하여 정렬과 크기를 조절할 수 있습니다.
-                          예: w-full (너비 100%), mx-auto (가운데 정렬) 
-                        --%>
-                        <div class="w-full, mx-auto">
+                        <%-- ★★★ 수정 2: Tailwind CSS 클래스 문법 오류 수정 (쉼표 제거) ★★★ --%>
+                        <div class="w-full mx-auto">
                             <%@ include file="/se2/SmartEditor.jsp" %>
                         </div>
                     </div>
@@ -67,8 +65,8 @@
                         <button type="button" onclick="goBack()" class="px-6 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors font-medium">
                             취소
                         </button>
-                        <button type="submit" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors font-medium">
-                            작성
+                        <button type="button" onclick="submitContents()" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors font-medium">
+                        	작성
                         </button>
                     </div>
                 </form>
@@ -89,7 +87,7 @@
                     document.getElementById('header').innerHTML = html;
                     // 소통 게시판 네비게이션 활성화
                     setTimeout(() => {
-                        const commuNav = document.querySelector('a[href="CommuBoard.html"]');
+                        const commuNav = document.querySelector('a[href="../HTml/CommuBoard.html"]');
                         if (commuNav) {
                             commuNav.className = 'text-white bg-primary px-3 py-2 text-sm font-medium rounded';
                         }
@@ -131,11 +129,10 @@
                 oEditors.getById["ir1"].exec("FOCUS");
                 return;
             }
-
+            
             // 폼을 전송합니다.
             document.getElementById("writeForm").submit();
         }
-    </script>
 
         function goBack() {
             history.back();
