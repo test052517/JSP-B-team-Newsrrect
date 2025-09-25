@@ -23,7 +23,7 @@
 </div>
 
 <form action="#" method="post">
-	<textarea name="ir1" id="ir1" rows="10" cols="100" style="width:766px; height:412px; display:none;"></textarea>
+	<textarea name="ir1" id="ir1" rows="10" cols="100" style="width:75%; height:412px; display:none;"></textarea>
 </form>
 
 <script type="text/javascript">

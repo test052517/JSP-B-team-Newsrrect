@@ -23,7 +23,7 @@
 		/* String path = GetProperties.SMART_EDITOR_UPLOAD_PATH; */
 		/* String path = "C:/java/dental/WebContent/boarder/se2/upload"; */
 		/* String path = "/se2/upload"; */
-		String path = "C:/JSP-B-team-Newsrrect/JSP-B-team-Newsrrect/src/main/webapp/se2/upload";
+		String path = request.getContextPath() + "/JSP-B-team-Newsrrect/src/main/webapp/se2/upload";
 		MultipartRequest multi=new MultipartRequest(request, path, 15*1024*1024, "UTF-8", new DefaultFileRenamePolicy());
 	
 		java.text.SimpleDateFormat formatter2 = new java.text.SimpleDateFormat ("yyyy_MM_dd_HHmmss", java.util.Locale.KOREA);
