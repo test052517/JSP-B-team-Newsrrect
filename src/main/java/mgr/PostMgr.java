@@ -13,14 +13,14 @@ public class PostMgr {
 			pool=DBConnectionMgr.getInstance();
 		}
 		
-		public void createPost(int userid, String type, String title, String content, String status, int viewcount, String createdAt, Integer attatchmentFileID, int reportCount, int recommandCount) {
+		public void createPost(int userid, String type, String title, String content, String status, int viewcount, String createdAt,  int reportCount, int recommandCount) {
 		    Connection con = null;
 		    PreparedStatement pstmt = null;
 		    String sql = null;
 		    try {
 		        con = pool.getConnection();
 		        // post_id 컬럼을 제거하고, VALUES 절의 물음표 개수를 맞춰줍니다.
-		        sql = "INSERT INTO post(user_id, type, title, content, status, view_count, created_at, attachmentFile_id, report_count, recommand_count) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		        sql = "INSERT INTO post(user_id, type, title, content, status, view_count, created_at, report_count, recommand_count) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		        
 		        pstmt = con.prepareStatement(sql);
 		        
@@ -33,14 +33,9 @@ public class PostMgr {
 		        pstmt.setInt(6, viewcount);
 		        pstmt.setString(7, createdAt);
 		        
-		        if (attatchmentFileID != null) {
-		            pstmt.setInt(8, attatchmentFileID);
-		        } else {
-		            pstmt.setNull(8, java.sql.Types.INTEGER);
-		        }
 		        
-		        pstmt.setInt(9, reportCount);
-		        pstmt.setInt(10, recommandCount);
+		        pstmt.setInt(8, reportCount);
+		        pstmt.setInt(9, recommandCount);
 		        
 		        pstmt.executeUpdate();
 		    } catch (Exception e) {
