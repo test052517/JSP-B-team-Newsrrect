@@ -1,4 +1,4 @@
-<!-- 소통 게시판 상세확인페이지 -->
+<!-- (관리자용) 소통 게시판 상세확인페이지 -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -21,21 +21,21 @@
         }
     </script>
 </head>
-<body class="bg-white min-h-screen">
+<body class="min-h-screen">
     <!-- Header -->
     <header class="bg-white shadow-sm border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-center items-center h-16 relative">
                 <!-- Logo - Centered -->
                 <div class="flex-shrink-0">
-                    <a href="MainPage.html"><h1 class="text-2xl font-bold text-primary" style="font-family: 'Aggravo', sans-serif;">Newsrrect</h1></a>
+                    <a href="AdminMainPage.html"><h1 class="text-2xl font-bold text-primary font-newsrrect">Newsrrect</h1></a>
                 </div>
                 
                 <!-- User Menu - Absolute positioned right -->
                 <div class="absolute right-0 flex items-center space-x-4">
-                    <button class="text-primary hover:text-primary-dark text-sm font-medium">
+                    <a href="#" onclick="loadLoginContent()" class="text-primary hover:text-primary-dark text-sm font-medium">
                         로그아웃
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -44,10 +44,11 @@
     <!-- Navigation -->
     <nav class="bg-white border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-center space-x-20 py-4">
-                <a href="InfoBoard.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판</a>
-                <a href="CommuBoard.html" class="text-white bg-primary px-3 py-2 text-sm font-medium rounded font-paperozi-medium">소통 게시판</a>
-                <a href="MyPage.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">마이 페이지</a>
+            <div class="flex justify-center space-x-16 py-4">
+                <a href="AdminInfo.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판</a>
+                <a href="AdminCommu.html" class="text-white bg-primary px-3 py-2 text-sm font-medium rounded font-paperozi-medium">소통 게시판</a>
+                <a href="AdminInfoBoard.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판 관리</a>
+                <a href="AdminUserReport.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">유저 / 신고 관리</a>
             </div>
         </div>
     </nav>
@@ -674,6 +675,11 @@
                 closeCommentReportModal();
             }
         });
+
+        function loadLoginContent() {
+            // 로그인 페이지로 이동하거나 로그인 모달 표시
+            window.location.href = 'Login.html';
+        }
     </script>
 </body>
 </html>

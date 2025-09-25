@@ -1,4 +1,4 @@
-<!-- 소통게시판 -->
+<!-- 소통게시판 (관리자용) -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -21,21 +21,21 @@
         }
     </script>
 </head>
-<body class="bg-white min-h-screen">
+<body class="min-h-screen">
     <!-- Header -->
     <header class="bg-white shadow-sm border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-center items-center h-16 relative">
                 <!-- Logo - Centered -->
                 <div class="flex-shrink-0">
-                    <a href="MainPage.html"><h1 class="text-2xl font-bold text-primary" style="font-family: 'Aggravo', sans-serif;">Newsrrect</h1></a>
+                    <a href="AdminMainPage.html"><h1 class="text-2xl font-bold text-primary font-newsrrect">Newsrrect</h1></a>
                 </div>
                 
                 <!-- User Menu - Absolute positioned right -->
                 <div class="absolute right-0 flex items-center space-x-4">
-                    <button class="text-primary hover:text-primary-dark text-sm font-medium">
+                    <a href="#" onclick="loadLoginContent()" class="text-primary hover:text-primary-dark text-sm font-medium">
                         로그아웃
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -44,10 +44,11 @@
     <!-- Navigation -->
     <nav class="bg-white border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-center space-x-20 py-4">
-                <a href="InfoBoard.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판</a>
-                <a href="CommuBoard.html" class="text-white bg-primary px-3 py-2 text-sm font-medium rounded font-paperozi-medium">소통 게시판</a>
-                <a href="MyPage.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">마이 페이지</a>
+            <div class="flex justify-center space-x-16 py-4">
+                <a href="AdminInfo.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판</a>
+                <a href="AdminCommu.html" class="text-white bg-primary px-3 py-2 text-sm font-medium rounded font-paperozi-medium">소통 게시판</a>
+                <a href="AdminInfoBoard.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판 관리</a>
+                <a href="AdminUserReport.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">유저 / 신고 관리</a>
             </div>
         </div>
     </nav>
@@ -103,7 +104,7 @@
                 <!-- Table Body -->
                 <div class="bg-white border border-gray-200 border-t-0 rounded-b-lg">
                     <!-- Table Row -->
-                    <a href="CommuWatch.html" class="grid grid-cols-4 gap-4 py-3 px-4 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
+                    <a href="AdminCommuWatch.html" class="grid grid-cols-4 gap-4 py-3 px-4 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
                         <div class="text-sm text-gray-900">1</div>
                         <div class="text-sm text-gray-900 font-medium">test제목</div>
                         <div class="text-sm text-gray-600">user1</div>
@@ -146,19 +147,59 @@
     <div id="footer"></div>
 
     <script>
-        // 헤더와 푸터 로드
-        document.addEventListener('DOMContentLoaded', function() {
-            // 헤더 로드
-            fetch('Common/Header.html')
+        // 네비게이션 링크 클릭 시 콘텐츠 로드
+        function loadContent(url, clickedElement) {
+            // 모든 네비게이션 링크에서 active 클래스 제거
+            document.querySelectorAll('nav a').forEach(link => {
+                link.classList.remove('text-primary-dark', 'bg-primary/10');
+                link.classList.add('text-primary');
+            });
+            
+            // 클릭된 링크에 active 스타일 적용
+            if (clickedElement) {
+                clickedElement.classList.remove('text-primary');
+                clickedElement.classList.add('text-primary-dark', 'bg-primary/10');
+            }
+            
+            // 콘텐츠 로드
+            fetch(url)
                 .then(response => response.text())
                 .then(html => {
-                    document.getElementById('header').innerHTML = html;
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const mainContent = doc.querySelector('main');
+                    if (mainContent) {
+                        const currentMain = document.querySelector('main');
+                        if (currentMain) {
+                            let content = mainContent.innerHTML;
+                            
+                            // 상세페이지 감지 (AdminInfoWatch.html 또는 AdminCommuWatch.html)
+                            if (url.includes('AdminInfoWatch.html') || url.includes('AdminCommuWatch.html')) {
+                                content = content.replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '');
+                                content = content.replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '');
+                                const contentMatch = content.match(/<div[^>]*class="[^"]*max-w-7xl[^"]*"[^>]*>([\s\S]*?)<\/div>/);
+                                if (contentMatch) {
+                                    content = contentMatch[1];
+                                }
+                            }
+                            
+                            currentMain.innerHTML = content;
+                        }
+                    }
                 })
                 .catch(error => {
-                    console.error('Error loading header:', errr);
+                    console.error('Error loading content:', error);
                 });
-            
-            // 푸터 로드
+        }
+
+        // 로그인 콘텐츠 로드
+        function loadLoginContent() {
+            // 로그인 페이지로 이동하거나 로그인 모달 표시
+            window.location.href = 'Login.html';
+        }
+
+        // 푸터 로드
+        document.addEventListener('DOMContentLoaded', function() {
             fetch('Common/Footer.html')
                 .then(response => response.text())
                 .then(html => {

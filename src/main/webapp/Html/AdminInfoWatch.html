@@ -1,10 +1,10 @@
-<!-- 소통 게시판 상세확인페이지 -->
+<!-- (관리자용) 정보검증게시판 상세확인페이지 -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>글 보기 - 소통 게시판 - Newsrrect</title>
+    <title>글 보기 - 정보 검증 게시판 - Newsrrect</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles/fonts.css">
     <script>
@@ -21,21 +21,21 @@
         }
     </script>
 </head>
-<body class="bg-white min-h-screen">
+<body class="min-h-screen">
     <!-- Header -->
     <header class="bg-white shadow-sm border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-center items-center h-16 relative">
                 <!-- Logo - Centered -->
                 <div class="flex-shrink-0">
-                    <a href="MainPage.html"><h1 class="text-2xl font-bold text-primary" style="font-family: 'Aggravo', sans-serif;">Newsrrect</h1></a>
+                    <a href="AdminMainPage.html"><h1 class="text-2xl font-bold text-primary font-newsrrect">Newsrrect</h1></a>
                 </div>
                 
                 <!-- User Menu - Absolute positioned right -->
                 <div class="absolute right-0 flex items-center space-x-4">
-                    <button class="text-primary hover:text-primary-dark text-sm font-medium">
+                    <a href="#" onclick="loadLoginContent()" class="text-primary hover:text-primary-dark text-sm font-medium">
                         로그아웃
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -44,10 +44,11 @@
     <!-- Navigation -->
     <nav class="bg-white border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-center space-x-20 py-4">
-                <a href="InfoBoard.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판</a>
-                <a href="CommuBoard.html" class="text-white bg-primary px-3 py-2 text-sm font-medium rounded font-paperozi-medium">소통 게시판</a>
-                <a href="MyPage.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">마이 페이지</a>
+            <div class="flex justify-center space-x-16 py-4">
+                <a href="AdminInfo.html" class="text-white bg-primary px-3 py-2 text-sm font-medium rounded font-paperozi-medium">정보 검증 게시판</a>
+                <a href="AdminCommu.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">소통 게시판</a>
+                <a href="AdminInfoBoard.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판 관리</a>
+                <a href="AdminUserReport.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">유저 / 신고 관리</a>
             </div>
         </div>
     </nav>
@@ -56,7 +57,7 @@
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Board Title -->
         <div class="mb-6">
-            <h2 class="text-3xl font-bold text-primary mb-4">소통 게시판</h2>
+            <h2 class="text-3xl font-bold text-primary mb-4">정보 검증 게시판</h2>
             <div class="border-t border-gray-200"></div>
         </div>
 
@@ -105,14 +106,49 @@
                         <p>글내용</p>
                     </div>
                 </div>
-            </div>
-        </div>
+
+                <!-- Credibility Rating -->
+                <div class="mb-6">
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-900 mb-2">신뢰도 nn%</label>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-primary h-2 rounded-full" style="width: 65%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center space-x-8">
+                        <div class="flex flex-col items-center justify-center w-28 h-28 bg-green-100 text-green-800 rounded-full">
+                            <span class="text-lg font-medium">참</span>
+                            <span class="text-2xl font-bold">23</span>
+                        </div>
+                        <div class="flex flex-col items-center justify-center w-28 h-28 bg-red-100 text-red-800 rounded-full">
+                            <span class="text-lg font-medium">거짓</span>
+                            <span class="text-2xl font-bold">10</span>
+                        </div>
+                        <div class="flex flex-col items-center justify-center w-28 h-28 bg-yellow-100 text-yellow-800 rounded-full">
+                            <span class="text-lg font-medium">모호</span>
+                            <span class="text-2xl font-bold">7</span>
+                        </div>
+                    </div>
+                </div>
+                    </div>
+                </div>
 
         <!-- Comment Section -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="p-6">
                 <!-- Comment Input -->
                 <div class="mb-6">
+                    <!-- Rating Selection -->
+                    <div class="mb-4">
+                        <select class="w-32 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option>선택</option>
+                            <option>참</option>
+                            <option>거짓</option>
+                            <option>모호</option>
+                        </select>
+                    </div>
+                    
                     <!-- Comment Text Area -->
                     <div class="mb-4">
                         <textarea class="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none" rows="4" placeholder="댓글을 입력해주세요"></textarea>
@@ -154,6 +190,18 @@
                     </div>
                 </div>
 
+                <!-- Comment List Header -->
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">전체 댓글 6개</h3>
+                    <div class="flex space-x-2">
+                        <select class="px-3 py-1 border border-gray-200 rounded text-sm">
+                            <option>추천순</option>
+                            <option>최신순</option>
+                            <option>등록순</option>
+                        </select>
+                    </div>
+                </div>
+
                 <!-- BEST Comments -->
                 <div class="mb-8 bg-blue-100 rounded-lg p-4">
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">BEST 댓글</h4>
@@ -170,6 +218,7 @@
                             <div class="flex items-center space-x-2">
                                 <span class="text-sm text-gray-500">작성일자</span>
                                 <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal()">🚨</span>
+                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">참</span>
                             </div>
                         </div>
                         
@@ -212,7 +261,7 @@
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     <span class="text-sm text-gray-500">작성일자</span>
-                                    <span class="text-gray-500 cursor-pointer">🚨</span>
+                                    <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal()">🚨</span>
                                 </div>
                             </div>
                             
@@ -253,11 +302,12 @@
                             <div class="flex items-center space-x-2">
                                 <span class="text-sm text-gray-500">작성일자</span>
                                 <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal()">🚨</span>
+                                <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-sm">거짓</span>
                             </div>
                         </div>
                         
                         <div class="mb-3">
-                            <p class="text-gray-900">정말 유용한 정보입니다!</p>
+                            <p class="text-gray-900 mb-2">이 정보는 거짓입니다! 증거 자료 제출합니다</p>
                             <div id="attached-files-comment3" class="hidden mt-2">
                             </div>
                         </div>
@@ -267,7 +317,7 @@
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
                                 </svg>
-                                <span>추천 89</span>
+                                <span>추천 100</span>
                             </button>
                             <button class="text-gray-600 hover:text-primary">답글쓰기</button>
                             <input type="file" id="file-comment3" class="hidden" multiple>
@@ -281,16 +331,12 @@
                             </div>
                         </div>
                     </div>
-                    </div>
-                </div>
 
-                <!-- Regular Comments -->
-                <div class="space-y-4">
-                    <!-- Comment 4 -->
+                    <!-- Comment 4 (BEST) -->
                     <div class="border border-gray-200 rounded-lg p-4 bg-white">
                         <div class="flex justify-between items-start mb-2">
                             <div class="flex items-center space-x-2">
-                                <span class="font-semibold">사용자4</span>
+                                <span class="font-semibold text-primary">BEST 사용자4</span>
                                 <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
                                 </svg>
@@ -298,11 +344,12 @@
                             <div class="flex items-center space-x-2">
                                 <span class="text-sm text-gray-500">작성일자</span>
                                 <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal()">🚨</span>
+                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-sm">모호</span>
                             </div>
                         </div>
                         
                         <div class="mb-3">
-                            <p class="text-gray-900 mb-2">일반 댓글입니다.</p>
+                            <p class="text-gray-900 mb-2">애매하네요... 모르겠습니다</p>
                             <div id="attached-files-comment4" class="hidden mt-2">
                             </div>
                         </div>
@@ -312,7 +359,7 @@
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
                                 </svg>
-                                <span>추천 12</span>
+                                <span>추천 50</span>
                             </button>
                             <button class="text-gray-600 hover:text-primary">답글쓰기</button>
                             <input type="file" id="file-comment4" class="hidden" multiple>
@@ -324,9 +371,14 @@
                             <div class="bg-white border border-gray-200 rounded-md p-2">
                                 <div id="file-list-comment4" class="space-y-1"></div>
                             </div>
+                            </div>
                         </div>
                     </div>
+                </div>
 
+                <!-- Regular Comments -->
+                <div>
+                    <div class="space-y-4">
                     <!-- Comment 5 -->
                     <div class="border border-gray-200 rounded-lg p-4 bg-white">
                         <div class="flex justify-between items-start mb-2">
@@ -339,11 +391,12 @@
                             <div class="flex items-center space-x-2">
                                 <span class="text-sm text-gray-500">작성일자</span>
                                 <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal()">🚨</span>
+                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">참</span>
                             </div>
                         </div>
                         
                         <div class="mb-3">
-                            <p class="text-gray-900 mb-2">또 다른 댓글입니다.</p>
+                            <p class="text-gray-900 mb-2">맞습니다~ 자료 들고왔어요~ 추천 부탁드립니다~</p>
                             <div id="attached-files-comment5" class="hidden mt-2">
                             </div>
                         </div>
@@ -380,11 +433,12 @@
                             <div class="flex items-center space-x-2">
                                 <span class="text-sm text-gray-500">작성일자</span>
                                 <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal()">🚨</span>
+                                <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-sm">거짓</span>
                             </div>
                         </div>
                         
                         <div class="mb-3">
-                            <p class="text-gray-900 mb-2">마지막 댓글입니다.</p>
+                            <p class="text-gray-900 mb-2">이거 아닌데요?</p>
                             <div id="attached-files-comment6" class="hidden mt-2">
                             </div>
                         </div>
@@ -395,7 +449,7 @@
                                     <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
                                 </svg>
                                 <span>추천 10</span>
-                            </button>
+            </button>
                             <button class="text-gray-600 hover:text-primary">답글쓰기</button>
                             <input type="file" id="file-comment6" class="hidden" multiple>
                             <button onclick="document.getElementById('file-comment6').click()" class="text-gray-600 hover:text-primary">첨부파일</button>
@@ -406,10 +460,10 @@
                             <div class="bg-white border border-gray-200 rounded-md p-2">
                                 <div id="file-list-comment6" class="space-y-1"></div>
                             </div>
-                        </div>
-                    </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
                 <!-- Comment Pagination -->
                 <div class="flex justify-center items-center mt-6 space-x-2">
@@ -429,16 +483,39 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                         </svg>
-                    </button>
+            </button>
                 </div>
-            </div>
-        </div>
             </div>
         </div>
     </main>
 
     <!-- Footer -->
     <div id="footer"></div>
+
+    <script>
+        // 헤더와 푸터 로드
+        document.addEventListener('DOMContentLoaded', function() {
+            // 헤더 로드
+            fetch('Common/Header.html')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('header').innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading header:', error);
+                });
+            
+            // 푸터 로드
+            fetch('Common/Footer.html')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('footer').innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading footer:', error);
+                });
+        });
+    </script>
 
     <!-- Report Modal -->
     <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
@@ -522,6 +599,7 @@
         </div>
     </div>
 
+
     <script>
         // File selection functionality
         document.getElementById('comment-file').addEventListener('change', function(e) {
@@ -547,6 +625,51 @@
             document.getElementById('selected-files').classList.add('hidden');
             document.getElementById('file-name').textContent = '선택된 파일 없음';
         }
+
+        // Report modal functions
+        function openReportModal() {
+            document.getElementById('reportModal').classList.remove('hidden');
+        }
+
+        function closeReportModal() {
+            document.getElementById('reportModal').classList.add('hidden');
+        }
+
+        function submitReport() {
+            // Here you would typically send the report to the server
+            alert('신고가 접수되었습니다.');
+            closeReportModal();
+        }
+
+        // Comment Report Modal Functions
+        function openCommentReportModal() {
+            document.getElementById('commentReportModal').classList.remove('hidden');
+        }
+
+        function closeCommentReportModal() {
+            document.getElementById('commentReportModal').classList.add('hidden');
+        }
+
+        function submitCommentReport() {
+            // Here you would typically send the comment report to the server
+            alert('댓글 신고가 접수되었습니다.');
+            closeCommentReportModal();
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('reportModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeReportModal();
+            }
+        });
+
+        document.getElementById('commentReportModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCommentReportModal();
+            }
+        });
+
+        // Direct File Upload Functions
 
         // File selection for each comment
         function setupFileUpload(commentId) {
@@ -615,65 +738,18 @@
             });
         }
 
+
         // Initialize file upload for all comments
         document.addEventListener('DOMContentLoaded', function() {
             for (let i = 1; i <= 6; i++) {
                 setupFileUpload(`comment${i}`);
             }
-            
-            // 푸터 로드
-            fetch('Common/Footer.html')
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('footer').innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('Error loading footer:', error);
-                });
         });
 
-        // Report modal functions
-        function openReportModal() {
-            document.getElementById('reportModal').classList.remove('hidden');
+        function loadLoginContent() {
+            // 로그인 페이지로 이동하거나 로그인 모달 표시
+            window.location.href = 'Login.html';
         }
-
-        function closeReportModal() {
-            document.getElementById('reportModal').classList.add('hidden');
-        }
-
-        function submitReport() {
-            // Here you would typically send the report to the server
-            alert('신고가 접수되었습니다.');
-            closeReportModal();
-        }
-
-        // Comment Report Modal Functions
-        function openCommentReportModal() {
-            document.getElementById('commentReportModal').classList.remove('hidden');
-        }
-
-        function closeCommentReportModal() {
-            document.getElementById('commentReportModal').classList.add('hidden');
-        }
-
-        function submitCommentReport() {
-            // Here you would typically send the comment report to the server
-            alert('댓글 신고가 접수되었습니다.');
-            closeCommentReportModal();
-        }
-
-        // Close modal when clicking outside
-        document.getElementById('reportModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeReportModal();
-            }
-        });
-
-        document.getElementById('commentReportModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeCommentReportModal();
-            }
-        });
     </script>
 </body>
 </html>

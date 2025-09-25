@@ -1,10 +1,10 @@
-<!-- 메인 페이지 -->
+<!-- (관리자)메인 페이지 -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Newsrrect - AI 정보 검증 플랫폼</title>
+    <title>Newsrrect - 관리자 페이지</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles/fonts.css">
     <script>
@@ -28,12 +28,12 @@
             <div class="flex justify-center items-center h-16 relative">
                 <!-- Logo - Centered -->
                 <div class="flex-shrink-0">
-                    <h1 class="text-2xl font-bold text-primary font-newsrrect">Newsrrect</h1>
+                    <a href="AdminMainPage.html"><h1 class="text-2xl font-bold text-primary font-newsrrect">Newsrrect</h1></a>
                 </div>
                 
                 <!-- User Menu - Absolute positioned right -->
                 <div class="absolute right-0 flex items-center space-x-4">
-                    <a href="Login.html" class="text-primary hover:text-primary-dark text-sm font-medium">
+                    <a href="#" onclick="loadLoginContent()" class="text-primary hover:text-primary-dark text-sm font-medium">
                         로그인
                     </a>
                 </div>
@@ -44,10 +44,11 @@
     <!-- Navigation -->
     <nav class="bg-white border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-center space-x-20 py-4">
-                <a href="InfoBoard.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판</a>
-                <a href="CommuBoard.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">소통 게시판</a>
-                <a href="MyPage.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">마이 페이지</a>
+            <div class="flex justify-center space-x-16 py-4">
+                <a href="AdminInfo.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판</a>
+                <a href="AdminCommu.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">소통 게시판</a>
+                <a href="AdminInfoBoard.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판 관리</a>
+                <a href="AdminUserReport.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">유저 / 신고 관리</a>
             </div>
         </div>
     </nav>
@@ -60,13 +61,13 @@
                 <!-- Popular Verification Posts Section -->
                 <section class="mb-12">
             <div class="text-center mb-8">
-                        <h2 class="text-3xl font-bold text-white mb-4 font-paperozi-semibold">오늘의 인기 검증 게시물</h2>
+                <h2 class="text-3xl font-bold text-white mb-4" style="font-family: 'Paperozi', sans-serif;">오늘의 인기 검증 게시물</h2>
             </div>
             
             <!-- Featured Post Carousel -->
             <div class="relative">
                 <div class="carousel-container relative overflow-hidden">
-                    <div class="carousel-track flex transition-transform duration-500 ease-in-out justify-center" id="carouselTrack">
+                    <div class="carousel-track flex transition-transform duration-500 ease-in-out justify-center" id="adminCarouselTrack">
                         <!-- Card 1 -->
                         <div class="review-card flex-shrink-0" style="width: 400px; margin: 0 15px;">
                             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 h-full text-center">
@@ -143,25 +144,25 @@
                 </div>
                 
                 <!-- Navigation Arrows -->
-                <button id="prevBtn" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-primary hover:border-primary hover:shadow-xl hover:scale-110 transition-all duration-300 ease-in-out group" onclick="slide('prev')">
+                <button id="adminPrevBtn" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-primary hover:border-primary hover:shadow-xl hover:scale-110 transition-all duration-300 ease-in-out group" onclick="adminSlide('prev')">
                     <svg class="w-6 h-6 text-gray-600 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                     </svg>
                 </button>
-                <button id="nextBtn" class="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-primary hover:border-primary hover:shadow-xl hover:scale-110 transition-all duration-300 ease-in-out group" onclick="slide('next')">
+                <button id="adminNextBtn" class="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-primary hover:border-primary hover:shadow-xl hover:scale-110 transition-all duration-300 ease-in-out group" onclick="adminSlide('next')">
                     <svg class="w-6 h-6 text-gray-600 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
                 </button>
-                        
-                        <!-- Slide Indicators -->
-                        <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3">
-                            <button class="w-3 h-3 rounded-full bg-primary opacity-50 transition-all duration-300 hover:opacity-100" onclick="goToSlide(0)"></button>
-                            <button class="w-3 h-3 rounded-full bg-primary opacity-50 transition-all duration-300 hover:opacity-100" onclick="goToSlide(1)"></button>
-                            <button class="w-3 h-3 rounded-full bg-primary opacity-50 transition-all duration-300 hover:opacity-100" onclick="goToSlide(2)"></button>
-                        </div>
-                    </div>
-                </section>
+                
+                <!-- Slide Indicators -->
+                <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3">
+                    <button class="w-3 h-3 rounded-full bg-primary opacity-50 transition-all duration-300 hover:opacity-100" onclick="adminGoToSlide(0)"></button>
+                    <button class="w-3 h-3 rounded-full bg-primary opacity-50 transition-all duration-300 hover:opacity-100" onclick="adminGoToSlide(1)"></button>
+                    <button class="w-3 h-3 rounded-full bg-primary opacity-50 transition-all duration-300 hover:opacity-100" onclick="adminGoToSlide(2)"></button>
+                </div>
+            </div>
+        </section>
             </div>
         </div>
 
@@ -198,8 +199,8 @@
                 <!-- Information Verification Board -->
                 <div class="text-center">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-semibold text-white font-paperozi-semibold">정보 검증 게시판</h3>
-                        <button onclick="window.location.href='InfoBoard.html'" class="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 ease-in-out group">
+                        <h3 class="text-xl font-semibold text-white" style="font-family: 'Paperozi', sans-serif;">정보 검증 게시판</h3>
+                        <button onclick="window.location.href='AdminInfo.html'" class="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 ease-in-out group">
                             <svg class="w-5 h-5 text-primary group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
@@ -213,8 +214,8 @@
                 <!-- Communication Board -->
                 <div class="text-center">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-semibold text-white font-paperozi-semibold">소통 게시판</h3>
-                        <button onclick="window.location.href='CommuBoard.html'" class="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 ease-in-out group">
+                        <h3 class="text-xl font-semibold text-white" style="font-family: 'Paperozi', sans-serif;">소통 게시판</h3>
+                        <button onclick="window.location.href='AdminCommu.html'" class="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 ease-in-out group">
                             <svg class="w-5 h-5 text-primary group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
@@ -234,19 +235,8 @@
     <div id="footer"></div>
 
     <script>
-        // 헤더와 푸터 로드
+        // 푸터 로드
         document.addEventListener('DOMContentLoaded', function() {
-            // 헤더 로드
-            fetch('Common/Header.html')
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('header').innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('Error loading header:', error);
-                });
-            
-            // 푸터 로드
             fetch('Common/Footer.html')
                 .then(response => response.text())
                 .then(html => {
@@ -257,53 +247,176 @@
                 });
             
             // 슬라이드 초기화
-            initCarousel();
+            adminInitCarousel();
         });
 
-        let currentIndex = 0;
-        const track = document.getElementById('carouselTrack');
-        const cards = document.querySelectorAll('.review-card');
-        const totalCards = cards.length;
-        const cardsPerView = 3; // 메인으로 보이는 카드 수 (A,B,C)
+        function loadContent(url, clickedElement) {
+            // 모든 내비게이션 항목을 비활성화 상태로 변경
+            const navItems = document.querySelectorAll('nav a');
+            navItems.forEach(item => {
+                item.className = 'text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium';
+            });
+            
+            // 클릭된 항목을 활성화 상태로 변경
+            if (clickedElement) {
+                clickedElement.className = 'text-white bg-primary px-3 py-2 text-sm font-medium rounded font-paperozi-medium';
+            }
+            
+            // 배경색을 흰색으로 변경
+            document.body.className = 'bg-white min-h-screen';
+            
+            // 현재 페이지의 헤더와 내비게이션은 유지하고, 메인 콘텐츠만 변경
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    // 로드된 HTML에서 메인 콘텐츠 부분만 추출
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const mainContent = doc.querySelector('main');
+                    
+                    if (mainContent) {
+                        // 현재 페이지의 메인 콘텐츠를 교체
+                        const currentMain = document.querySelector('main');
+                        if (currentMain) {
+                            // 상세페이지인 경우 헤더와 네비게이션 제거
+                            let content = mainContent.innerHTML;
+                            
+                            // 상세페이지 감지 (InfoWatch.html, CommuWatch.html, AdminInfoWatch.html 등)
+                            if (url.includes('Watch.html')) {
+                                // 헤더와 네비게이션 관련 요소 제거
+                                content = content.replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '');
+                                content = content.replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '');
+                                
+                                // 메인 콘텐츠만 추출 (max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 클래스가 있는 div)
+                                const contentMatch = content.match(/<div[^>]*class="[^"]*max-w-7xl[^"]*"[^>]*>([\s\S]*?)<\/div>/);
+                                if (contentMatch) {
+                                    content = contentMatch[1];
+                                }
+                                
+                                // AdminMainPage의 헤더와 네비게이션을 유지하기 위해 현재 헤더/네비게이션 보존
+                                const currentHeader = document.querySelector('header');
+                                const currentNav = document.querySelector('nav');
+                                
+                                // 메인 콘텐츠 교체 후 헤더와 네비게이션 복원
+                                setTimeout(() => {
+                                    if (currentHeader && currentNav) {
+                                        // 현재 헤더와 네비게이션이 있다면 유지
+                                        const mainElement = document.querySelector('main');
+                                        if (mainElement) {
+                                            // 헤더와 네비게이션을 메인 위에 삽입
+                                            mainElement.insertAdjacentElement('beforebegin', currentHeader);
+                                            mainElement.insertAdjacentElement('beforebegin', currentNav);
+                                        }
+                                    }
+                                }, 100);
+                            }
+                            
+                            currentMain.innerHTML = content;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading content:', error);
+                    // 에러 발생시 새 창에서 열기
+                    window.open(url, '_blank');
+                });
+        }
+
+        function loadLoginContent() {
+            // Login.html의 메인 콘텐츠만 로드
+            fetch('Login.html')
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const mainContent = doc.querySelector('main');
+                    
+                    if (mainContent) {
+                        // 현재 메인 콘텐츠를 로그인 콘텐츠로 교체
+                        const currentMain = document.querySelector('main');
+                        if (currentMain) {
+                            currentMain.innerHTML = mainContent.innerHTML;
+                        }
+                        
+                        // 배경색을 흰색으로 변경
+                        document.body.className = 'bg-white min-h-screen';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading login content:', error);
+                });
+        }
+
+        function loadJoinContent() {
+            // Join.html의 메인 콘텐츠만 로드
+            fetch('Join.html')
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const mainContent = doc.querySelector('main');
+                    
+                    if (mainContent) {
+                        // 현재 메인 콘텐츠를 회원가입 콘텐츠로 교체
+                        const currentMain = document.querySelector('main');
+                        if (currentMain) {
+                            currentMain.innerHTML = mainContent.innerHTML;
+                        }
+                        
+                        // 배경색을 흰색으로 변경
+                        document.body.className = 'bg-white min-h-screen';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading join content:', error);
+                });
+        }
+
+        // Admin 슬라이드 관련 변수
+        let adminCurrentIndex = 0;
+        const adminTrack = document.getElementById('adminCarouselTrack');
+        const adminCards = document.querySelectorAll('.review-card');
+        const adminTotalCards = adminCards.length;
+        const adminCardsPerView = 3; // 메인으로 보이는 카드 수 (A,B,C)
         
-        const cardWidth = 352; // 카드 너비 (고정값)
-        const gap = 20; // 카드 간격 (고정값)
+        const adminCardWidth = 352; // 카드 너비 (고정값)
+        const adminGap = 20; // 카드 간격 (고정값)
         
         // 캐러셀 이동은 0 (A,B,C) -> 1 (B,C,D) -> 2 (C,D,E)
-        const maxIndex = totalCards - cardsPerView;
+        const adminMaxIndex = adminTotalCards - adminCardsPerView;
 
-        function updateCarousel() {
+        function adminUpdateCarousel() {
             // 슬라이드 위치 계산
-            const translateX = -currentIndex * (cardWidth + gap);
-            track.style.transform = `translateX(${translateX}px)`;
+            const translateX = -adminCurrentIndex * (adminCardWidth + adminGap);
+            adminTrack.style.transform = `translateX(${translateX}px)`;
             
-            cards.forEach((card, index) => {
+            adminCards.forEach((card, index) => {
                 let opacityValue = 0;
                 let displayValue = 'none';
                 
                 // 첫 번째 슬라이드 (A, B, C, D(반투명))
-                if (currentIndex === 0) {
-                    if (index >= 0 && index < cardsPerView) { // A, B, C
+                if (adminCurrentIndex === 0) {
+                    if (index >= 0 && index < adminCardsPerView) { // A, B, C
                         opacityValue = 1;
                         displayValue = 'block';
-                    } else if (index === cardsPerView) { // D
+                    } else if (index === adminCardsPerView) { // D
                         opacityValue = 0.5;
                         displayValue = 'block';
                     }
                 }
                 // 두 번째 슬라이드 (B, C, D, E(반투명))
-                else if (currentIndex === 1) { 
-                    if (index >= 1 && index < cardsPerView + 1) { // B, C, D
+                else if (adminCurrentIndex === 1) { 
+                    if (index >= 1 && index < adminCardsPerView + 1) { // B, C, D
                         opacityValue = 1;
                         displayValue = 'block';
-                    } else if (index === 0 || index === cardsPerView + 1) { // A, E
+                    } else if (index === 0 || index === adminCardsPerView + 1) { // A, E
                         opacityValue = 0.5;
                         displayValue = 'block';
                     }
                 }
                 // 세 번째 슬라이드 (C, D, E)
-                else if (currentIndex === 2) { 
-                    if (index >= 2 && index < totalCards) { // C, D, E
+                else if (adminCurrentIndex === 2) { 
+                    if (index >= 2 && index < adminTotalCards) { // C, D, E
                         opacityValue = 1;
                         displayValue = 'block';
                     } else if (index === 1) { // B
@@ -317,34 +430,35 @@
             });
             
             // 버튼 상태 업데이트
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
+            const prevBtn = document.getElementById('adminPrevBtn');
+            const nextBtn = document.getElementById('adminNextBtn');
             
-            prevBtn.disabled = currentIndex === 0;
-            nextBtn.disabled = currentIndex >= maxIndex;
+            prevBtn.disabled = adminCurrentIndex === 0;
+            nextBtn.disabled = adminCurrentIndex >= adminMaxIndex;
         }
 
-        function slide(direction) {
-            if (direction === 'next' && currentIndex < maxIndex) {
-                currentIndex++;
-            } else if (direction === 'prev' && currentIndex > 0) {
-                currentIndex--;
+        function adminSlide(direction) {
+            if (direction === 'next' && adminCurrentIndex < adminMaxIndex) {
+                adminCurrentIndex++;
+            } else if (direction === 'prev' && adminCurrentIndex > 0) {
+                adminCurrentIndex--;
             }
-            updateCarousel();
+            adminUpdateCarousel();
         }
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'ArrowLeft') {
-                slide('prev');
+                adminSlide('prev');
             } else if (e.key === 'ArrowRight') {
-                slide('next');
+                adminSlide('next');
             }
         });
 
         // 초기 상태 설정
         document.addEventListener('DOMContentLoaded', () => {
-            updateCarousel();
+            adminUpdateCarousel();
         });
+
     </script>
 </body>
 </html>

@@ -1,0 +1,91 @@
+<!-- 정보검증게시판 테이블만 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>정보 검증 게시판 테이블</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles/fonts.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#5d74f8',
+                        'primary-dark': '#4c63e7',
+                        'primary-light': '#7d8ff9'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white">
+    <!-- Table Header -->
+    <div class="bg-gray-100 rounded-t-lg">
+        <div class="grid grid-cols-4 gap-4 py-3 px-4 text-sm font-semibold text-gray-900">
+            <div class="text-left">번호</div>
+            <div class="text-left">제목</div>
+            <div class="text-left">작성자</div>
+            <div class="text-left">작성일</div>
+        </div>
+    </div>
+
+    <!-- Table Body -->
+    <div class="bg-white border border-gray-200 border-t-0 rounded-b-lg">
+        <!-- Table Row 1 -->
+        <div onclick="handleTableRowClick('InfoWatch.html')" class="grid grid-cols-4 gap-4 py-3 px-4 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
+            <div class="text-sm text-gray-900">1</div>
+            <div class="text-sm text-gray-900 font-medium">정치 관련 정보 검증 요청</div>
+            <div class="text-sm text-gray-600">user1</div>
+            <div class="text-sm text-gray-600">09.24</div>
+        </div>
+        
+        <!-- Table Row 2 -->
+        <div onclick="handleTableRowClick('InfoWatch.html')" class="grid grid-cols-4 gap-4 py-3 px-4 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
+            <div class="text-sm text-gray-900">2</div>
+            <div class="text-sm text-gray-900 font-medium">경제 뉴스 진위 확인</div>
+            <div class="text-sm text-gray-600">user2</div>
+            <div class="text-sm text-gray-600">09.23</div>
+        </div>
+        
+        <!-- Table Row 3 -->
+        <div onclick="handleTableRowClick('InfoWatch.html')" class="grid grid-cols-4 gap-4 py-3 px-4 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
+            <div class="text-sm text-gray-900">3</div>
+            <div class="text-sm text-gray-900 font-medium">과학 연구 결과 검증</div>
+            <div class="text-sm text-gray-600">user3</div>
+            <div class="text-sm text-gray-600">09.22</div>
+        </div>
+        
+        <!-- Table Row 4 -->
+        <div onclick="handleTableRowClick('InfoWatch.html')" class="grid grid-cols-4 gap-4 py-3 px-4 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
+            <div class="text-sm text-gray-900">4</div>
+            <div class="text-sm text-gray-900 font-medium">사회 이슈 정보 확인</div>
+            <div class="text-sm text-gray-600">user4</div>
+            <div class="text-sm text-gray-600">09.21</div>
+        </div>
+        
+        <!-- Table Row 5 -->
+        <div onclick="handleTableRowClick('InfoWatch.html')" class="grid grid-cols-4 gap-4 py-3 px-4 hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
+            <div class="text-sm text-gray-900">5</div>
+            <div class="text-sm text-gray-900 font-medium">문화 콘텐츠 정보 검증</div>
+            <div class="text-sm text-gray-600">user5</div>
+            <div class="text-sm text-gray-600">09.20</div>
+        </div>
+    </div>
+
+    <script>
+        function handleTableRowClick(url) {
+            // 부모 창이 어드민메인페이지인지 확인
+            if (window.parent && window.parent.location.href.includes('AdminMainPage.html')) {
+                // 어드민메인페이지에서 호출된 경우, AdminInfoWatch.html로 이동
+                window.parent.location.href = 'AdminInfoWatch.html';
+            } else {
+                // 일반 페이지에서 호출된 경우 InfoWatch.html로 이동
+                window.parent.location.href = 'InfoWatch.html';
+            }
+        }
+    </script>
+</body>
+</html>

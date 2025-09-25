@@ -1,0 +1,502 @@
+<!-- (관리자) 신고 페이지 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>유저 / 신고 관리 - Newsrrect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles/fonts.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#5d74f8',
+                        'primary-dark': '#4c63e7',
+                        'primary-light': '#7d8ff9'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-center items-center h-16 relative">
+                <!-- Logo - Centered -->
+                <div class="flex-shrink-0">
+                    <a href="AdminMainPage.html"><h1 class="text-2xl font-bold text-primary font-newsrrect">Newsrrect</h1></a>
+                </div>
+                
+                <!-- User Menu - Absolute positioned right -->
+                <div class="absolute right-0 flex items-center space-x-4">
+                    <a href="#" onclick="loadLoginContent()" class="text-primary hover:text-primary-dark text-sm font-medium">
+                        로그인
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-center space-x-16 py-4">
+                <a href="AdminInfo.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판</a>
+                <a href="AdminCommu.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">소통 게시판</a>
+                <a href="AdminInfoBoard.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판 관리</a>
+                <a href="AdminUserReport.html" class="text-white bg-primary px-3 py-2 text-sm font-medium rounded font-paperozi-medium">유저 / 신고 관리</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Board Title -->
+        <div class="mb-6">
+            <h2 class="text-3xl font-bold text-primary mb-4 font-paperozi-semibold">유저 / 신고 관리</h2>
+            <div class="border-t border-gray-200"></div>
+        </div>
+
+        <!-- Board Controls -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+            <div class="p-6">
+                <!-- Top Controls -->
+                <div class="flex justify-end items-center mb-4">
+                    <!-- Page Info -->
+                    <div class="text-sm text-gray-600">
+                        전체 10 / 1 페이지
+                    </div>
+                </div>
+
+                <!-- Table Header -->
+                <div class="bg-gray-100 rounded-t-lg">
+                    <div class="grid grid-cols-7 gap-4 py-3 px-4 text-sm font-semibold text-gray-900">
+                        <div class="text-left">번호</div>
+                        <div class="text-left">게시판</div>
+                        <div class="text-left">구분</div>
+                        <div class="text-left">작성자</div>
+                        <div class="text-left">신고자</div>
+                        <div class="text-left">작성일</div>
+                        <div class="text-left"></div>
+                    </div>
+                </div>
+
+                <!-- Table Body -->
+                <div class="bg-white border border-gray-200 border-t-0 rounded-b-lg">
+                    <!-- Sample Data Row -->
+                    <div class="grid grid-cols-7 gap-4 py-3 px-4 text-sm border-b border-gray-100 hover:bg-gray-50">
+                        <div class="text-left text-gray-900">1</div>
+                        <div class="text-left text-gray-900">소통</div>
+                        <div class="text-left text-gray-900">댓글</div>
+                        <div class="text-left text-gray-900">
+                            <a href="AdminUserWatch.html" class="text-primary hover:text-primary-dark hover:underline">user1</a>
+                        </div>
+                        <div class="text-left text-gray-900">
+                            <a href="AdminUserWatch.html" class="text-primary hover:text-primary-dark hover:underline">test</a>
+                        </div>
+                        <div class="text-left text-gray-900">09.18</div>
+                        <div class="text-left">
+                            <button onclick="showDeletePopup('댓글')" class="w-6 h-6 bg-red-100 text-red-600 rounded flex items-center justify-center hover:bg-red-200 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Sample Data Row 2 -->
+                    <div class="grid grid-cols-7 gap-4 py-3 px-4 text-sm border-b border-gray-100 hover:bg-gray-50">
+                        <div class="text-left text-gray-900">2</div>
+                        <div class="text-left text-gray-900">소통</div>
+                        <div class="text-left text-gray-900">게시글</div>
+                        <div class="text-left text-gray-900">
+                            <a href="AdminUserWatch.html" class="text-primary hover:text-primary-dark hover:underline">user2</a>
+                        </div>
+                        <div class="text-left text-gray-900">
+                            <a href="AdminUserWatch.html" class="text-primary hover:text-primary-dark hover:underline">test2</a>
+                        </div>
+                        <div class="text-left text-gray-900">09.21</div>
+                        <div class="text-left">
+                            <button onclick="showDeletePopup('게시글')" class="w-6 h-6 bg-red-100 text-red-600 rounded flex items-center justify-center hover:bg-red-200 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Empty Rows -->
+                    <div class="grid grid-cols-7 gap-4 py-3 px-4 text-sm border-b border-gray-100">
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left">-</div>
+                    </div>
+                    
+                    <div class="grid grid-cols-7 gap-4 py-3 px-4 text-sm border-b border-gray-100">
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left">-</div>
+                    </div>
+                    
+                    <div class="grid grid-cols-7 gap-4 py-3 px-4 text-sm border-b border-gray-100">
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left">-</div>
+                    </div>
+                    
+                    <div class="grid grid-cols-7 gap-4 py-3 px-4 text-sm border-b border-gray-100">
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left">-</div>
+                    </div>
+                    
+                    <div class="grid grid-cols-7 gap-4 py-3 px-4 text-sm border-b border-gray-100">
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left text-gray-400">-</div>
+                        <div class="text-left">-</div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex justify-center items-center mt-6 space-x-2">
+                    <div class="flex space-x-1">
+                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[1]</button>
+                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[2]</button>
+                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[3]</button>
+                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[4]</button>
+                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[5]</button>
+                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[6]</button>
+                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[7]</button>
+                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[8]</button>
+                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[9]</button>
+                        <span class="px-2 text-gray-400">....</span>
+                    </div>
+                    <button class="ml-4 px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 댓글 삭제 팝업창 -->
+    <div id="commentDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <!-- Header -->
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-900">정보 검증 게시판</h3>
+                </div>
+                
+                <!-- Content -->
+                <div class="px-6 py-4">
+                    <!-- 작성자 정보 -->
+                    <div class="bg-gray-100 rounded-lg p-4 mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="flex items-center">
+                                <span class="text-sm text-gray-600">해당 글 작성자</span>
+                                <div class="w-6 h-6 bg-gray-300 rounded-full ml-2 flex items-center justify-center">
+                                    <span class="text-xs text-gray-600">M</span>
+                                </div>
+                            </div>
+                            <span class="text-sm text-gray-600">작성일자</span>
+                        </div>
+                        <div class="text-sm text-gray-600 mb-2">작성한 댓글</div>
+                        <div class="bg-gray-200 rounded p-3 h-24 mb-2">
+                            <!-- 댓글 내용이 여기에 표시됩니다 -->
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-sm text-gray-600">첨부 파일</span>
+                            <div class="bg-gray-200 rounded p-2 ml-2 flex-1 h-8">
+                                <!-- 첨부 파일이 여기에 표시됩니다 -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 삭제 사유 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">삭제 사유</label>
+                        <textarea class="w-full border border-gray-200 rounded-lg p-3 h-24 resize-none focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none" placeholder="삭제 사유를 입력하세요"></textarea>
+                    </div>
+                </div>
+                
+                <!-- Modal Footer -->
+                <div class="px-6 py-4 flex justify-end">
+                    <button onclick="closeDeleteModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800 mr-2">취소</button>
+                    <button onclick="confirmDelete()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">삭제</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 게시글 삭제 팝업창 -->
+    <div id="postDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <!-- Header -->
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-900">정보 검증 게시판</h3>
+                </div>
+                
+                <!-- Content -->
+                <div class="px-6 py-4">
+                    <!-- 제목 -->
+                    <div class="mb-4">
+                        <span class="text-sm text-gray-600">제목</span>
+                        <div class="bg-gray-200 rounded p-2 mt-1 h-8">
+                            <!-- 제목이 여기에 표시됩니다 -->
+                        </div>
+                    </div>
+                    
+                    <!-- 작성자 정보 -->
+                    <div class="bg-gray-100 rounded-lg p-4 mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="flex items-center">
+                                <span class="text-sm text-gray-600">해당 글 작성자</span>
+                                <div class="w-6 h-6 bg-gray-300 rounded-full ml-2 flex items-center justify-center">
+                                    <span class="text-xs text-gray-600">M</span>
+                                </div>
+                            </div>
+                            <span class="text-sm text-gray-600">작성일자</span>
+                        </div>
+                        <div class="text-sm text-gray-600 mb-2">작성한 글</div>
+                        <div class="bg-gray-200 rounded p-3 h-24">
+                            <!-- 게시글 내용이 여기에 표시됩니다 -->
+                        </div>
+                    </div>
+                    
+                    <!-- 삭제 사유 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">삭제 사유</label>
+                        <textarea class="w-full border border-gray-200 rounded-lg p-3 h-24 resize-none focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none" placeholder="삭제 사유를 입력하세요"></textarea>
+                    </div>
+                </div>
+                
+                <!-- Modal Footer -->
+                <div class="px-6 py-4 flex justify-end">
+                    <button onclick="closeDeleteModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800 mr-2">취소</button>
+                    <button onclick="confirmDelete()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">삭제</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div id="footer"></div>
+
+    <script>
+        // 푸터 로드
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('Common/Footer.html')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('footer').innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading footer:', error);
+                });
+        });
+
+        function loadContent(url, clickedElement) {
+            // 모든 내비게이션 항목을 비활성화 상태로 변경
+            const navItems = document.querySelectorAll('nav a');
+            navItems.forEach(item => {
+                item.className = 'text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium';
+                item.style.fontFamily = "'Paperozi', sans-serif";
+            });
+            
+            // 클릭된 항목을 활성화 상태로 변경
+            if (clickedElement) {
+                clickedElement.className = 'text-white bg-primary px-3 py-2 text-sm font-medium rounded';
+                clickedElement.style.fontFamily = "'Paperozi', sans-serif";
+            }
+            
+            // 배경색을 흰색으로 변경
+            document.body.className = 'bg-white min-h-screen';
+            
+            // 현재 페이지의 헤더와 내비게이션은 유지하고, 메인 콘텐츠만 변경
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    // 로드된 HTML에서 메인 콘텐츠 부분만 추출
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const mainContent = doc.querySelector('main');
+                    
+                    if (mainContent) {
+                        // 현재 페이지의 메인 콘텐츠를 교체
+                        const currentMain = document.querySelector('main');
+                        if (currentMain) {
+                            currentMain.innerHTML = mainContent.innerHTML;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading content:', error);
+                    // 에러 발생시 새 창에서 열기
+                    window.open(url, '_blank');
+                });
+        }
+
+        // 삭제 팝업창 표시 함수
+        function showDeletePopup(type) {
+            // 모든 팝업창 숨기기
+            document.getElementById('commentDeleteModal').classList.add('hidden');
+            document.getElementById('postDeleteModal').classList.add('hidden');
+            
+            // 구분에 따라 적절한 팝업창 표시
+            if (type === '댓글') {
+                document.getElementById('commentDeleteModal').classList.remove('hidden');
+            } else if (type === '게시글') {
+                document.getElementById('postDeleteModal').classList.remove('hidden');
+            }
+        }
+        
+        // 삭제 팝업창 닫기 함수
+        function closeDeleteModal() {
+            document.getElementById('commentDeleteModal').classList.add('hidden');
+            document.getElementById('postDeleteModal').classList.add('hidden');
+        }
+        
+        // 삭제 확인 함수
+        function confirmDelete() {
+            const deleteReason = document.querySelector('textarea').value;
+            if (!deleteReason.trim()) {
+                alert('삭제 사유를 입력해주세요.');
+                return;
+            }
+            
+            // 여기에 실제 삭제 로직을 구현할 수 있습니다
+            alert('삭제가 완료되었습니다.');
+            closeDeleteModal();
+        }
+        
+        // ESC 키로 팝업창 닫기
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeDeleteModal();
+            }
+        });
+        
+        // 팝업창 외부 클릭시 닫기
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('bg-opacity-50')) {
+                closeDeleteModal();
+            }
+        });
+        
+        // 콘텐츠 로드 함수
+        function loadContent(url, clickedElement) {
+            // 모든 내비게이션 항목을 비활성화 상태로 변경
+            const navItems = document.querySelectorAll('nav a');
+            navItems.forEach(item => {
+                item.className = 'text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium';
+            });
+            
+            // 클릭된 항목을 활성화 상태로 변경
+            if (clickedElement) {
+                clickedElement.className = 'text-white bg-primary px-3 py-2 text-sm font-medium rounded';
+            }
+            
+            // 현재 페이지의 헤더와 내비게이션은 유지하고, 메인 콘텐츠만 변경
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    // 로드된 HTML에서 메인 콘텐츠 부분만 추출
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const mainContent = doc.querySelector('main');
+                    
+                    if (mainContent) {
+                        // 현재 페이지의 메인 콘텐츠를 교체
+                        const currentMain = document.querySelector('main');
+                        if (currentMain) {
+                            currentMain.innerHTML = mainContent.innerHTML;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading content:', error);
+                    // 에러 발생시 새 창에서 열기
+                    window.open(url, '_blank');
+                });
+        }
+
+        function loadLoginContent() {
+            // Login.html의 메인 콘텐츠만 로드
+            fetch('Login.html')
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const mainContent = doc.querySelector('main');
+                    
+                    if (mainContent) {
+                        // 현재 메인 콘텐츠를 로그인 콘텐츠로 교체
+                        const currentMain = document.querySelector('main');
+                        if (currentMain) {
+                            currentMain.innerHTML = mainContent.innerHTML;
+                        }
+                        
+                        // 배경색을 흰색으로 변경
+                        document.body.className = 'bg-white min-h-screen';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading login content:', error);
+                });
+        }
+
+        function loadJoinContent() {
+            // Join.html의 메인 콘텐츠만 로드
+            fetch('Join.html')
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const mainContent = doc.querySelector('main');
+                    
+                    if (mainContent) {
+                        // 현재 메인 콘텐츠를 회원가입 콘텐츠로 교체
+                        const currentMain = document.querySelector('main');
+                        if (currentMain) {
+                            currentMain.innerHTML = mainContent.innerHTML;
+                        }
+                        
+                        // 배경색을 흰색으로 변경
+                        document.body.className = 'bg-white min-h-screen';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading join content:', error);
+                });
+        }
+    </script>
+</body>
+</html>
