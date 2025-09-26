@@ -32,13 +32,19 @@
             <div class="flex justify-center items-center h-16 relative">
                 <!-- Logo - Centered -->
                 <div class="flex-shrink-0">
-                    <a href="AdminMainPage.html"><h1 class="text-2xl font-bold text-primary font-newsrrect">Newsrrect</h1></a>
+                    <h1 class="text-2xl font-bold text-primary font-newsrrect"
+                    style="
+                    background-image: linear-gradient(to bottom, #738dff, #6179f8);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                    color: transparent; /* fallback */">Newsrrect</h1>
                 </div>
                 
                 <!-- User Menu - Absolute positioned right -->
                 <div class="absolute right-0 flex items-center space-x-4">
                     <a href="#" onclick="loadLoginContent()" class="text-primary hover:text-primary-dark text-sm font-medium">
-                        로그인
+                        로그아웃
                     </a>
                 </div>
             </div>
@@ -57,23 +63,22 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
+	<!-- Main Content -->
     <main>
         <!-- 첫 번째 섹션: 후기 캐러셀 영역 -->
-        <div class="w-full bg-[#738dff] py-16">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <!-- Popular Verification Posts Section -->
-                <section class="mb-12">
-            <div class="text-center mb-8">
-                <h2 class="text-3xl font-bold text-white mb-4" style="font-family: 'Paperozi', sans-serif;">오늘의 인기 검증 게시물</h2>
-            </div>
+        <div class="w-full py-16" style="background-image: linear-gradient(to bottom, #738dff, #6179f8);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section class="mb-12">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-white mb-4 font-paperozi-semibold">오늘의 인기 검증 게시물</h2>
+                </div>
             
             <!-- Featured Post Carousel -->
-            <div class="relative">
+            <div class="relative" id="carouselWrapper">
                 <div class="carousel-container relative overflow-hidden">
-                    <div class="carousel-track flex transition-transform duration-500 ease-in-out justify-center" id="adminCarouselTrack">
+                    <div class="carousel-track flex transition-transform duration-500 ease-in-out" id="carouselTrack">
                         <!-- Card 1 -->
-                        <div class="review-card flex-shrink-0" style="width: 400px; margin: 0 15px;">
+                        <div class="review-card flex-shrink-0" style="width: 500px; margin: 0 15px;">
                             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 h-full text-center">
                                 <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-6">
                                     A
@@ -88,7 +93,7 @@
                         </div>
                         
                         <!-- Card 2 -->
-                        <div class="review-card flex-shrink-0" style="width: 400px; margin: 0 15px;">
+                        <div class="review-card flex-shrink-0" style="width: 500px; margin: 0 15px;">
                             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 h-full text-center">
                                 <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-6">
                                     B
@@ -103,7 +108,7 @@
                         </div>
                         
                         <!-- Card 3 -->
-                        <div class="review-card flex-shrink-0" style="width: 400px; margin: 0 15px;">
+                        <div class="review-card flex-shrink-0" style="width: 500px; margin: 0 15px;">
                             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 h-full text-center">
                                 <div class="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-6">
                                     C
@@ -118,7 +123,7 @@
                         </div>
                         
                         <!-- Card 4 -->
-                        <div class="review-card flex-shrink-0" style="width: 400px; margin: 0 15px;">
+                        <div class="review-card flex-shrink-0" style="width: 500px; margin: 0 15px;">
                             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 h-full text-center">
                                 <div class="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-6">
                                     D
@@ -132,7 +137,7 @@
                         </div>
                         
                         <!-- Card 5 -->
-                        <div class="review-card flex-shrink-0" style="width: 400px; margin: 0 15px;">
+                        <div class="review-card flex-shrink-0" style="width: 500px; margin: 0 15px;">
                             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 h-full text-center">
                                 <div class="w-16 h-16 bg-pink-500 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-6">
                                     E
@@ -148,34 +153,27 @@
                 </div>
                 
                 <!-- Navigation Arrows -->
-                <button id="adminPrevBtn" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-primary hover:border-primary hover:shadow-xl hover:scale-110 transition-all duration-300 ease-in-out group" onclick="adminSlide('prev')">
+                <button id="prevBtn" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-primary hover:border-primary hover:shadow-xl hover:scale-110 transition-all duration-300 ease-in-out group" onclick="slide('prev')">
                     <svg class="w-6 h-6 text-gray-600 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                     </svg>
                 </button>
-                <button id="adminNextBtn" class="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-primary hover:border-primary hover:shadow-xl hover:scale-110 transition-all duration-300 ease-in-out group" onclick="adminSlide('next')">
+                <button id="nextBtn" class="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-primary hover:border-primary hover:shadow-xl hover:scale-110 transition-all duration-300 ease-in-out group" onclick="slide('next')">
                     <svg class="w-6 h-6 text-gray-600 group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
                 </button>
-                
-                <!-- Slide Indicators -->
-                <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3">
-                    <button class="w-3 h-3 rounded-full bg-primary opacity-50 transition-all duration-300 hover:opacity-100" onclick="adminGoToSlide(0)"></button>
-                    <button class="w-3 h-3 rounded-full bg-primary opacity-50 transition-all duration-300 hover:opacity-100" onclick="adminGoToSlide(1)"></button>
-                    <button class="w-3 h-3 rounded-full bg-primary opacity-50 transition-all duration-300 hover:opacity-100" onclick="adminGoToSlide(2)"></button>
-                </div>
-            </div>
-        </section>
+                    </div>
+                </section>
             </div>
         </div>
 
         <!-- 두 번째 섹션: 중간 영역 -->
-        <div class="w-full bg-white py-16">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <!-- Statistics Section -->
-                <section class="mb-12">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="w-full"> 
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center min-h-[500px]">
+            	<div class="w-full"> 
+                	<section>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto"> 
                 <!-- Today's Upload Statistics -->
                 <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200 text-center">
                     <h3 class="text-lg font-medium text-gray-900 mb-4" style="font-family: 'Paperozi', sans-serif; font-weight: 400;">금일 업로드 정보 검증글</h3>
@@ -191,11 +189,12 @@
                 </div>
             </div>
         </section>
+      			  </div>
             </div>
         </div>
 
         <!-- 세 번째 섹션: 엑스퍼트 소개 영역 -->
-        <div class="w-full bg-[#6179f8] py-16">
+        <div class="w-full bg-[#eff3ff] py-16">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <!-- Board Previews Section -->
                 <section class="mb-12">
@@ -203,8 +202,8 @@
                 <!-- Information Verification Board -->
                 <div class="text-center">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-semibold text-white" style="font-family: 'Paperozi', sans-serif;">정보 검증 게시판</h3>
-                        <button onclick="window.location.href='AdminInfo.html'" class="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 ease-in-out group">
+                        <h3 class="text-xl font-semibold text-[#333437] font-paperozi-semibold">정보 검증 게시판</h3>
+                        <button onclick="window.location.href='InfoBoard.html'" class="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 ease-in-out group">
                             <svg class="w-5 h-5 text-primary group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
@@ -218,8 +217,8 @@
                 <!-- Communication Board -->
                 <div class="text-center">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-semibold text-white" style="font-family: 'Paperozi', sans-serif;">소통 게시판</h3>
-                        <button onclick="window.location.href='AdminCommu.html'" class="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 ease-in-out group">
+                        <h3 class="text-xl font-semibold text-[#333437] font-paperozi-semibold">소통 게시판</h3>
+                        <button onclick="window.location.href='CommuBoard.html'" class="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 ease-in-out group">
                             <svg class="w-5 h-5 text-primary group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
@@ -239,230 +238,117 @@
     <div id="footer"></div>
 
     <script>
-        // 푸터 로드
-        document.addEventListener('DOMContentLoaded', function() {
-            fetch('Common/Footer.html')
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('footer').innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('Error loading footer:', error);
-                });
+    let currentIndex = 0;
+    const track = document.getElementById('carouselTrack');
+    const cards = document.querySelectorAll('.review-card');
+    const carouselWrapper = document.getElementById('carouselWrapper');
+    const totalCards = cards.length;
+    // const cardsPerView = 3; 
+
+    // 실제 CSS와 일치하는 값
+    const CARD_WIDTH = 500; 
+    const CARD_MARGIN = 15;
+    const STEP_SIZE = CARD_WIDTH + CARD_MARGIN * 2; // 500px + 30px = 530px
+
+    // maxIndex는 3개 카드를 중앙에 정렬하는 방식이므로, 
+    // 현재 인덱스는 0부터 totalCards-1까지 모두 유효합니다.
+    const maxIndex = totalCards - 1; // 0, 1, 2, 3, 4 (5단계)
+
+    // 중앙 정렬 로직
+    function updateCarousel() {
+
+        // 컨테이너 폭의 절반 (max-w-7xl = 1280px 가정)
+        const containerWidth = carouselWrapper.offsetWidth;
+    	const containerHalfWidth = containerWidth / 2;
+    	
+        // 현재 선택된 카드까지의 왼쪽 누적 거리
+        // currentIndex * STEP_SIZE + (카드 자체 너비의 절반) + (왼쪽 마진)
+        const cardCenterOffset = currentIndex * STEP_SIZE + (CARD_WIDTH / 2) + CARD_MARGIN;
+        
+        // 최종 이동 거리: 선택된 카드의 중심을 중앙에 맞추기 위한 트랙의 이동 값
+        const translateX = containerHalfWidth - cardCenterOffset;
+        
+        track.style.transform = `translateX(${translateX}px)`;
+        
+        // 중앙 위치에 따른 투명화 로직
+        cards.forEach((card, index) => {
             
-            // 슬라이드 초기화
-            adminInitCarousel();
+            // 중앙 카드(currentIndex)와의 거리
+            const distance = Math.abs(index - currentIndex);
+            
+            let opacityValue;
+            
+            if (distance === 0) {
+                opacityValue = 1; // 중앙 카드는 완전 불투명
+            } else if (distance === 1) {
+                opacityValue = 0.5; // 바로 옆 카드는 반투명 
+            } else {
+                opacityValue = 0.2; // 그 외 카드는 거의 보이지 않음
+            }
+            
+            // CSS 스타일 적용
+            card.style.opacity = opacityValue;
+            card.style.pointerEvents = (distance < 2) ? 'auto' : 'none'; // 중앙 2칸만 클릭 가능
+            card.style.transition = 'opacity 0.5s ease-in-out'; // 부드러운 투명화 전환
+        }); 
+        
+        // 버튼 상태 업데이트
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        
+        prevBtn.disabled = currentIndex === 0;
+        nextBtn.disabled = currentIndex >= maxIndex; 
+
+        // 인디케이터 업데이트
+        const indicators = document.querySelectorAll('.slide-indicator');
+        indicators.forEach((indicator, index) => {
+            indicator.style.opacity = index === currentIndex ? '1' : '0.5'; 
         });
+    }
 
-        function loadContent(url, clickedElement) {
-            // 모든 내비게이션 항목을 비활성화 상태로 변경
-            const navItems = document.querySelectorAll('nav a');
-            navItems.forEach(item => {
-                item.className = 'text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium';
-            });
-            
-            // 클릭된 항목을 활성화 상태로 변경
-            if (clickedElement) {
-                clickedElement.className = 'text-white bg-primary px-3 py-2 text-sm font-medium rounded font-paperozi-medium';
-            }
-            
-            // 배경색을 흰색으로 변경
-            document.body.className = 'bg-white min-h-screen';
-            
-            // 현재 페이지의 헤더와 내비게이션은 유지하고, 메인 콘텐츠만 변경
-            fetch(url)
-                .then(response => response.text())
-                .then(html => {
-                    // 로드된 HTML에서 메인 콘텐츠 부분만 추출
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    const mainContent = doc.querySelector('main');
-                    
-                    if (mainContent) {
-                        // 현재 페이지의 메인 콘텐츠를 교체
-                        const currentMain = document.querySelector('main');
-                        if (currentMain) {
-                            // 상세페이지인 경우 헤더와 네비게이션 제거
-                            let content = mainContent.innerHTML;
-                            
-                            // 상세페이지 감지 (InfoWatch.html, CommuWatch.html, AdminInfoWatch.html 등)
-                            if (url.includes('Watch.html')) {
-                                // 헤더와 네비게이션 관련 요소 제거
-                                content = content.replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '');
-                                content = content.replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '');
-                                
-                                // 메인 콘텐츠만 추출 (max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 클래스가 있는 div)
-                                const contentMatch = content.match(/<div[^>]*class="[^"]*max-w-7xl[^"]*"[^>]*>([\s\S]*?)<\/div>/);
-                                if (contentMatch) {
-                                    content = contentMatch[1];
-                                }
-                                
-                                // AdminMainPage의 헤더와 네비게이션을 유지하기 위해 현재 헤더/네비게이션 보존
-                                const currentHeader = document.querySelector('header');
-                                const currentNav = document.querySelector('nav');
-                                
-                                // 메인 콘텐츠 교체 후 헤더와 네비게이션 복원
-                                setTimeout(() => {
-                                    if (currentHeader && currentNav) {
-                                        // 현재 헤더와 네비게이션이 있다면 유지
-                                        const mainElement = document.querySelector('main');
-                                        if (mainElement) {
-                                            // 헤더와 네비게이션을 메인 위에 삽입
-                                            mainElement.insertAdjacentElement('beforebegin', currentHeader);
-                                            mainElement.insertAdjacentElement('beforebegin', currentNav);
-                                        }
-                                    }
-                                }, 100);
-                            }
-                            
-                            currentMain.innerHTML = content;
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading content:', error);
-                    // 에러 발생시 새 창에서 열기
-                    window.open(url, '_blank');
-                });
+    // 슬라이드 및 이동 함수 
+    function slide(direction) {
+        if (direction === 'next' && currentIndex < maxIndex) {
+            currentIndex++;
+        } else if (direction === 'prev' && currentIndex > 0) {
+            currentIndex--;
         }
+        updateCarousel();
+    }
 
-        function loadLoginContent() {
-            // Login.html의 메인 콘텐츠만 로드
-            fetch('Login.html')
-                .then(response => response.text())
-                .then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    const mainContent = doc.querySelector('main');
-                    
-                    if (mainContent) {
-                        // 현재 메인 콘텐츠를 로그인 콘텐츠로 교체
-                        const currentMain = document.querySelector('main');
-                        if (currentMain) {
-                            currentMain.innerHTML = mainContent.innerHTML;
-                        }
-                        
-                        // 배경색을 흰색으로 변경
-                        document.body.className = 'bg-white min-h-screen';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading login content:', error);
-                });
+    function goToSlide(index) {
+        if (index >= 0 && index <= maxIndex) {
+            currentIndex = index;
+            updateCarousel();
         }
+    }
 
-        function loadJoinContent() {
-            // Join.html의 메인 콘텐츠만 로드
-            fetch('Join.html')
-                .then(response => response.text())
-                .then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    const mainContent = doc.querySelector('main');
-                    
-                    if (mainContent) {
-                        // 현재 메인 콘텐츠를 회원가입 콘텐츠로 교체
-                        const currentMain = document.querySelector('main');
-                        if (currentMain) {
-                            currentMain.innerHTML = mainContent.innerHTML;
-                        }
-                        
-                        // 배경색을 흰색으로 변경
-                        document.body.className = 'bg-white min-h-screen';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading join content:', error);
-                });
-        }
-
-        // Admin 슬라이드 관련 변수
-        let adminCurrentIndex = 0;
-        const adminTrack = document.getElementById('adminCarouselTrack');
-        const adminCards = document.querySelectorAll('.review-card');
-        const adminTotalCards = adminCards.length;
-        const adminCardsPerView = 3; // 메인으로 보이는 카드 수 (A,B,C)
+    // 초기 로딩
+    document.addEventListener('DOMContentLoaded', () => {
+        // Header, Footer 로드
+        fetch('Common/Header.html').then(response => response.text()).then(html => {
+            document.getElementById('header').innerHTML = html;
+        }).catch(error => { console.error('Error loading header:', error); });
         
-        const adminCardWidth = 352; // 카드 너비 (고정값)
-        const adminGap = 20; // 카드 간격 (고정값)
+        fetch('Common/Footer.html').then(response => response.text()).then(html => {
+            document.getElementById('footer').innerHTML = html;
+        }).catch(error => { console.error('Error loading footer:', error); });
         
-        // 캐러셀 이동은 0 (A,B,C) -> 1 (B,C,D) -> 2 (C,D,E)
-        const adminMaxIndex = adminTotalCards - adminCardsPerView;
-
-        function adminUpdateCarousel() {
-            // 슬라이드 위치 계산
-            const translateX = -adminCurrentIndex * (adminCardWidth + adminGap);
-            adminTrack.style.transform = `translateX(${translateX}px)`;
-            
-            adminCards.forEach((card, index) => {
-                let opacityValue = 0;
-                let displayValue = 'none';
-                
-                // 첫 번째 슬라이드 (A, B, C, D(반투명))
-                if (adminCurrentIndex === 0) {
-                    if (index >= 0 && index < adminCardsPerView) { // A, B, C
-                        opacityValue = 1;
-                        displayValue = 'block';
-                    } else if (index === adminCardsPerView) { // D
-                        opacityValue = 0.5;
-                        displayValue = 'block';
-                    }
-                }
-                // 두 번째 슬라이드 (B, C, D, E(반투명))
-                else if (adminCurrentIndex === 1) { 
-                    if (index >= 1 && index < adminCardsPerView + 1) { // B, C, D
-                        opacityValue = 1;
-                        displayValue = 'block';
-                    } else if (index === 0 || index === adminCardsPerView + 1) { // A, E
-                        opacityValue = 0.5;
-                        displayValue = 'block';
-                    }
-                }
-                // 세 번째 슬라이드 (C, D, E)
-                else if (adminCurrentIndex === 2) { 
-                    if (index >= 2 && index < adminTotalCards) { // C, D, E
-                        opacityValue = 1;
-                        displayValue = 'block';
-                    } else if (index === 1) { // B
-                        opacityValue = 0.5;
-                        displayValue = 'block';
-                    }
-                }
-                
-                card.style.opacity = opacityValue;
-                card.style.display = displayValue;
-            });
-            
-            // 버튼 상태 업데이트
-            const prevBtn = document.getElementById('adminPrevBtn');
-            const nextBtn = document.getElementById('adminNextBtn');
-            
-            prevBtn.disabled = adminCurrentIndex === 0;
-            nextBtn.disabled = adminCurrentIndex >= adminMaxIndex;
-        }
-
-        function adminSlide(direction) {
-            if (direction === 'next' && adminCurrentIndex < adminMaxIndex) {
-                adminCurrentIndex++;
-            } else if (direction === 'prev' && adminCurrentIndex > 0) {
-                adminCurrentIndex--;
-            }
-            adminUpdateCarousel();
-        }
-
+        // 슬라이드 초기 상태 설정
+        updateCarousel();
+        
+        // 창크기 변동 시 업데이트 
+        window.addEventListener('resize', updateCarousel); 
+        
+        // 키보드 이벤트 리스너
         document.addEventListener('keydown', function(e) {
             if (e.key === 'ArrowLeft') {
-                adminSlide('prev');
+                slide('prev');
             } else if (e.key === 'ArrowRight') {
-                adminSlide('next');
+                slide('next');
             }
         });
-
-        // 초기 상태 설정
-        document.addEventListener('DOMContentLoaded', () => {
-            adminUpdateCarousel();
-        });
-
+    });
     </script>
 </body>
 </html>
