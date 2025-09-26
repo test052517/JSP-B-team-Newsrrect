@@ -29,6 +29,7 @@ CREATE TABLE `post` (
     `created_at` VARCHAR(19) NOT NULL,
     `report_count` INT NOT NULL DEFAULT 0,
     `recommand_count` INT NOT NULL DEFAULT 0,
+    `priority` INT NOT NULL DEFAULT 0,
     INDEX idx_status (status),
     INDEX idx_type (type),
     INDEX idx_created_at (created_at)

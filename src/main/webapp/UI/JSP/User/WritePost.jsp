@@ -88,7 +88,11 @@
             });
 
             // --- 헤더 로드 ---
+<<<<<<< HEAD
             fetch(contextPath + '../Common/header.jsp')
+=======
+            fetch(contextPath + '/Html/Common/Header.html')
+>>>>>>> e03fffad9d43a727e7c146cb3843fc0f307a0723
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('header').innerHTML = html;
