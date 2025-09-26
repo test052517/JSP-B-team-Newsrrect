@@ -43,7 +43,7 @@
                     
                    <div>
                         <label for="ir1" class="block text-sm font-medium text-gray-900 mb-2">내용</label>
-                        <textarea name="ir1" id="ir1" rows="10" cols="100" style="width:100%; height:412px; display:none;"></textarea>
+                        <textarea name="ir1" id="ir1" rows="10" cols="100" style="width:100%; height:600px; display:none;"></textarea>
                     </div>
                     
                     <div>
@@ -88,15 +88,7 @@
             });
 
             // --- 헤더 로드 ---
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-            fetch(contextPath + '../Common/header.jsp')
-=======
             fetch(contextPath + '/UI/JSP/Common/Header.jsp')
->>>>>>> Stashed changes
-=======
-            fetch(contextPath + '/Html/Common/Header.html')
->>>>>>> e03fffad9d43a727e7c146cb3843fc0f307a0723
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('header').innerHTML = html;
@@ -108,11 +100,8 @@
                 .catch(error => console.error('Error loading header:', error));
             
             // --- 푸터 로드 ---
-<<<<<<< HEAD
-            fetch(contextPath + '/UI/Html/Common/Footer.html')
-=======
-            fetch(contextPath + '/UI/Html/Common/Footer.html')
->>>>>>> e03fffad9d43a727e7c146cb3843fc0f307a0723
+            fetch(contextPath + '/UI/JSP/Common/Footer.jsp')
+
                 .then(response => response.text())
                 .then(html => document.getElementById('footer').innerHTML = html)
                 .catch(error => console.error('Error loading footer:', error));
