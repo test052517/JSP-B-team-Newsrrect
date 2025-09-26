@@ -9,7 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <%-- 스마트에디터 필수 Javascript 라이브러리 로드 --%>
     <script type="text/javascript" src="<%= request.getContextPath() %>/se2/js/HuskyEZCreator.js" charset="utf-8"></script>
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/fonts.css">
+    <link rel="stylesheet" href="../CSS/fonts.css">
     <script>
         tailwind.config = {
             theme: {
@@ -35,7 +35,7 @@
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="p-6">
-                <form id="writeForm" action="../../Proc/WritePostProc.jsp" method="post" enctype="multipart/form-data" class="space-y-6">
+                <form id="writeForm" action="<%=request.getContextPath()%>/Proc/User/CommuwriteProc.jsp" method="post" enctype="multipart/form-data" class="space-y-6">
                     <div>
                         <label for="title" class="block text-sm font-medium text-gray-900 mb-2">제목</label>
                         <input type="text" id="title" name="title" class="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="제목을 입력하세요" required>
@@ -88,13 +88,8 @@
             });
 
             // --- 헤더 로드 ---
-<<<<<<< HEAD:src/main/webapp/UI/JSP/User/CommuWrite.jsp
+
             fetch(contextPath + '/UI/JSP/Common/Header.jsp')
-=======
-            fetch(contextPath + '../Common/header.jsp')
-            fetch(contextPath + '/UI/JSP/Common/Header.jsp')
-            fetch(contextPath + '/Html/Common/Header.html')
->>>>>>> 8240be6fda39b5a1a874c3991a563966c80fb8ac:src/main/webapp/UI/JSP/User/WritePost.jsp
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('header').innerHTML = html;
@@ -106,13 +101,10 @@
                 .catch(error => console.error('Error loading header:', error));
             
             // --- 푸터 로드 ---
-<<<<<<< HEAD:src/main/webapp/UI/JSP/User/CommuWrite.jsp
+
             fetch(contextPath + '/UI/JSP/Common/Footer.jsp')
 
-=======
-            fetch(contextPath + '/UI/Html/Common/Footer.html')
-            fetch(contextPath + '/UI/Html/Common/Footer.html')
->>>>>>> 8240be6fda39b5a1a874c3991a563966c80fb8ac:src/main/webapp/UI/JSP/User/WritePost.jsp
+
                 .then(response => response.text())
                 .then(html => document.getElementById('footer').innerHTML = html)
                 .catch(error => console.error('Error loading footer:', error));
@@ -144,7 +136,7 @@
         // --- 취소 함수 ---
         function goBack() {
             // --- ★ 수정: 안정적인 절대 경로를 사용하도록 수정 ---
-            window.location.href = contextPath + '/Html/CommuBoard.html';
+            window.location.href = contextPath + '/UI/Html/User/CommuBoard.html';
         }
     </script>
 </body>

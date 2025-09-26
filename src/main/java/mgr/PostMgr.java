@@ -32,8 +32,6 @@ public class PostMgr {
 		        pstmt.setString(5, status);
 		        pstmt.setInt(6, viewcount);
 		        pstmt.setString(7, createdAt);
-		        
-		        
 		        pstmt.setInt(8, reportCount);
 		        pstmt.setInt(9, recommandCount);
 		        

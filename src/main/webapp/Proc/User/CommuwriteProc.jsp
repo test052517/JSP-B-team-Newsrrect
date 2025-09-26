@@ -68,7 +68,7 @@
         const result = "<%= result %>";
         if (result === "success") {
             alert("게시물이 성공적으로 작성되었습니다.");
-            window.location.href = "../Html/CommuBoard.html";
+            window.location.href = "<%=request.getContextPath()%>/UI/Html/User/CommuBoard.html";
         } else {
             alert("게시물 작성에 실패했습니다. 관리자에게 문의하세요.");
             window.history.back();
