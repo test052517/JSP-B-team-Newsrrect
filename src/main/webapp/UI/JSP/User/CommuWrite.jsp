@@ -9,7 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <%-- 스마트에디터 필수 Javascript 라이브러리 로드 --%>
     <script type="text/javascript" src="<%= request.getContextPath() %>/se2/js/HuskyEZCreator.js" charset="utf-8"></script>
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/styles/fonts.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/fonts.css">
     <script>
         tailwind.config = {
             theme: {
@@ -35,7 +35,7 @@
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="p-6">
-                <form id="writeForm" action="WritePostProc.jsp" method="post" enctype="multipart/form-data" class="space-y-6">
+                <form id="writeForm" action="../../Proc/WritePostProc.jsp" method="post" enctype="multipart/form-data" class="space-y-6">
                     <div>
                         <label for="title" class="block text-sm font-medium text-gray-900 mb-2">제목</label>
                         <input type="text" id="title" name="title" class="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="제목을 입력하세요" required>
