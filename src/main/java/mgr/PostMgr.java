@@ -18,7 +18,7 @@ public class PostMgr {
 		    PreparedStatement pstmt = null;
 		    String sql = null;
 		    try {
-		        con = pool.getConnection();
+		        con = pool.getConnection("user");
 		        // post_id 컬럼을 제거하고, VALUES 절의 물음표 개수를 맞춰줍니다.
 		        sql = "INSERT INTO post(user_id, type, title, content, status, view_count, created_at, report_count, recommand_count) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		        

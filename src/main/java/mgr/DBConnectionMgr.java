@@ -99,15 +99,20 @@ public class DBConnectionMgr {
     public synchronized Connection getConnection() throws Exception {
         return getConnection("news");
     }
+    
 
     /** 특정 데이터베이스의 연결 반환 */
     public synchronized Connection getConnection(String dbName) throws Exception {
+    	 System.out.println("1. getConnection 요청 받음. 요청된 DB 키: [" + dbName + "]");
         Vector<ConnectionObject> connections = connectionPools.get(dbName);
         DatabaseConfig config = dbConfigs.get(dbName);
         
         if (connections == null || config == null) {
+        	System.out.println("2. 오류: '" + dbName + "'에 해당하는 설정을 찾을 수 없음!");
             throw new Exception("Unknown database: " + dbName);
         }
+        
+        System.out.println("2. '" + dbName + "' 설정 찾음. 연결할 URL: " + config.url);
 
         if (!initialized) {
             // 모든 데이터베이스 드라이버 등록
@@ -151,6 +156,7 @@ public class DBConnectionMgr {
 
         // 사용 가능한 연결이 없으면 새로 생성
         if (c == null) {
+        	System.out.println("3. 사용 가능한 기존 연결 없음. 새 연결 생성 시도...");
             c = createConnection(dbName);
             co = new ConnectionObject(c, true);
             connections.addElement(co);
