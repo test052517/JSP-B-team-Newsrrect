@@ -1,6 +1,8 @@
 <%-- JSTL Core 라이브러리 선언 --%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%-- 🚩 핵심 수정: 이 파일 내의 ${...} 구문을 서버의 EL로 해석하지 않도록 설정 --%>
+<%@ page isELIgnored="true" %> 
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -9,15 +11,51 @@
     <%-- 게시글 제목을 동적으로 표시 --%>
     <title>${post.title} - 정보 검증 게시판 - Newsrrect</title>
     <script src="https://cdn.tailwindcss.com"></script>
+<<<<<<< HEAD
     <link rel="stylesheet" href="<c:url value='/CSS/fonts.css'/>">
     
+=======
+	
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/styles.css">
+
+>>>>>>> 5caaaced9bef18ac2f7504d2fd21dca36e768360
     <script>
         // tailwind config (기존과 동일)
     </script>
 </head>
 <body class="bg-white min-h-screen">
+<<<<<<< HEAD
     <%-- Header와 Nav는 Common/Header.jsp로 통합하여 관리하는 것을 권장 --%>
     <jsp:include page="../Common/Header.jsp" />
+=======
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-center items-center h-16 relative">
+                <div class="flex-shrink-0">
+                    <%-- 🚩 MainPage.html 경로 수정: 현재 JSP 위치에서 ../../Html/로 수정합니다. --%>
+                    <a href="../../Html/MainPage.html"><h1 class="text-2xl font-bold text-primary" style="font-family: 'Aggravo', sans-serif;">Newsrrect</h1></a>
+                </div>
+                
+                <div class="absolute right-0 flex items-center space-x-4">
+                    <button class="text-primary hover:text-primary-dark text-sm font-medium">
+                        로그아웃
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <nav class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-center space-x-20 py-4">
+                <a href="InfoBoard.jsp" class="text-white bg-primary px-3 py-2 text-sm font-medium rounded font-paperozi-medium">정보 검증 게시판</a>
+                <a href="CommuBoard.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">소통 게시판</a>
+                <a href="MyPage.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">마이 페이지</a>
+            </div>
+        </div>
+    </nav>
+>>>>>>> 5caaaced9bef18ac2f7504d2fd21dca36e768360
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <%-- ==================== 게시글 상세 내용 (데이터 동적 출력) ==================== --%>
@@ -165,11 +203,49 @@
                 
                 if (files.length > 0) {
                     selectedFilesDiv.classList.remove('hidden');
+<<<<<<< HEAD
                     fileListDiv.innerHTML = ''; // 목록 초기화
 
                     Array.from(files).forEach(file => {
                         const fileItemHTML = `
                             <div class="flex items-center justify-between p-1">
+=======
+                    fileList.innerHTML = '';
+                    
+                    // 파일 수 표시 업데이트
+                    if (fileCountSpan) {
+                        fileCountSpan.textContent = files.length;
+                        fileCountSpan.classList.remove('hidden');
+                    }
+                    
+                    // 모든 댓글에서 이미지 파일만 댓글 내용에 표시
+                    if (attachedFilesDiv) {
+                        const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+                        if (imageFiles.length > 0) {
+                            attachedFilesDiv.classList.remove('hidden');
+                            // 이미지 미리보기 생성
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                attachedFilesDiv.innerHTML = `
+                                    <img src="${e.target.result}" alt="${imageFiles[0].name}" class="max-w-full h-auto rounded-lg border border-gray-200" style="max-height: 200px;">
+                                `;
+                            };
+                            reader.readAsDataURL(imageFiles[0]);
+                        } else {
+                            attachedFilesDiv.classList.add('hidden');
+                        }
+                    }
+                    
+                    Array.from(files).forEach((file, index) => {
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'flex items-center p-2 bg-white rounded border';
+                        // 🚩 EL 오류가 났던 ${...} 코드가 JavaScript 문자열 템플릿 리터럴로 정상 동작합니다.
+                        fileItem.innerHTML = `
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+>>>>>>> 5caaaced9bef18ac2f7504d2fd21dca36e768360
                                 <span class="text-sm text-gray-700">${file.name}</span>
                                 <span class="text-xs text-gray-500">${(file.size / 1024).toFixed(1)}KB</span>
                             </div>`;
