@@ -6,7 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>소통 게시판 - Newsrrect</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
     <link rel="stylesheet" href="CSS/fonts.css">
+
+    <link rel="stylesheet" href="styles/fonts.css">
+
     <script>
         tailwind.config = {
             theme: {
@@ -134,7 +138,7 @@
 
                 <!-- Write Post Button -->
                 <div class="flex justify-end mt-6">
-                    <a href="CommuWrite.html" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors font-medium inline-block">
+                    <a href="../JSP/WritePost.jsp" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors font-medium inline-block">
                         글 작성
                     </a>
                 </div>
@@ -155,7 +159,11 @@
                     document.getElementById('header').innerHTML = html;
                 })
                 .catch(error => {
+
                     console.error('Error loading header:', errr);
+
+                    console.error('Error loading header:', error);
+
                 });
             
             // 푸터 로드
