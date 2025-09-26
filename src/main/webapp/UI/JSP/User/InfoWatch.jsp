@@ -1,5 +1,7 @@
 <%-- 정보검증게시판 상세확인페이지 --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%-- 🚩 핵심 수정: 이 파일 내의 ${...} 구문을 서버의 EL로 해석하지 않도록 설정 --%>
+<%@ page isELIgnored="true" %> 
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -7,10 +9,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>글 보기 - 정보 검증 게시판 - Newsrrect</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/fonts.css">
-    <%-- <link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/styles.css"> --%>
-    
+	
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/styles.css">
 
     <script>
         tailwind.config = {
@@ -28,10 +29,10 @@
 </head>
 <body class="bg-white min-h-screen">
     <header class="bg-white shadow-sm border-b border-gray-200">
-        <jsp:include page="../Common/Header.jsp" />
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-center items-center h-16 relative">
                 <div class="flex-shrink-0">
+                    <%-- 🚩 MainPage.html 경로 수정: 현재 JSP 위치에서 ../../Html/로 수정합니다. --%>
                     <a href="../../Html/MainPage.html"><h1 class="text-2xl font-bold text-primary" style="font-family: 'Aggravo', sans-serif;">Newsrrect</h1></a>
                 </div>
                 
@@ -651,6 +652,7 @@
                     Array.from(files).forEach((file, index) => {
                         const fileItem = document.createElement('div');
                         fileItem.className = 'flex items-center p-2 bg-white rounded border';
+                        // 🚩 EL 오류가 났던 ${...} 코드가 JavaScript 문자열 템플릿 리터럴로 정상 동작합니다.
                         fileItem.innerHTML = `
                             <div class="flex items-center space-x-2">
                                 <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
