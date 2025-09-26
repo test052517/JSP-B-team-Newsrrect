@@ -88,7 +88,13 @@
             });
 
             // --- 헤더 로드 ---
+<<<<<<< HEAD:src/main/webapp/UI/JSP/User/CommuWrite.jsp
             fetch(contextPath + '/UI/JSP/Common/Header.jsp')
+=======
+            fetch(contextPath + '../Common/header.jsp')
+            fetch(contextPath + '/UI/JSP/Common/Header.jsp')
+            fetch(contextPath + '/Html/Common/Header.html')
+>>>>>>> 8240be6fda39b5a1a874c3991a563966c80fb8ac:src/main/webapp/UI/JSP/User/WritePost.jsp
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('header').innerHTML = html;
@@ -100,8 +106,13 @@
                 .catch(error => console.error('Error loading header:', error));
             
             // --- 푸터 로드 ---
+<<<<<<< HEAD:src/main/webapp/UI/JSP/User/CommuWrite.jsp
             fetch(contextPath + '/UI/JSP/Common/Footer.jsp')
 
+=======
+            fetch(contextPath + '/UI/Html/Common/Footer.html')
+            fetch(contextPath + '/UI/Html/Common/Footer.html')
+>>>>>>> 8240be6fda39b5a1a874c3991a563966c80fb8ac:src/main/webapp/UI/JSP/User/WritePost.jsp
                 .then(response => response.text())
                 .then(html => document.getElementById('footer').innerHTML = html)
                 .catch(error => console.error('Error loading footer:', error));
