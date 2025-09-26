@@ -1,4 +1,5 @@
-<!-- 소통 게시판 상세확인페이지 -->
+<%-- 소통 게시판 상세확인페이지 --%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -8,7 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/fonts.css">
-	<link rel="stylesheet" href="<%= request.getContextPath() %>/styles/fonts.css">
+	<link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/styles.css">
 
     <script>
         tailwind.config = {
@@ -25,16 +26,14 @@
     </script>
 </head>
 <body class="bg-white min-h-screen">
-    <!-- Header -->
     <header class="bg-white shadow-sm border-b border-gray-200">
+        <jsp:include page="../Common/Header.jsp" />
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-center items-center h-16 relative">
-                <!-- Logo - Centered -->
                 <div class="flex-shrink-0">
-                    <a href="MainPage.html"><h1 class="text-2xl font-bold text-primary" style="font-family: 'Aggravo', sans-serif;">Newsrrect</h1></a>
+                    <a href="../../Html/MainPage.html"><h1 class="text-2xl font-bold text-primary" style="font-family: 'Aggravo', sans-serif;">Newsrrect</h1></a>
                 </div>
                 
-                <!-- User Menu - Absolute positioned right -->
                 <div class="absolute right-0 flex items-center space-x-4">
                     <button class="text-primary hover:text-primary-dark text-sm font-medium">
                         로그아웃
@@ -44,34 +43,28 @@
         </div>
     </header>
     
-    <!-- Navigation -->
     <nav class="bg-white border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-center space-x-20 py-4">
-                <a href="InfoBoard.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판</a>
-                <a href="CommuBoard.html" class="text-white bg-primary px-3 py-2 text-sm font-medium rounded font-paperozi-medium">소통 게시판</a>
-                <a href="MyPage.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">마이 페이지</a>
+                <a href="InfoBoard.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판</a>
+                <a href="CommuBoard.jsp" class="text-white bg-primary px-3 py-2 text-sm font-medium rounded font-paperozi-medium">소통 게시판</a>
+                <a href="MyPage.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">마이 페이지</a>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Board Title -->
         <div class="mb-6">
             <h2 class="text-3xl font-bold text-primary mb-4">소통 게시판</h2>
             <div class="border-t border-gray-200"></div>
         </div>
 
-        <!-- Post Content -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
             <div class="p-6">
-                <!-- Post Title -->
                 <div class="mb-4">
                     <h1 class="text-2xl font-bold text-gray-900">제목</h1>
                 </div>
 
-                <!-- Post Metadata -->
                 <div class="mb-6">
                     <div class="bg-blue-100 border border-gray-200 rounded-md p-3">
                         <div class="flex items-center justify-between text-sm text-gray-600">
@@ -102,7 +95,6 @@
                     </div>
                 </div>
 
-                <!-- Post Body -->
                 <div class="mb-6">
                     <div class="text-gray-900 leading-relaxed">
                         <p>글내용</p>
@@ -111,17 +103,13 @@
             </div>
         </div>
 
-        <!-- Comment Section -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="p-6">
-                <!-- Comment Input -->
                 <div class="mb-6">
-                    <!-- Comment Text Area -->
                     <div class="mb-4">
                         <textarea class="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none" rows="4" placeholder="댓글을 입력해주세요"></textarea>
                     </div>
                     
-                    <!-- File Upload Section -->
                     <div class="mb-4">
                         <div class="flex items-center space-x-2 mb-2">
                             <input type="file" id="comment-file" class="hidden" multiple>
@@ -131,7 +119,6 @@
                             <span class="text-sm text-gray-500">파일을 선택하세요</span>
                         </div>
                         
-                        <!-- Selected Files Display -->
                         <div id="selected-files" class="hidden">
                             <div class="bg-gray-50 border border-gray-200 rounded-md p-3">
                                 <div class="flex items-center justify-between">
@@ -149,7 +136,6 @@
                         </div>
                     </div>
                     
-                    <!-- Submit Button -->
                     <div class="flex justify-end">
                         <button class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors">
                             댓글등록
@@ -157,11 +143,9 @@
                     </div>
                 </div>
 
-                <!-- BEST Comments -->
                 <div class="mb-8 bg-blue-100 rounded-lg p-4">
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">BEST 댓글</h4>
                     <div class="space-y-4">
-                    <!-- Comment 1 (BEST) -->
                     <div class="border border-gray-200 rounded-lg p-4 bg-white">
                         <div class="flex justify-between items-start mb-2">
                             <div class="flex items-center space-x-2">
@@ -197,7 +181,6 @@
                             </button>
                         </div>
                         
-                        <!-- Selected Files Display for Comment 1 -->
                         <div id="selected-files-comment1" class="hidden mt-3 p-3 bg-gray-50 rounded-md">
                             <div class="bg-white border border-gray-200 rounded-md p-2">
                                 <div id="file-list-comment1" class="space-y-1"></div>
@@ -205,7 +188,6 @@
                         </div>
                     </div>
 
-                    <!-- Comment 2 (Reply) -->
                     <div class="ml-6">
                         <div class="border border-gray-200 rounded-lg p-4 bg-white">
                             <div class="flex justify-between items-start mb-2">
@@ -236,7 +218,6 @@
                             </div>
                         </div>
                         
-                        <!-- Selected Files Display for Comment 2 -->
                         <div id="selected-files-comment2" class="hidden mt-3 p-3 bg-gray-50 rounded-md">
                             <div class="bg-white border border-gray-200 rounded-md p-2">
                                 <div id="file-list-comment2" class="space-y-1"></div>
@@ -244,7 +225,6 @@
                         </div>
                     </div>
 
-                    <!-- Comment 3 (BEST) -->
                     <div class="border border-gray-200 rounded-lg p-4 bg-white">
                         <div class="flex justify-between items-start mb-2">
                             <div class="flex items-center space-x-2">
@@ -277,7 +257,6 @@
                             <button onclick="document.getElementById('file-comment3').click()" class="text-gray-600 hover:text-primary">첨부파일</button>
                         </div>
                         
-                        <!-- Selected Files Display for Comment 3 -->
                         <div id="selected-files-comment3" class="hidden mt-3 p-3 bg-gray-50 rounded-md">
                             <div class="bg-white border border-gray-200 rounded-md p-2">
                                 <div id="file-list-comment3" class="space-y-1"></div>
@@ -287,9 +266,7 @@
                     </div>
                 </div>
 
-                <!-- Regular Comments -->
                 <div class="space-y-4">
-                    <!-- Comment 4 -->
                     <div class="border border-gray-200 rounded-lg p-4 bg-white">
                         <div class="flex justify-between items-start mb-2">
                             <div class="flex items-center space-x-2">
@@ -322,7 +299,6 @@
                             <button onclick="document.getElementById('file-comment4').click()" class="text-gray-600 hover:text-primary">첨부파일</button>
                         </div>
                         
-                        <!-- Selected Files Display for Comment 4 -->
                         <div id="selected-files-comment4" class="hidden mt-3 p-3 bg-gray-50 rounded-md">
                             <div class="bg-white border border-gray-200 rounded-md p-2">
                                 <div id="file-list-comment4" class="space-y-1"></div>
@@ -330,7 +306,6 @@
                         </div>
                     </div>
 
-                    <!-- Comment 5 -->
                     <div class="border border-gray-200 rounded-lg p-4 bg-white">
                         <div class="flex justify-between items-start mb-2">
                             <div class="flex items-center space-x-2">
@@ -363,7 +338,6 @@
                             <button onclick="document.getElementById('file-comment5').click()" class="text-gray-600 hover:text-primary">첨부파일</button>
                         </div>
                         
-                        <!-- Selected Files Display for Comment 5 -->
                         <div id="selected-files-comment5" class="hidden mt-3 p-3 bg-gray-50 rounded-md">
                             <div class="bg-white border border-gray-200 rounded-md p-2">
                                 <div id="file-list-comment5" class="space-y-1"></div>
@@ -371,7 +345,6 @@
                         </div>
                     </div>
 
-                    <!-- Comment 6 -->
                     <div class="border border-gray-200 rounded-lg p-4 bg-white">
                         <div class="flex justify-between items-start mb-2">
                             <div class="flex items-center space-x-2">
@@ -404,7 +377,6 @@
                             <button onclick="document.getElementById('file-comment6').click()" class="text-gray-600 hover:text-primary">첨부파일</button>
                         </div>
                         
-                        <!-- Selected Files Display for Comment 6 -->
                         <div id="selected-files-comment6" class="hidden mt-3 p-3 bg-gray-50 rounded-md">
                             <div class="bg-white border border-gray-200 rounded-md p-2">
                                 <div id="file-list-comment6" class="space-y-1"></div>
@@ -414,7 +386,6 @@
                     </div>
                 </div>
 
-                <!-- Comment Pagination -->
                 <div class="flex justify-center items-center mt-6 space-x-2">
                     <div class="flex space-x-1">
                         <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[1]</button>
@@ -440,24 +411,19 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <div id="footer"></div>
+    <jsp:include page="../Common/Footer.jsp" />
 
-    <!-- Report Modal -->
     <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
-                <!-- Modal Header -->
                 <div class="p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-2">신고하기</h3>
                     <div class="border-b border-gray-200 mb-4"></div>
                 </div>
                 
-                <!-- Modal Content -->
                 <div class="p-6">
                     <p class="text-gray-900 mb-4">해당 게시글을 아래와 같은 사유로 신고합니다.</p>
                     
-                    <!-- Post Information -->
                     <div class="mb-4">
                         <div class="bg-gray-100 border border-gray-200 rounded-md p-3 mb-2">
                             <div class="flex justify-between">
@@ -470,7 +436,6 @@
                         </div>
                     </div>
                     
-                    <!-- Report Reason -->
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-900 mb-2">신고사유</label>
                         <div class="bg-gray-100 border border-gray-200 rounded-md p-3">
@@ -478,7 +443,6 @@
                         </div>
                     </div>
                     
-                    <!-- Action Buttons -->
                     <div class="flex justify-end space-x-3">
                         <button onclick="closeReportModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
                             취소
@@ -492,7 +456,6 @@
         </div>
     </div>
 
-    <!-- Comment Report Modal -->
     <div id="commentReportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
@@ -623,16 +586,6 @@
             for (let i = 1; i <= 6; i++) {
                 setupFileUpload(`comment${i}`);
             }
-            
-            // 푸터 로드
-            fetch('Common/Footer.html')
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('footer').innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('Error loading footer:', error);
-                });
         });
 
         // Report modal functions

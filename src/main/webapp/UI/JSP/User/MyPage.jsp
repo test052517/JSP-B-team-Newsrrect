@@ -1,0 +1,211 @@
+<%-- 마이페이지 --%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이 페이지 - Newsrrect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <%-- CSS 경로를 절대 경로로 수정하여 404 오류 방지 --%>
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/fonts.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/styles.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#5d74f8',
+                        'primary-dark': '#4c63e7',
+                        'primary-light': '#7d8ff9'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white min-h-screen">
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-center items-center h-16 relative">
+                <div class="flex-shrink-0">
+                    <a href="../../Html/MainPage.html"><h1 class="text-2xl font-bold text-primary" style="font-family: 'Aggravo', sans-serif;">Newsrrect</h1></a>
+                </div>
+                
+                <div class="absolute right-0 flex items-center space-x-4">
+                    <button class="text-primary hover:text-primary-dark text-sm font-medium">
+                        로그아웃
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <nav class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-center space-x-20 py-4">
+                <a href="InfoBoard.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판</a>
+                <a href="CommuBoard.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">소통 게시판</a>
+                <a href="MyPage.jsp" class="text-white bg-primary px-3 py-2 text-sm font-medium rounded font-paperozi-medium">마이 페이지</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-6">
+            <h2 class="text-3xl font-bold text-primary mb-4 font-paperozi-semibold">마이 페이지</h2>
+            <div class="border-t border-gray-200"></div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm">
+            <div class="p-8">
+                
+                <div class="bg-gray-100 rounded-lg p-6 mb-8 relative">
+                    <div class="absolute top-4 right-4 text-sm text-gray-500">
+                        가입 일자
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <div class="relative">
+                            <input type="file" id="profileImageInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                            <div id="profileImageContainer" class="w-32 h-32 bg-gray-400 rounded-full mr-6 flex-shrink-0 cursor-pointer hover:bg-gray-500 transition-colors flex items-center justify-center" onclick="document.getElementById('profileImageInput').click()">
+                                <img id="profileImage" src="" alt="프로필 이미지" class="w-full h-full object-cover rounded-full hidden">
+                                <span id="profileImagePlaceholder" class="text-white text-sm font-medium">이미지 선택</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex-1">
+                            <div class="mb-2">
+                                <h3 class="text-xl font-semibold text-gray-900">닉네임</h3>
+                            </div>
+                            <div class="mb-4">
+                                <p class="text-gray-600">자기 소개</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="absolute bottom-4 right-4">
+                        <button class="bg-gray-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-700 transition-colors">
+                            수정
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">작성한 게시글(1234)</h3>
+                    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">번호</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">제목</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">작성일</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">글 심사상태</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+                                        <div class="bg-gray-100 h-32 rounded-lg flex items-center justify-center">
+                                            <span class="text-gray-400">작성한 게시글이 없습니다.</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">작성한 댓글(1234)</h3>
+                    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">번호</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">제목</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">원글 작성자</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">작성일</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+                                        <div class="bg-gray-100 h-32 rounded-lg flex items-center justify-center">
+                                            <span class="text-gray-400">작성한 댓글이 없습니다.</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="flex justify-between">
+                    <button onclick="openWithdrawalModal()" class="bg-gray-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors">
+                        탈퇴
+                    </button>
+                    <a href="PwdChange.jsp" class="bg-gray-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors inline-block">
+                        비밀번호 변경
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="withdrawalModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <div class="text-center">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">정말 탈퇴하시겠습니까?</h3>
+                <p class="text-gray-600 mb-6">탈퇴 버튼 선택 시, 계정은 삭제되며 복구되지 않습니다.</p>
+                <div class="flex space-x-4">
+                    <button onclick="closeWithdrawalModal()" class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-400 transition-colors">
+                        취소
+                    </button>
+                    <button onclick="confirmWithdrawal()" class="flex-1 bg-gray-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors">
+                        탈퇴
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <jsp:include page="../Common/Footer.jsp" />
+
+    <script>
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const profileImage = document.getElementById('profileImage');
+                    const profileImagePlaceholder = document.getElementById('profileImagePlaceholder');
+                    
+                    // 이미지 표시
+                    profileImage.src = e.target.result;
+                    profileImage.classList.remove('hidden');
+                    profileImagePlaceholder.classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function openWithdrawalModal() {
+            document.getElementById('withdrawalModal').classList.remove('hidden');
+        }
+
+        function closeWithdrawalModal() {
+            document.getElementById('withdrawalModal').classList.add('hidden');
+        }
+
+        function confirmWithdrawal() {
+            // 실제 탈퇴 로직을 여기에 구현
+            alert('탈퇴가 완료되었습니다.');
+            closeWithdrawalModal();
+            // 필요시 페이지 리다이렉트 또는 로그아웃 처리
+        }
+    </script>
+</body>
+</html>
