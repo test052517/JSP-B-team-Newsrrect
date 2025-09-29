@@ -2,6 +2,7 @@
 <%@ page import="com.oreilly.servlet.MultipartRequest" %>
 <%@ page import="com.oreilly.servlet.multipart.DefaultFileRenamePolicy" %>
 <%@ page import="mgr.PostMgr" %>
+<%@ page import="beans.PostBean" %> <%-- PostBean 임포트 추가 --%>
 <%@ page import="java.util.Date" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 
@@ -13,7 +14,6 @@
         String saveDirectory = application.getRealPath("/upload");
         int maxPostSize = 10 * 1024 * 1024; // 10MB
         String encoding = "UTF-8";
-
         MultipartRequest multi = new MultipartRequest(
             request, 
             saveDirectory, 
@@ -25,30 +25,28 @@
         String title = multi.getParameter("title");
         String content = multi.getParameter("ir1");
         
-        int userId = 1; 
-        String type = "정보";
-        String status = "공개";
-        int viewcount = 0;
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String createdAt = sdf.format(new Date());
-        int reportCount = 0;
-        int recommandCount = 0;
+        // [수정 1] PostBean 객체를 생성하여 폼 데이터를 담습니다.
+        PostBean post = new PostBean();
         
-        Integer attatchmentFileID = null; 
+        // 실제 운영 시에는 세션 등에서 사용자 정보를 가져와야 합니다.
+        int userId = 1; // 예시: session.getAttribute("userId");
+        
+        post.setUserId(userId);
+        post.setTitle(title);
+        post.setContent(content);
+        post.setType("정보");
+        post.setStatus("공개"); // 관리자가 승인하기 전까지 '비공개'로 설정할 수도 있습니다.
+        post.setViewCount(0);
+        post.setReportCount(0);
+        post.setRecommandCount(0);
+        post.setPriority(0); // 기본 우선순위
 
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        post.setCreatedAt(sdf.format(new Date()));
+
+        // [수정 2] PostMgr를 생성하고 PostBean 객체를 전달합니다.
         PostMgr postMgr = new PostMgr();
-        
-        postMgr.createPost(
-            userId, 
-            type, 
-            title, 
-            content, 
-            status, 
-            viewcount, 
-            createdAt, 
-            reportCount, 
-            recommandCount
-        );
+        postMgr.createPost(post); // 여러 파라미터 대신 객체 하나만 전달
         
         result = "success";
 
@@ -68,7 +66,8 @@
         const result = "<%= result %>";
         if (result === "success") {
             alert("게시물이 성공적으로 작성되었습니다.");
-            window.location.href = "<%=request.getContextPath()%>/UI/Html/User/CommuBoard.html";
+            // 성공 시 이동할 페이지 (게시판 목록 등)
+            window.location.href = "<%=request.getContextPath()%>/UI/JSP/User/CommuBoard.jsp";
         } else {
             alert("게시물 작성에 실패했습니다. 관리자에게 문의하세요.");
             window.history.back();

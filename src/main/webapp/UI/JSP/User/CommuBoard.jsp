@@ -1,5 +1,12 @@
 <%-- 소통게시판 --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>   
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%
+		// 세션에서 User 정보 가져옴
+		beans.UserBean user = (beans.UserBean)session.getAttribute("loggedInUser");
+%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -9,8 +16,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/styles.css">
-
+   
     <script>
         tailwind.config = {
             theme: {
@@ -26,31 +32,7 @@
     </script>
 </head>
 <body class="bg-white min-h-screen">
-    <header class="bg-white shadow-sm border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-center items-center h-16 relative">
-                <div class="flex-shrink-0">
-                    <a href="../MainPage.jsp"><h1 class="text-2xl font-bold text-primary" style="font-family: 'Aggravo', sans-serif;">Newsrrect</h1></a>
-                </div>
-                
-                <div class="absolute right-0 flex items-center space-x-4">
-                    <button class="text-primary hover:text-primary-dark text-sm font-medium">
-                        로그아웃
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
-    
-    <nav class="bg-white border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-center space-x-20 py-4">
-                <a href="InfoBoard.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판</a>
-                <a href="CommuBoard.jsp" class="text-white bg-primary px-3 py-2 text-sm font-medium rounded font-paperozi-medium">소통 게시판</a>
-                <a href="MyPage.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">마이 페이지</a>
-            </div>
-        </div>
-    </nav>
+    <jsp:include page="../Common/Header.jsp" />
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="mb-6">
@@ -122,7 +104,7 @@
                 </div>
 
                 <div class="flex justify-end mt-6">
-                    <a href="../JSP/WritePost.jsp" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors font-medium inline-block">
+                    <a href="CommuWrite.jsp" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors font-medium inline-block">
                         글 작성
                     </a>
                 </div>

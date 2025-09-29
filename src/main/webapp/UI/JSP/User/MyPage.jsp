@@ -2,6 +2,10 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%
+		// 세션에서 User 정보 가져옴
+		beans.UserBean user = (beans.UserBean)session.getAttribute("loggedInUser");
+%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -11,7 +15,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/styles.css">
 
     <script>
         tailwind.config = {
@@ -27,20 +30,6 @@
         }
     </script>
     
-    <style>
-        /* 마이페이지 active 링크 hover 효과 */
-        nav a[href*="MyPage.jsp"] {
-            background-color: #5d74f8 !important;
-            color: white !important;
-        }
-        
-        nav a[href*="MyPage.jsp"]:hover {
-            background-color: #4c63e7 !important;
-            transform: scale(1.02);
-            box-shadow: 0 2px 6px rgba(93, 116, 248, 0.4);
-            transition: all 0.2s ease-in-out;
-        }
-    </style>
 </head>
 <body class="bg-white min-h-screen">
     <jsp:include page="../Common/Header.jsp" />
@@ -59,11 +48,14 @@
                     <div class="absolute top-4 right-4 text-sm text-gray-500">
                         가입일: 
                         <c:choose>
-                            <c:when test="${not empty user.joinDate}">
-                                <fmt:formatDate value="${user.joinDate}" pattern="yyyy.MM.dd" />
+                            <c:when test="${not empty user.createdAt}">
+                                <fmt:parseDate var="joinDateObj" 
+                                               value="${user.createdAt}" 
+                                               pattern="yyyy-MM-dd HH:mm:ss" 
+                                               type="both" />
+                                <fmt:formatDate value="${joinDateObj}" pattern="yyyy.MM.dd" />
                             </c:when>
                             <c:otherwise>
-                                2024.01.01
                             </c:otherwise>
                         </c:choose>
                     </div>
@@ -95,12 +87,12 @@
                                            maxlength="20" readonly>
                                 </div>
                                 <div class="mb-4">
-                                    <label for="bio" class="block text-sm font-medium text-gray-700 mb-1">자기소개</label>
-                                    <textarea id="bio" name="bio" rows="3"
+                                    <label for="introduce" class="block text-sm font-medium text-gray-700 mb-1">자기소개</label>
+                                    <textarea id="introduce" name="introduce" rows="3"
                                               class="w-full max-w-lg px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                                              placeholder="자기소개를 입력하세요" maxlength="200" readonly><c:out value="${not empty user.bio ? user.bio : '자기 소개'}" /></textarea>
+                                              placeholder="자기소개를 입력하세요" maxlength="200" readonly><c:out value="${not empty user.introduce ? user.introduce : '자기 소개'}" /></textarea>
                                     <div class="text-sm text-gray-500 mt-1">
-                                        <span id="bioCount">${not empty user.bio ? fn:length(user.bio) : 0}</span>/200자
+                                        <span id="introduceCount">${not empty user.introduce ? fn:length(user.introduce) : 0}</span>/200자
                                     </div>
                                 </div>
                             </div>
@@ -291,14 +283,14 @@
     <script>
         let isEditing = false;
         let originalNickname = '';
-        let originalBio = '';
+        let originalintroduce = '';
 
-        const bioTextarea = document.getElementById('bio');
-        const bioCount = document.getElementById('bioCount');
+        const introduceTextarea = document.getElementById('introduce');
+        const introduceCount = document.getElementById('introduceCount');
 
-        if (bioTextarea) {
-            bioTextarea.addEventListener('input', function() {
-                bioCount.textContent = this.value.length;
+        if (introduceTextarea) {
+        	introduceTextarea.addEventListener('input', function() {
+        		introduceCount.textContent = this.value.length;
             });
         }
 
@@ -334,17 +326,17 @@
 
         function toggleEdit() {
             const nicknameInput = document.getElementById('nickname');
-            const bioTextarea = document.getElementById('bio');
+            const introduceTextarea = document.getElementById('introduce');
             const editBtn = document.getElementById('editBtn');
             const saveBtn = document.getElementById('saveBtn');
             const cancelBtn = document.getElementById('cancelBtn');
 
             if (!isEditing) {
                 originalNickname = nicknameInput.value;
-                originalBio = bioTextarea.value;
+                originalIntroduce = introduceTextarea.value;
                 
                 nicknameInput.readOnly = false;
-                bioTextarea.readOnly = false;
+                introduceTextarea.readOnly = false;
                 nicknameInput.focus();
                 
                 editBtn.classList.add('hidden');
@@ -357,20 +349,20 @@
 
         function cancelEdit() {
             const nicknameInput = document.getElementById('nickname');
-            const bioTextarea = document.getElementById('bio');
+            const introduceTextarea = document.getElementById('introduce');
             const editBtn = document.getElementById('editBtn');
             const saveBtn = document.getElementById('saveBtn');
             const cancelBtn = document.getElementById('cancelBtn');
             const profileImageInput = document.getElementById('profileImageInput');
 
             nicknameInput.value = originalNickname;
-            bioTextarea.value = originalBio;
-            bioCount.textContent = originalBio.length;
+            introduceTextarea.value = originalIntroduce;
+            introduceCount.textContent = originalIntroduce.length;
             
             profileImageInput.value = '';
 
             nicknameInput.readOnly = true;
-            bioTextarea.readOnly = true;
+            introduceTextarea.readOnly = true;
             
             editBtn.classList.remove('hidden');
             saveBtn.classList.add('hidden');
@@ -385,7 +377,7 @@
                 e.preventDefault();
                 
                 const nickname = document.getElementById('nickname').value.trim();
-                const bio = document.getElementById('bio').value.trim();
+                const introduce = document.getElementById('introduce').value.trim();
                 
                 if (!nickname) {
                     alert('닉네임을 입력해주세요.');
@@ -397,7 +389,7 @@
                     return;
                 }
 
-                if (bio.length > 200) {
+                if (introduce.length > 200) {
                     alert('자기소개는 200자 이하여야 합니다.');
                     return;
                 }

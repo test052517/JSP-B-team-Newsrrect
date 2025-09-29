@@ -9,8 +9,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <%-- CSS 경로를 절대 경로로 수정하여 404 오류 방지 --%>
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/styles.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/fonts.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/styles.css">
 
     <script>
         tailwind.config = {
@@ -56,36 +56,43 @@
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="flex justify-center items-center min-h-96">
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 w-full max-w-md">
-                <div class="space-y-6">
+                <form id="signupForm" action="NewAccountProc.jsp" method="post" class="space-y-6">
                 	<div>
                         <label for="email" class="block text-sm font-medium text-gray-900 mb-2">이메일</label>
                         <input type="email" id="email" name="email" class="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="이메일을 입력하세요">
+                        <p class="text-red-600 text-sm mt-1 hidden">이메일을 입력해주세요</p>
                     </div>
                     
                     <div>
-                        <label for="nickname" class="block text-sm font-medium text-gray-900 mb-2">닉네임</label>
-                        <div class="flex space-x-2">
-                            <input type="text" id="nickname" name="nickname" class="flex-1 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="닉네임을 입력하세요">
-                            <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium">
-                                중복확인
-                            </button>
-                        </div>
-                    </div>
+					    <label for="nickname" class="block text-sm font-medium text-gray-900 mb-2">닉네임</label>
+					    <div class="flex space-x-2">
+					        <input type="text" id="nickname" name="nickname"
+					               class="flex-1 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+					               placeholder="닉네임을 입력하세요">
+					        <button type="button" id="checkNicknameBtn"
+					                class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium">
+					            중복확인
+					        </button>
+					    </div>
+					    <p id="nicknameCheckResult" class="text-sm mt-1"></p>
+					</div>
                     
                     <div>
                         <label for="password" class="block text-sm font-medium text-gray-900 mb-2">비밀번호</label>
                         <input type="password" id="password" name="password" class="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="비밀번호를 입력하세요">
+                        <p class="text-red-600 text-sm mt-1 hidden">비밀번호를 입력해주세요</p>
                     </div>
                     
                     <div>
                         <label for="confirm-password" class="block text-sm font-medium text-gray-900 mb-2">비밀번호 확인</label>
                         <input type="password" id="confirm-password" name="confirm-password" class="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="비밀번호를 다시 입력하세요">
+                        <p class="text-red-600 text-sm mt-1 hidden">비밀번호 확인을 입력해주세요</p>
                     </div>
                     
-                    <button class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-dark transition-colors font-medium">
+                    <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-dark transition-colors font-medium">
                         회원가입
                     </button>
-                </div>
+                </form>
             </div>
         </div>
     </main>
@@ -94,6 +101,65 @@
 
     <script>
         // HTML 파일의 fetch 코드는 JSP include로 대체되어 제거되었습니다.
+
+        // 입력 필드 체크
+        const form = document.getElementById('signupForm');
+        form.addEventListener('submit', function(e) {
+            let valid = true;
+
+            const fields = ['email','nickname','password','confirm-password'];
+            fields.forEach(id => {
+                const input = document.getElementById(id);
+                const errorMsg = input.nextElementSibling;
+                if (!input.value.trim()) {
+                    errorMsg.classList.remove('hidden');
+                    valid = false;
+                } else {
+                    errorMsg.classList.add('hidden');
+                }
+            });
+
+            // 비밀번호 일치 체크
+            const password = document.getElementById('password').value.trim();
+            const confirm = document.getElementById('confirm-password').value.trim();
+            const confirmError = document.getElementById('confirm-password').nextElementSibling;
+            if (password && confirm && password !== confirm) {
+                confirmError.textContent = '비밀번호가 일치하지 않습니다';
+                confirmError.classList.remove('hidden');
+                valid = false;
+            }
+
+            if (!valid) e.preventDefault();
+        });
+
+        // 닉네임 중복 확인
+        document.getElementById('checkNicknameBtn').addEventListener('click', function() {
+            const nickname = document.getElementById('nickname').value.trim();
+            const resultEl = document.getElementById('nicknameCheckResult');
+
+            if (!nickname) {
+                resultEl.textContent = '닉네임을 입력해주세요.';
+                resultEl.style.color = 'red';
+                return;
+            }
+
+            fetch('CheckNickname.jsp?nickname=' + encodeURIComponent(nickname))
+                .then(response => response.text())
+                .then(data => {
+                    if (data === 'true') {
+                        resultEl.textContent = '이미 사용 중인 닉네임입니다.';
+                        resultEl.style.color = 'red';
+                    } else {
+                        resultEl.textContent = '사용 가능한 닉네임입니다.';
+                        resultEl.style.color = 'green';
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    resultEl.textContent = '중복 확인 중 오류가 발생했습니다.';
+                    resultEl.style.color = 'red';
+                });
+        });
     </script>
 </body>
 </html>

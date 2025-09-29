@@ -14,6 +14,7 @@ public class UserBean{
     private int point;
     private String attend;
     private String introduce;
+    private String profileImage; 
     
 	public int getUserId() {
 		return userId;
@@ -86,5 +87,11 @@ public class UserBean{
 	}
 	public void setIntroduce(String introduce) {
 		this.introduce = introduce;
+	}
+	public String getProfileImage() {
+		return profileImage;
+	}
+	public void setProfileImage(String profileImage) {
+		this.profileImage = profileImage;
 	}
 }

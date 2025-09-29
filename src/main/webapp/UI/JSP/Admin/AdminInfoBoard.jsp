@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.*" %>
-<%@ page import="java.text.SimpleDateFormat" %>
+<%@ page import="beans.PostBean" %>
+<%@ page import="mgr.PostMgr" %>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -8,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>정보 검증 게시판 관리 - Newsrrect</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="../CSS/fonts.css">
+    <link rel="stylesheet" href="../../CSS/fonts.css">
     <script>
         tailwind.config = {
             theme: {
@@ -23,7 +24,37 @@
         }
     </script>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen bg-gray-50">
+<%
+    // 페이징 처리
+    int pageSize = 10; // 한 페이지에 보여줄 게시글 수
+    String pageNum = request.getParameter("page");
+    if(pageNum == null) {
+        pageNum = "1";
+    }
+    int currentPage = Integer.parseInt(pageNum);
+    int start = (currentPage - 1) * pageSize;
+    
+    // 검색 파라미터
+    String searchType = request.getParameter("searchType");
+    String searchKeyword = request.getParameter("searchKeyword");
+    
+    PostMgr postMgr = new PostMgr();
+    Vector<PostBean> vlist = null;
+    int totalCount = 0;
+    
+    // 검색 여부에 따라 다른 메서드 호출
+    if(searchKeyword != null && !searchKeyword.trim().equals("")) {
+        vlist = postMgr.searchPendingPosts(searchType, searchKeyword, start, pageSize);
+        totalCount = vlist.size(); // 실제로는 별도 카운트 메서드 필요
+    } else {
+        vlist = postMgr.getPendingPosts(start, pageSize);
+        totalCount = postMgr.getPendingPostCount();
+    }
+    
+    int totalPages = (int)Math.ceil((double)totalCount / pageSize);
+    if(totalPages == 0) totalPages = 1;
+%>
     <!-- Header -->
     <header class="bg-white shadow-sm border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -60,7 +91,7 @@
         <!-- Board Title -->
         <div class="mb-6">
             <h2 class="text-3xl font-bold text-primary mb-4 font-paperozi-semibold">정보 검증 게시판 관리</h2>
-            <div class="border-t border-gray-200"></div>
+            <div class="border-t-2 border-primary"></div>
         </div>
 
         <!-- Board Controls -->
@@ -72,9 +103,9 @@
                         <!-- Dropdown for category/filter -->
                         <div class="relative">
                             <select name="searchType" class="appearance-none bg-gray-100 border border-gray-200 rounded px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                                <option value="">전체</option>
-                                <option value="title">제목</option>
-                                <option value="author">작성자</option>
+                                <option value="" <%= (searchType == null || searchType.equals("")) ? "selected" : "" %>>전체</option>
+                                <option value="title" <%= "title".equals(searchType) ? "selected" : "" %>>제목</option>
+                                <option value="author" <%= "author".equals(searchType) ? "selected" : "" %>>작성자</option>
                             </select>
                             <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                 <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,47 +115,53 @@
                         </div>
                         
                         <!-- Search Input -->
-                        <input type="text" name="searchKeyword" placeholder="검색어를 입력하세요" class="bg-gray-100 border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary w-64">
-                        <button type="submit" class="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors">검색</button>
+                        <input type="text" name="searchKeyword" value="<%= searchKeyword != null ? searchKeyword : "" %>" placeholder="검색어를 입력하세요" class="bg-gray-100 border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary w-64">
+                        <button type="submit" class="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors text-sm font-medium">검색</button>
                     </form>
                     
                     <!-- Page Info -->
-                    <div class="text-sm text-gray-600">
-                        <%
-                            Integer totalCount = (Integer) request.getAttribute("totalCount");
-                            Integer currentPage = (Integer) request.getAttribute("currentPage");
-                            if (totalCount == null) totalCount = 10;
-                            if (currentPage == null) currentPage = 1;
-                        %>
-                        전체 <%= totalCount %> / <%= currentPage %> 페이지
+                    <div class="text-sm text-gray-600 font-medium">
+                        전체 <span class="text-primary font-bold"><%= totalCount %></span>건 / <span class="text-primary font-bold"><%= currentPage %></span> 페이지
                     </div>
                 </div>
 
                 <!-- Table Header -->
-                <div class="bg-gray-100 rounded-t-lg">
-                    <div class="grid grid-cols-4 gap-4 py-3 px-4 text-sm font-semibold text-gray-900">
-                        <div class="text-left">번호</div>
-                        <div class="text-left">제목</div>
-                        <div class="text-left">작성자</div>
-                        <div class="text-left">작성일</div>
+                <div class="bg-gray-100 rounded-t-lg border border-gray-200">
+                    <div class="grid grid-cols-5 gap-4 py-3 px-4 text-sm font-semibold text-gray-900">
+                        <div class="text-center">번호</div>
+                        <div class="text-left col-span-2">제목</div>
+                        <div class="text-center">작성자</div>
+                        <div class="text-center">작성일</div>
                     </div>
                 </div>
 
                 <!-- Table Body -->
-                <div class="bg-white border border-gray-200 border-t-0 rounded-b-lg">
+                <div class="bg-white border border-gray-200 border-t-0 rounded-b-lg divide-y divide-gray-100">
                     <%
-                        List<?> pendingPosts = (List<?>) request.getAttribute("pendingPosts");
-                        if (pendingPosts != null && !pendingPosts.isEmpty()) {
-                            // 실제 데이터 처리
-                        } else {
-                            // 샘플 데이터
+                        if(vlist != null && vlist.size() > 0) {
+                            for(int i = 0; i < vlist.size(); i++) {
+                                PostBean bean = vlist.get(i);
+                                int num = totalCount - (start + i);
                     %>
                     <!-- Table Row -->
-                    <div onclick="location.href='AdminInfoSelect.jsp?postId=1'" class="grid grid-cols-4 gap-4 py-3 px-4 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
-                        <div class="text-sm text-gray-900">1</div>
-                        <div class="text-sm text-gray-900 font-medium">승인 대기중인 게시글</div>
-                        <div class="text-sm text-gray-600">user1</div>
-                        <div class="text-sm text-gray-600">09.25</div>
+                    <div onclick="location.href='AdminInfoSelect.jsp?postId=<%= bean.getPostId() %>'" 
+                         class="grid grid-cols-5 gap-4 py-4 px-4 hover:bg-blue-50 transition-colors duration-200 cursor-pointer group">
+                        <div class="text-sm text-gray-900 text-center font-medium"><%= num %></div>
+                        <div class="text-sm text-gray-900 font-medium col-span-2 group-hover:text-primary transition-colors truncate">
+                            <%= bean.getTitle() %>
+                        </div>
+                        <div class="text-sm text-gray-600 text-center"><%= bean.getNickname() %></div>
+                        <div class="text-sm text-gray-600 text-center"><%= bean.getFormattedDate() %></div>
+                    </div>
+                    <%
+                            }
+                        } else {
+                    %>
+                    <div class="py-12 text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p class="mt-4 text-gray-500 font-medium">승인 대기 중인 게시글이 없습니다.</p>
                     </div>
                     <%
                         }
@@ -133,25 +170,60 @@
 
                 <!-- Pagination -->
                 <div class="flex justify-center items-center mt-6 space-x-2">
-                    <div class="flex space-x-1">
-                        <%
-                            Integer totalPages = (Integer) request.getAttribute("totalPages");
-                            if (totalPages == null) totalPages = 9;
-                            
-                            for (int i = 1; i <= Math.min(totalPages, 9); i++) {
-                                String activeClass = (i == currentPage) ? "text-white bg-primary" : "text-primary hover:text-white hover:bg-primary";
-                        %>
-                            <button onclick="location.href='AdminInfoBoard.jsp?page=<%= i %>'" class="px-3 py-2 text-sm font-medium <%= activeClass %> border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[<%= i %>]</button>
-                        <%
+                    <%
+                        // 페이지 블록 설정
+                        int pageBlock = 10;
+                        int startPage = ((currentPage - 1) / pageBlock) * pageBlock + 1;
+                        int endPage = startPage + pageBlock - 1;
+                        if(endPage > totalPages) endPage = totalPages;
+                        
+                        String searchParams = "";
+                        if(searchKeyword != null && !searchKeyword.trim().equals("")) {
+                            searchParams = "&searchType=" + (searchType != null ? searchType : "") + "&searchKeyword=" + searchKeyword;
+                        }
+                        
+                        // 이전 버튼
+                        if(startPage > pageBlock) {
+                    %>
+                    <button onclick="location.href='AdminInfoBoard.jsp?page=<%= startPage - 1 %><%= searchParams %>'" 
+                            class="p-2 text-primary hover:bg-primary hover:text-white border border-gray-200 rounded transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                    <%
+                        }
+                        
+                        // 페이지 번호
+                        for(int i = startPage; i <= endPage; i++) {
+                            if(i == currentPage) {
+                    %>
+                    <button class="px-4 py-2 text-white bg-primary border border-primary rounded font-medium shadow-sm">
+                        <%= i %>
+                    </button>
+                    <%
+                            } else {
+                    %>
+                    <button onclick="location.href='AdminInfoBoard.jsp?page=<%= i %><%= searchParams %>'" 
+                            class="px-4 py-2 text-primary hover:bg-primary hover:text-white border border-gray-200 rounded transition-all font-medium">
+                        <%= i %>
+                    </button>
+                    <%
                             }
-                        %>
-                        <span class="px-2 text-gray-400">....</span>
-                    </div>
-                    <button class="ml-4 px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        }
+                        
+                        // 다음 버튼
+                        if(endPage < totalPages) {
+                    %>
+                    <button onclick="location.href='AdminInfoBoard.jsp?page=<%= endPage + 1 %><%= searchParams %>'" 
+                            class="p-2 text-primary hover:bg-primary hover:text-white border border-gray-200 rounded transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                         </svg>
                     </button>
+                    <%
+                        }
+                    %>
                 </div>
             </div>
         </div>
@@ -163,7 +235,7 @@
     <script>
         function logout() {
             if(confirm('로그아웃 하시겠습니까?')) {
-                location.href = 'Login.jsp';
+                location.href = '../User/Login.jsp';
             }
         }
     </script>

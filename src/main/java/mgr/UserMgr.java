@@ -71,7 +71,9 @@ public class UserMgr {
             con = pool.getConnection("user");
             
             // 로그인 쿼리 - is_active가 1인 활성 사용자만 로그인 가능
-            String sql = "SELECT user_id, email, role, nickname, is_active FROM user WHERE email = ? AND password = ? AND is_active = 1";
+            String sql = "SELECT user_id, email, role, nickname, created_at, is_active, "
+                    + "ban_count, report_count, point, attend, introduce "
+                    + "FROM user WHERE email = ? AND password = ? AND is_active = 1";
             pstmt = con.prepareStatement(sql);
             pstmt.setString(1, email);
             pstmt.setString(2, password);
@@ -84,6 +86,14 @@ public class UserMgr {
                 user.setEmail(rs.getString("email"));
                 user.setRole(rs.getString("role"));
                 user.setNickname(rs.getString("nickname"));
+                user.setCreatedAt(rs.getString("created_at"));
+                user.setIsActive(rs.getInt("is_active"));
+                user.setBanCount(rs.getInt("ban_count"));
+                user.setReportCount(rs.getInt("report_count"));
+                user.setPoint(rs.getInt("point"));
+                user.setAttend(rs.getString("attend"));
+                user.setIntroduce(rs.getString("introduce"));
+                user.setProfileImage("");
                 
                 System.out.println("로그인 성공: " + email + " (" + rs.getString("role") + ")");
             } else {

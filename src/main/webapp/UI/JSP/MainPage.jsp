@@ -2,8 +2,8 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%
-		//세션에서 email 가져옴
-		String email = (String)session.getAttribute("email");
+		// 세션에서 User 정보 가져옴
+		beans.UserBean user = (beans.UserBean)session.getAttribute("loggedInUser");
 %>
 <!DOCTYPE html>
 <html lang="ko">
@@ -46,7 +46,7 @@
                 
                 <!-- User Menu - Absolute positioned right -->
                 <div class="absolute right-0 flex items-center space-x-4">
-                    <%if(email!=null){ %>
+                    <%if(user!=null){ %>
                     <a href="../JSP/Logout.jsp" class="text-primary hover:text-primary-dark text-sm font-medium">
                         로그아웃
                     </a>

@@ -295,7 +295,7 @@
         // 로그인 체크
         <c:if test="${empty sessionScope.user}">
             alert('로그인이 필요합니다.');
-            location.href = contextPath + '/UI/Html/Login.html';
+            location.href = contextPath + '/UI/JSP/Login.jsp';
         </c:if>
     </script>
 </body>

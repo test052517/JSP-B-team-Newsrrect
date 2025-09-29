@@ -1,7 +1,10 @@
 package beans;
 
-public class PostBean{
-
+/**
+ * 게시글 정보를 담는 Bean 클래스
+ */
+public class PostBean {
+    // 기본 필드
     private int postId;
     private int userId;
     private String type;
@@ -12,8 +15,15 @@ public class PostBean{
     private String createdAt;
     private int reportCount;
     private int recommandCount;
-    private int priority; // New field added
+    private int priority;
+    
+    // JOIN을 위한 추가 필드
+    private String nickname;
+    
+    // 기본 생성자
+    public PostBean() {}
 
+    // Getters and Setters
 	public int getPostId() {
 		return postId;
 	}
@@ -80,4 +90,24 @@ public class PostBean{
 	public void setPriority(int priority) {
 		this.priority = priority;
 	}
+	public String getNickname() {
+		return nickname;
+	}
+	public void setNickname(String nickname) {
+		this.nickname = nickname;
+	}
+
+    /**
+     * 날짜 포맷 변환 (yyyy-MM-dd HH:mm:ss -> MM.dd)
+     */
+    public String getFormattedDate() {
+        if(createdAt == null || createdAt.length() < 10) {
+            return createdAt;
+        }
+        String[] parts = createdAt.substring(0, 10).split("-");
+        if(parts.length == 3) {
+            return parts[1] + "." + parts[2];
+        }
+        return createdAt;
+    }
 }

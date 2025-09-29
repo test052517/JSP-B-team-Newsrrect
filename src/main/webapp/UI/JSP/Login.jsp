@@ -19,6 +19,9 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
             UserBean user = userMgr.Login(email.trim(), password.trim());
             
             if (user != null) {
+            	// UserBean 객체 전체를 세션에 저장
+            	session.setAttribute("loggedInUser", user);
+            	
                 // 세션에 사용자 정보 저장
                 session.setAttribute("userId", user.getUserId());
                 session.setAttribute("email", user.getEmail());
@@ -31,7 +34,7 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
                 // 역할에 따른 리다이렉트
                 String redirectUrl;
                 if ("관리자".equals(user.getRole())) {
-                    redirectUrl = "../JSP/AdminMainPage.jsp";
+                    redirectUrl = "../JSP/Admin/AdminMainPage.jsp";
                 } else {
                     redirectUrl = "../JSP/MainPage.jsp";
                 }
@@ -138,7 +141,7 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
                     <div class="text-center">
                         <p class="text-sm text-gray-600">
                             계정이 없으신가요? 
-                            <a href="../Html/Join.html" class="text-primary hover:text-primary-dark font-medium">회원가입</a>
+                            <a href="/User/NewAccount.jsp" class="text-primary hover:text-primary-dark font-medium">회원가입</a>
                         </p>
                     </div>
                 </form>
@@ -181,7 +184,7 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
 
-        // 헤더와 푸터 로드 (오류 방지 버전)
+     // 헤더와 푸터 로드
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM 로딩 완료');
             
@@ -204,26 +207,16 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
                         console.log('헤더 HTML 로딩 성공');
                         headerElement.innerHTML = html;
                         
-                        // JSP 폴더에서 접근할 수 있도록 링크 수정
-                        const headerLinks = document.querySelectorAll('#header a');
-                        headerLinks.forEach(link => {
-                            const href = link.getAttribute('href');
-                            if (href && !href.startsWith('http') && !href.startsWith('../') && !href.startsWith('/')) {
-                                link.setAttribute('href', '../Html/' + href);
-                            }
-                        });
-                        console.log('헤더 링크 수정 완료');
                     })
                     .catch(error => {
                         console.error('헤더 로드 실패:', error);
-                        // 헤더 로딩 실패시 기본 헤더 표시
                         headerElement.innerHTML = `
                             <div class="bg-white border-b border-gray-200">
                                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                                     <div class="flex justify-between items-center py-4">
                                         <h1 class="text-xl font-bold text-primary">Newsrrect</h1>
                                         <nav>
-                                            <a href="../Html/MainPage.html" class="text-gray-700 hover:text-primary">메인</a>
+                                            <a href="../JSP/MainPage.jsp" class="text-gray-700 hover:text-primary">메인</a>
                                         </nav>
                                     </div>
                                 </div>
