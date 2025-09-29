@@ -14,6 +14,47 @@ public class UserMgr {
     }
     
     /**
+     * 회원가입
+     * @param user UserBean 객체 (email, password, nickname, role 등 설정 필요)
+     * @return 생성 성공 시 true, 실패 시 false
+     */
+    public boolean createUser(UserBean user) {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        boolean result = false;
+
+        try {
+            con = pool.getConnection("user");
+
+            String sql = "INSERT INTO user (email, password, nickname, role, created_at, is_active, point) "
+                       + "VALUES (?, ?, ?, ?, NOW(), 1, 0)";
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, user.getEmail());
+            pstmt.setString(2, user.getPassword());
+            pstmt.setString(3, user.getNickname());
+            pstmt.setString(4, user.getRole());
+
+            int rows = pstmt.executeUpdate();
+            result = rows > 0;
+
+            if (result) {
+                System.out.println("회원가입 성공: " + user.getEmail() + " (" + user.getNickname() + ")");
+            } else {
+                System.out.println("회원가입 실패: " + user.getEmail());
+            }
+
+        } catch (Exception e) {
+            System.err.println("UserMgr.createUser() 오류: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(con, pstmt);
+        }
+
+        return result;
+    }
+
+    
+    /**
      * 로그인 처리
      * @param email 사용자 이메일
      * @param password 사용자 비밀번호
