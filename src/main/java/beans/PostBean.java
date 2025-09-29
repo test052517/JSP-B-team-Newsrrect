@@ -12,7 +12,8 @@ public class PostBean{
     private String createdAt;
     private int reportCount;
     private int recommandCount;
-    
+    private int priority; // New field added
+
 	public int getPostId() {
 		return postId;
 	}
@@ -73,5 +74,10 @@ public class PostBean{
 	public void setRecommandCount(int recommandCount) {
 		this.recommandCount = recommandCount;
 	}
-
+	public int getPriority() {
+		return priority;
+	}
+	public void setPriority(int priority) {
+		this.priority = priority;
+	}
 }

@@ -6,26 +6,58 @@
 </head>
 <body>
     <script type="text/javascript">
-    	// alert("callback");
-		// document.domain 설정
-		try { document.domain = "http://58.72.66.9:7001/Na_down"; } catch(e) {}
-		
-        // execute callback script
-        var sUrl = document.location.search.substr(1);
-		if (sUrl != "blank") {
-	        var oParameter = {}; // query array
-
-	        sUrl.replace(/([^=]+)=([^&]*)(&|$)/g, function(){
-	            oParameter[arguments[1]] = arguments[2];
-	            return "";
-	        });
-	        
-	        if ((oParameter.errstr || '').length) { // on error
-	            (parent.jindo.FileUploader._oCallback[oParameter.callback_func+'_error'])(oParameter);
-	        } else {
-		        (parent.jindo.FileUploader._oCallback[oParameter.callback_func+'_success'])(oParameter);
-		   }
-		}
+        console.log("Callback 페이지 로드됨");
+        console.log("현재 URL:", window.location.href);
+        
+        try {
+            // URL에서 파라미터 추출
+            var urlParams = new URLSearchParams(window.location.search);
+            var callbackFunc = urlParams.get('callback_func');
+            var uploadPath = urlParams.get('uploadPath');
+            var fileName = urlParams.get('fileName');
+            
+            console.log("콜백함수:", callbackFunc);
+            console.log("업로드경로:", uploadPath);
+            console.log("파일명:", fileName);
+            
+            if (uploadPath && fileName) {
+                // SmartEditor에 이미지 삽입
+                if (parent && parent.oEditors && parent.oEditors.getById) {
+                    var editor = parent.oEditors.getById["ir1"];
+                    if (editor) {
+                        var imgHtml = '<img src="' + uploadPath + '" alt="' + decodeURIComponent(fileName) + '" style="max-width: 100%;" />';
+                        editor.exec("PASTE_HTML", [imgHtml]);
+                        console.log("이미지 삽입 성공");
+                    }
+                }
+                
+                // 팝업 창 닫기
+                if (window.opener) {
+                    window.close();
+                } else if (parent) {
+                    // iframe인 경우
+                    parent.postMessage('close_popup', '*');
+                }
+            } else {
+                console.error("필수 파라미터가 없습니다.");
+                alert("파일 업로드에 문제가 발생했습니다.");
+            }
+            
+        } catch (e) {
+            console.error("콜백 처리 오류:", e);
+            alert("이미지 삽입 중 오류가 발생했습니다: " + e.message);
+            
+            // 그래도 팝업은 닫기
+            try {
+                if (window.opener) {
+                    window.close();
+                } else if (parent) {
+                    parent.postMessage('close_popup', '*');
+                }
+            } catch (closeError) {
+                console.error("창 닫기 오류:", closeError);
+            }
+        }
     </script>
 </body>
 </html>

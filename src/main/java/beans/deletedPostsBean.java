@@ -1,0 +1,54 @@
+package beans;
+
+public class deletedPostsBean {
+	private int deletedId;
+    private int postId;
+    private int userId;
+    private String type;
+    private String title;
+    private String content;
+    private String reason;
+    
+	public int getDeletedId() {
+		return deletedId;
+	}
+	public void setDeletedId(int deletedId) {
+		this.deletedId = deletedId;
+	}
+	public int getPostId() {
+		return postId;
+	}
+	public void setPostId(int postId) {
+		this.postId = postId;
+	}
+	public int getUserId() {
+		return userId;
+	}
+	public void setUserId(int userId) {
+		this.userId = userId;
+	}
+	public String getType() {
+		return type;
+	}
+	public void setType(String type) {
+		this.type = type;
+	}
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	public String getContent() {
+		return content;
+	}
+	public void setContent(String content) {
+		this.content = content;
+	}
+	public String getReason() {
+		return reason;
+	}
+	public void setReason(String reason) {
+		this.reason = reason;
+	}
+}
