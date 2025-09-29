@@ -8,8 +8,8 @@
     <title>정보 검증 게시판 - Newsrrect</title>
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/fonts.css">
-	<link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/styles.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/styles.css">
 
     <script>
         tailwind.config = {

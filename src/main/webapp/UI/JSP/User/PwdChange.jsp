@@ -9,8 +9,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <%-- CSS 경로를 절대 경로로 수정하여 404 오류 방지 --%>
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/fonts.css">
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/styles.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/styles.css">
 
     <script>
         tailwind.config = {

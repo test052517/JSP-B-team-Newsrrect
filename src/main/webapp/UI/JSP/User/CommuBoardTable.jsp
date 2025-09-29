@@ -8,8 +8,8 @@
     <title>소통 게시판 테이블</title>
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/fonts.css">
-	<link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/styles.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/styles.css">
 
     <script>
         tailwind.config = {
@@ -77,7 +77,7 @@
             // 부모 창이 어드민메인페이지인지 확인
             if (window.parent && window.parent.location.href.includes('AdminMainPage.jsp')) {
                 // 어드민메인페이지에서 호출된 경우, AdminCommuWatch.html로 이동
-                window.parent.location.href = 'AdminCommuWatch.jsp';
+                window.parent.location.href = '../Admin/AdminCommuWatch.jsp';
             } else {
                 // 일반 페이지에서 호출된 경우 CommuWatch.html로 이동
                 window.parent.location.href = 'CommuWatch.jsp';

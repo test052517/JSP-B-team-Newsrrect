@@ -12,6 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Newsrrect - AI 정보 검증 플랫폼</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link rel="stylesheet" href="CSS/fonts.css">
     <script>
         tailwind.config = {
@@ -62,9 +63,9 @@
 <nav class="bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-center space-x-20 py-4">
-            <a href="InfoBoard.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">정보 검증 게시판</a>
-            <a href="CommuBoard.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">소통 게시판</a>
-            <a href="MyPage.html" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">마이 페이지</a>
+            <a href="User/InfoBoard.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">정보 검증 게시판</a>
+            <a href="User/CommuBoard.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">소통 게시판</a>
+            <a href="User/MyPage.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">마이 페이지</a>
         </div>
     </div>
 </nav>
@@ -352,7 +353,8 @@
         // 최종 이동 거리: 선택된 카드의 중심을 중앙에 맞추기 위한 트랙의 이동 값
         const translateX = containerHalfWidth - cardCenterOffset;
         
-        track.style.transform = `translateX(${translateX}px)`;
+        //track.style.transform = `translateX(${translateX}px)`;
+		$('#carouselTrack').css('transform', 'translateX(' + translateX + 'px)');
         
         // 중앙 위치에 따른 투명화 로직
         cards.forEach((card, index) => {
