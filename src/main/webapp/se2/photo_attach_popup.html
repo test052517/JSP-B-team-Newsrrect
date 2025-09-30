@@ -554,43 +554,6 @@
                     });
             });
         }
-        
-        function pollForImage(imageUrl, fileName, maxRetries = 10, retryInterval = 500) {
-            let retries = 0;
-            
-            console.log(`이미지 동기화 시작: ${imageUrl}`);
-            // 필요하다면 사용자에게 "동기화 중..." 메시지를 보여줄 수 있습니다.
-            
-            const checkImage = () => {
-                const img = new Image();
-                
-                img.onload = () => {
-                    // ✅ 성공! 이미지가 서버에 준비되어 로드 완료됨
-                    console.log("동기화 성공! 에디터에 이미지를 삽입합니다.");
-                    insertToEditor(fileName, imageUrl); // 기존의 이미지 삽입 함수 호출
-                    finishUpload(1); // 업로드 성공 처리
-                };
-                
-                img.onerror = () => {
-                    // ❌ 실패! 아직 이미지가 준비되지 않음. 재시도합니다.
-                    retries++;
-                    if (retries < maxRetries) {
-                        console.log(`동기화 재시도 (${retries}/${maxRetries})...`);
-                        setTimeout(checkImage, retryInterval);
-                    } else {
-                        // 🔃 최대 재시도 횟수 초과. 동기화를 포기합니다.
-                        console.error("폴링 실패: 최대 재시도 횟수를 초과했습니다.");
-                        alert("이미지 동기화에 실패했습니다. 잠시 후 다시 시도해주세요.");
-                        finishUpload(0); // 업로드 실패 처리
-                    }
-                };
-                
-                // 브라우저가 404 에러를 캐싱하는 것을 방지하기 위해 임의의 파라미터를 추가합니다.
-                img.src = imageUrl + '?t=' + new Date().getTime();
-            };
-            
-            checkImage();
-        }
 
         function uploadSingleFile(file) {
             return new Promise((resolve, reject) => {
@@ -603,7 +566,7 @@
                 document.body.appendChild(iframe);
                 
                 form.method = 'POST';
-                form.action = 'photo_uploader/popup/file_uploader.jsp';
+                form.action = '/JSP-B-team-Newsrrect/se2/photo_uploader/popup/file_uploader.jsp';
                 form.target = iframe.name;
                 form.enctype = 'multipart/form-data';
                 
@@ -619,17 +582,23 @@
                 
                 // 콜백 함수를 전역으로 설정하되 삭제하지 않음
                 if (!window.se2_uploadCallback) {
-                	window.se2_uploadCallback = function(uploadPath, fileName) {
-                	    console.log('업로드 완료, 동기화 시작:', uploadPath, fileName);
-                	    
-                	    if (uploadPath && fileName) {
-                	        // 이미지를 바로 삽입하는 대신, 동기화를 확인하는 pollForImage 함수를 호출합니다.
-                	        pollForImage(uploadPath, fileName);
-                	    } else {
-                	        console.error('서버에서 업로드 실패 응답을 받았습니다.');
-                	        alert('서버에서 파일 업로드에 실패했습니다.');
-                	    }
-                	};
+                    window.se2_uploadCallback = function(uploadPath, fileName) {
+                        console.log('업로드 완료:', uploadPath, fileName);
+                        
+                        if (uploadPath && fileName) {
+                            const fullPath = '/JSP-B-team-Newsrrect' + uploadPath;
+                            insertToEditor(fileName, fullPath);
+                            
+                            // 현재 처리 중인 파일의 resolve 호출
+                            if (window.currentResolve) {
+                                window.currentResolve(fullPath);
+                                window.currentResolve = null;
+                            }
+                        } else if (window.currentReject) {
+                            window.currentReject(new Error('업로드 실패'));
+                            window.currentReject = null;
+                        }
+                    };
                 }
                 
                 // 현재 Promise의 resolve/reject 저장
@@ -664,18 +633,8 @@
         function finishUpload(successful) {
             setTimeout(() => {
                 if (successful > 0) {
-                    // [기존] showNotification(...)
-                    // [기존] setTimeout(() => closeWindow(), 1000);
-
-                    // [수정] 1.5초 정도 기다린 후에 창을 닫도록 변경
-                    // 이 시간 동안 Eclipse가 파일을 동기화할 가능성이 높아집니다.
                     showNotification(`${successful}개 파일이 성공적으로 업로드되었습니다.`, 'success');
-                    setTimeout(() => {
-                        // 부모창(에디터)이 스스로 새로고침하도록 할 수도 있습니다.
-                        // if (window.opener) window.opener.location.reload(); 
-                        closeWindow();
-                    }, 1500); // 1.5초 대기
-
+                    setTimeout(() => closeWindow(), 1000);
                 } else {
                     showNotification('업로드에 실패했습니다. 다시 시도해주세요.', 'error');
                     resetUploadState();

@@ -45,17 +45,13 @@
 <script>
 try {
     <% if (errorMessage == null && newFileName != null) { %>
-        var contextPath = "<%= request.getContextPath() %>";
-        var uploadPath = contextPath + "/se2/upload/<%= newFileName %>";
+        var uploadPath = "/se2/upload/<%= newFileName %>";
         var fileName = "<%= newFileName %>";
-        window.parent.se2_uploadCallback(uploadPath, fileName);
 
-    <% } else { %>
-        var errorMsg = "<%= errorMessage != null ? errorMessage.replace("'", "\\'") : "Unknown server error" %>";
-        console.error("Upload Failed. Server Error:", errorMsg);
-        window.parent.se2_uploadCallback(null, null);
+        // alert(uploadPath); // 확인용 alert, 필요 없으면 삭제
+        window.parent.se2_uploadCallback(uploadPath, fileName);
     <% } %>
-} catch (e) {
-    console.error("Error in JSP script tag:", e);
+} catch(e) {
+    console.error(e);
 }
 </script>
