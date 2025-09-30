@@ -7,10 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>회원가입 - Newsrrect</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <%-- CSS 경로를 절대 경로로 수정하여 404 오류 방지 --%>
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/fonts.css">
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/styles.css">
+	<link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
 
     <script>
         tailwind.config = {
@@ -31,7 +28,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-center items-center h-16 relative">
                 <div class="flex-shrink-0">
-                    <a href="../../Html/MainPage.html"><h1 class="text-2xl font-bold text-primary font-newsrrect">Newsrrect</h1></a>
+                    <a href="<%= request.getContextPath() %>/UI/JSP/MainPage.jsp"><h1 class="text-2xl font-bold text-primary font-newsrrect">Newsrrect</h1></a>
                 </div>
                 
                 <div class="absolute right-0 flex items-center space-x-4">
@@ -56,11 +53,11 @@
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="flex justify-center items-center min-h-96">
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 w-full max-w-md">
-                <form id="signupForm" action="NewAccountProc.jsp" method="post" class="space-y-6">
+                <form id="signupForm" action="../../../Proc/User/NewAccountProc.jsp" method="post" class="space-y-6">
                 	<div>
                         <label for="email" class="block text-sm font-medium text-gray-900 mb-2">이메일</label>
                         <input type="email" id="email" name="email" class="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="이메일을 입력하세요">
-                        <p class="text-red-600 text-sm mt-1 hidden">이메일을 입력해주세요</p>
+                        <p id="emailCheckResult" class="text-sm mt-1"></p>
                     </div>
                     
                     <div>
@@ -111,15 +108,16 @@
             fields.forEach(id => {
                 const input = document.getElementById(id);
                 const errorMsg = input.nextElementSibling;
-                if (!input.value.trim()) {
-                    errorMsg.classList.remove('hidden');
-                    valid = false;
-                } else {
-                    errorMsg.classList.add('hidden');
+                if (errorMsg && errorMsg.tagName === "P" && errorMsg.classList.contains("text-red-600")) {
+                    if (!input.value.trim()) {
+                        errorMsg.classList.remove('hidden');
+                        valid = false;
+                    } else {
+                        errorMsg.classList.add('hidden');
+                    }
                 }
             });
 
-            // 비밀번호 일치 체크
             const password = document.getElementById('password').value.trim();
             const confirm = document.getElementById('confirm-password').value.trim();
             const confirmError = document.getElementById('confirm-password').nextElementSibling;
@@ -146,14 +144,15 @@
             fetch('CheckNickname.jsp?nickname=' + encodeURIComponent(nickname))
                 .then(response => response.text())
                 .then(data => {
-                    if (data === 'true') {
-                        resultEl.textContent = '이미 사용 중인 닉네임입니다.';
-                        resultEl.style.color = 'red';
-                    } else {
-                        resultEl.textContent = '사용 가능한 닉네임입니다.';
-                        resultEl.style.color = 'green';
-                    }
-                })
+				    data = data.trim();
+				    if (data === '중복') {
+				        resultEl.textContent = '이미 사용 중인 닉네임입니다.';
+				        resultEl.style.color = 'red';
+				    } else {
+				        resultEl.textContent = '사용 가능한 닉네임입니다.';
+				        resultEl.style.color = 'green';
+				    }
+				})
                 .catch(err => {
                     console.error(err);
                     resultEl.textContent = '중복 확인 중 오류가 발생했습니다.';

@@ -45,7 +45,7 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
                 boolean created = userMgr.createUser(newUser); // UserMgr에 createUser 메서드 필요
                 if (created) {
                     successMessage = "회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.";
-                    response.setHeader("Refresh", "3; URL=Login.jsp"); // 3초 후 로그인 페이지 이동
+                    response.setHeader("Refresh", "3; URL=" + request.getContextPath() + "/UI/JSP/Login.jsp"); // 3초 후 로그인 페이지 이동
                 } else {
                     errorMessage = "회원가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
                 }
@@ -73,12 +73,12 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
         <% if (errorMessage != null) { %>
             <div class="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
                 <p class="text-red-800"><%= errorMessage %></p>
-                <a href="NewAccount.jsp" class="text-primary hover:text-primary-dark font-medium">회원가입 페이지로 돌아가기</a>
+                <a href="<%= request.getContextPath() %>/UI/JSP/User/NewAccount.jsp" class="text-primary hover:text-primary-dark font-medium">회원가입 페이지로 돌아가기</a>
             </div>
         <% } else if (successMessage != null) { %>
             <div class="bg-green-50 border border-green-200 rounded-md p-3 mb-4">
                 <p class="text-green-800"><%= successMessage %></p>
-                <a href="Login.jsp" class="text-primary hover:text-primary-dark font-medium">로그인 페이지로 이동</a>
+                <a href="<%= request.getContextPath() %>/UI/JSP/Login.jsp" class="text-primary hover:text-primary-dark font-medium">로그인 페이지로 이동</a>
             </div>
         <% } %>
     </div>

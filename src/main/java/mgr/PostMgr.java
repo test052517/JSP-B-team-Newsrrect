@@ -22,7 +22,7 @@ public class PostMgr {
         PreparedStatement pstmt = null;
         String sql = null;
         try {
-            con = pool.getConnection();
+            con = pool.getConnection("user");
             // priority 컬럼을 포함하여 INSERT SQL 문을 수정
             sql = "INSERT INTO post(user_id, type, title, content, status, view_count, created_at, report_count, recommand_count, priority) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             
@@ -59,7 +59,7 @@ public class PostMgr {
         PostBean bean = null;
         
         try {
-            conn = pool.getConnection();
+            conn = pool.getConnection("user");
             String sql = "SELECT p.*, u.nickname " +
                          "FROM post p " +
                          "JOIN user u ON p.user_id = u.user_id " +
@@ -96,6 +96,13 @@ public class PostMgr {
     }
 
     /**
+     * 특정 게시글 조회 (getPost 메서드 - AdminInfoWatch.jsp에서 사용)
+     */
+    public PostBean getPost(int postId) {
+        return getPostByPostID(postId);
+    }
+
+    /**
      * 승인 대기 중인 게시글 목록 조회
      */
     public Vector<PostBean> getPendingPosts(int start, int limit) {
@@ -105,7 +112,7 @@ public class PostMgr {
         Vector<PostBean> vlist = new Vector<>();
         
         try {
-            conn = pool.getConnection();
+            conn = pool.getConnection("user");
             String sql = "SELECT p.post_id, p.title, p.created_at, u.nickname " +
                          "FROM post p " +
                          "JOIN user u ON p.user_id = u.user_id " +
@@ -144,7 +151,7 @@ public class PostMgr {
         int count = 0;
         
         try {
-            conn = pool.getConnection();
+            conn = pool.getConnection("user");
             String sql = "SELECT COUNT(*) FROM post WHERE type = '정보' AND status = '비공개'";
             pstmt = conn.prepareStatement(sql);
             rs = pstmt.executeQuery();
@@ -169,7 +176,7 @@ public class PostMgr {
         boolean flag = false;
         
         try {
-            conn = pool.getConnection();
+            conn = pool.getConnection("user");
             String sql = "UPDATE post SET status = '공개' WHERE post_id = ?";
             pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, postId);
@@ -193,7 +200,7 @@ public class PostMgr {
         boolean flag = false;
         
         try {
-            conn = pool.getConnection();
+            conn = pool.getConnection("user");
             String sql = "UPDATE post SET status = '삭제' WHERE post_id = ?";
             pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, postId);
@@ -218,7 +225,7 @@ public class PostMgr {
         Vector<PostBean> vlist = new Vector<>();
         
         try {
-            conn = pool.getConnection();
+            conn = pool.getConnection("user");
             String sql = "";
             
             String baseQuery = "SELECT p.post_id, p.title, p.created_at, u.nickname " +
@@ -266,19 +273,6 @@ public class PostMgr {
     }
 
     /**
-     * ResultSet에 특정 컬럼이 있는지 확인하는 유틸리티 메소드
-     */
-    private boolean hasColumn(ResultSet rs, String columnName) {
-        try {
-            rs.findColumn(columnName);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
- // PostMgr.java 파일에 추가하세요.
-
-    /**
      * 검색된 승인 대기 게시글의 총 개수
      */
     public int getSearchPendingPostCount(String searchType, String keyword) {
@@ -288,7 +282,7 @@ public class PostMgr {
         int count = 0;
         
         try {
-            conn = pool.getConnection();
+            conn = pool.getConnection("user");
             String sql = "";
             String baseQuery = "SELECT COUNT(*) " +
                                "FROM post p JOIN user u ON p.user_id = u.user_id " +
@@ -314,6 +308,417 @@ public class PostMgr {
             rs = pstmt.executeQuery();
             if(rs.next()) {
                 count = rs.getInt(1);
+            }
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        return count;
+    }
+
+    /**
+     * 공개된 게시글 목록 조회 (페이징)
+     */
+    public Vector<PostBean> getPublicPosts(int start, int pageSize) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        Vector<PostBean> vlist = new Vector<>();
+        
+        try {
+            conn = pool.getConnection("user");
+            
+            String sql = "SELECT p.post_id, p.user_id, p.type, p.title, p.content, " +
+                        "p.view_count, p.report_count, p.created_at, p.recommand_count, " +
+                        "u.nickname " +
+                        "FROM post p " +
+                        "JOIN user u ON p.user_id = u.user_id " +
+                        "WHERE p.type = '정보' AND p.status = '공개' " +
+                        "ORDER BY p.created_at DESC " +
+                        "LIMIT ?, ?";
+            
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, start);
+            pstmt.setInt(2, pageSize);
+            rs = pstmt.executeQuery();
+            
+            while(rs.next()) {
+                PostBean post = new PostBean();
+                post.setPostId(rs.getInt("post_id"));
+                post.setUserId(rs.getInt("user_id"));
+                post.setType(rs.getString("type"));
+                post.setTitle(rs.getString("title"));
+                post.setContent(rs.getString("content"));
+                post.setViewCount(rs.getInt("view_count"));
+                post.setReportCount(rs.getInt("report_count"));
+                post.setCreatedAt(rs.getString("created_at"));
+                post.setRecommandCount(rs.getInt("recommand_count"));
+                post.setNickname(rs.getString("nickname"));
+                vlist.add(post);
+            }
+            
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        
+        return vlist;
+    }
+
+    /**
+     * 공개된 게시글 총 개수 조회
+     */
+    public int getPublicPostCount() {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        int count = 0;
+        
+        try {
+            conn = pool.getConnection("user");
+            
+            String sql = "SELECT COUNT(*) as cnt FROM post " +
+                        "WHERE type = '정보' AND status = '공개'";
+            
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            
+            if(rs.next()) {
+                count = rs.getInt("cnt");
+            }
+            
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        
+        return count;
+    }
+
+    /**
+     * 공개된 게시글 검색 (페이징)
+     */
+    public Vector<PostBean> searchPublicPosts(String searchType, String keyword, int start, int pageSize) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        Vector<PostBean> vlist = new Vector<>();
+        
+        try {
+            conn = pool.getConnection("user");
+            
+            String sql = "SELECT p.post_id, p.user_id, p.type, p.title, p.content, " +
+                        "p.view_count, p.report_count, p.created_at, p.recommand_count, " +
+                        "u.nickname " +
+                        "FROM post p " +
+                        "JOIN user u ON p.user_id = u.user_id " +
+                        "WHERE p.type = '정보' AND p.status = '공개' AND ";
+            
+            if("title".equals(searchType)) {
+                sql += "p.title LIKE ? ";
+            } else if("content".equals(searchType)) {
+                sql += "p.content LIKE ? ";
+            } else if("author".equals(searchType)) {
+                sql += "u.nickname LIKE ? ";
+            } else { // 'all' or default
+                sql += "(p.title LIKE ? OR p.content LIKE ? OR u.nickname LIKE ?) ";
+            }
+            
+            sql += "ORDER BY p.created_at DESC LIMIT ?, ?";
+            
+            pstmt = conn.prepareStatement(sql);
+            
+            if("title".equals(searchType) || "content".equals(searchType) || "author".equals(searchType)) {
+                pstmt.setString(1, "%" + keyword + "%");
+                pstmt.setInt(2, start);
+                pstmt.setInt(3, pageSize);
+            } else {
+                pstmt.setString(1, "%" + keyword + "%");
+                pstmt.setString(2, "%" + keyword + "%");
+                pstmt.setString(3, "%" + keyword + "%");
+                pstmt.setInt(4, start);
+                pstmt.setInt(5, pageSize);
+            }
+            
+            rs = pstmt.executeQuery();
+            
+            while(rs.next()) {
+                PostBean post = new PostBean();
+                post.setPostId(rs.getInt("post_id"));
+                post.setUserId(rs.getInt("user_id"));
+                post.setType(rs.getString("type"));
+                post.setTitle(rs.getString("title"));
+                post.setContent(rs.getString("content"));
+                post.setViewCount(rs.getInt("view_count"));
+                post.setReportCount(rs.getInt("report_count"));
+                post.setCreatedAt(rs.getString("created_at"));
+                post.setRecommandCount(rs.getInt("recommand_count"));
+                post.setNickname(rs.getString("nickname"));
+                vlist.add(post);
+            }
+            
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        
+        return vlist;
+    }
+
+    /**
+     * 검색된 공개 게시글의 총 개수
+     */
+    public int getSearchPublicPostCount(String searchType, String keyword) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        int count = 0;
+        
+        try {
+            conn = pool.getConnection("user");
+            
+            String sql = "SELECT COUNT(*) as cnt " +
+                        "FROM post p JOIN user u ON p.user_id = u.user_id " +
+                        "WHERE p.type = '정보' AND p.status = '공개' AND ";
+
+            if("title".equals(searchType)) {
+                sql += "p.title LIKE ?";
+            } else if("content".equals(searchType)) {
+                sql += "p.content LIKE ?";
+            } else if("author".equals(searchType)) {
+                sql += "u.nickname LIKE ?";
+            } else {
+                sql += "(p.title LIKE ? OR p.content LIKE ? OR u.nickname LIKE ?)";
+            }
+            
+            pstmt = conn.prepareStatement(sql);
+            
+            if("title".equals(searchType) || "content".equals(searchType) || "author".equals(searchType)) {
+                pstmt.setString(1, "%" + keyword + "%");
+            } else {
+                pstmt.setString(1, "%" + keyword + "%");
+                pstmt.setString(2, "%" + keyword + "%");
+                pstmt.setString(3, "%" + keyword + "%");
+            }
+            
+            rs = pstmt.executeQuery();
+            if(rs.next()) {
+                count = rs.getInt("cnt");
+            }
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        return count;
+    }
+
+    /**
+     * ResultSet에 특정 컬럼이 있는지 확인하는 유틸리티 메소드
+     */
+    private boolean hasColumn(ResultSet rs, String columnName) {
+        try {
+            rs.findColumn(columnName);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    /**
+     * 커뮤니티 게시글 목록 조회 (페이징)
+     */
+    public Vector<PostBean> getCommunityPosts(int start, int pageSize) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        Vector<PostBean> vlist = new Vector<>();
+        
+        try {
+            conn = pool.getConnection("user");
+            
+            String sql = "SELECT p.post_id, p.user_id, p.type, p.title, p.content, " +
+                        "p.view_count, p.report_count, p.created_at, p.recommand_count, " +
+                        "u.nickname " +
+                        "FROM post p " +
+                        "JOIN user u ON p.user_id = u.user_id " +
+                        "WHERE p.type = '소통' AND p.status = '공개' " +
+                        "ORDER BY p.created_at DESC " +
+                        "LIMIT ?, ?";
+            
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, start);
+            pstmt.setInt(2, pageSize);
+            rs = pstmt.executeQuery();
+            
+            while(rs.next()) {
+                PostBean post = new PostBean();
+                post.setPostId(rs.getInt("post_id"));
+                post.setUserId(rs.getInt("user_id"));
+                post.setType(rs.getString("type"));
+                post.setTitle(rs.getString("title"));
+                post.setContent(rs.getString("content"));
+                post.setViewCount(rs.getInt("view_count"));
+                post.setReportCount(rs.getInt("report_count"));
+                post.setCreatedAt(rs.getString("created_at"));
+                post.setRecommandCount(rs.getInt("recommand_count"));
+                post.setNickname(rs.getString("nickname"));
+                vlist.add(post);
+            }
+            
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        
+        return vlist;
+    }
+
+    /**
+     * 커뮤니티 게시글 총 개수 조회
+     */
+    public int getCommunityPostCount() {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        int count = 0;
+        
+        try {
+            conn = pool.getConnection("user");
+            
+            String sql = "SELECT COUNT(*) as cnt FROM post " +
+                        "WHERE type = '소통' AND status = '공개'";
+            
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            
+            if(rs.next()) {
+                count = rs.getInt("cnt");
+            }
+            
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        
+        return count;
+    }
+
+    /**
+     * 커뮤니티 게시글 검색 (페이징)
+     */
+    public Vector<PostBean> searchCommunityPosts(String searchType, String keyword, int start, int pageSize) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        Vector<PostBean> vlist = new Vector<>();
+        
+        try {
+            conn = pool.getConnection("user");
+            
+            String sql = "SELECT p.post_id, p.user_id, p.type, p.title, p.content, " +
+                        "p.view_count, p.report_count, p.created_at, p.recommand_count, " +
+                        "u.nickname " +
+                        "FROM post p " +
+                        "JOIN user u ON p.user_id = u.user_id " +
+                        "WHERE p.type = '소통' AND p.status = '공개' AND ";
+            
+            if("title".equals(searchType)) {
+                sql += "p.title LIKE ? ";
+            } else if("content".equals(searchType)) {
+                sql += "p.content LIKE ? ";
+            } else if("author".equals(searchType)) {
+                sql += "u.nickname LIKE ? ";
+            } else { // 'all' or default
+                sql += "(p.title LIKE ? OR p.content LIKE ? OR u.nickname LIKE ?) ";
+            }
+            
+            sql += "ORDER BY p.created_at DESC LIMIT ?, ?";
+            
+            pstmt = conn.prepareStatement(sql);
+            
+            if("title".equals(searchType) || "content".equals(searchType) || "author".equals(searchType)) {
+                pstmt.setString(1, "%" + keyword + "%");
+                pstmt.setInt(2, start);
+                pstmt.setInt(3, pageSize);
+            } else {
+                pstmt.setString(1, "%" + keyword + "%");
+                pstmt.setString(2, "%" + keyword + "%");
+                pstmt.setString(3, "%" + keyword + "%");
+                pstmt.setInt(4, start);
+                pstmt.setInt(5, pageSize);
+            }
+            
+            rs = pstmt.executeQuery();
+            
+            while(rs.next()) {
+                PostBean post = new PostBean();
+                post.setPostId(rs.getInt("post_id"));
+                post.setUserId(rs.getInt("user_id"));
+                post.setType(rs.getString("type"));
+                post.setTitle(rs.getString("title"));
+                post.setContent(rs.getString("content"));
+                post.setViewCount(rs.getInt("view_count"));
+                post.setReportCount(rs.getInt("report_count"));
+                post.setCreatedAt(rs.getString("created_at"));
+                post.setRecommandCount(rs.getInt("recommand_count"));
+                post.setNickname(rs.getString("nickname"));
+                vlist.add(post);
+            }
+            
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        
+        return vlist;
+    }
+
+    /**
+     * 검색된 커뮤니티 게시글의 총 개수
+     */
+    public int getSearchCommunityPostCount(String searchType, String keyword) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        int count = 0;
+        
+        try {
+            conn = pool.getConnection("user");
+            
+            String sql = "SELECT COUNT(*) as cnt " +
+                        "FROM post p JOIN user u ON p.user_id = u.user_id " +
+                        "WHERE p.type = '소통' AND p.status = '공개' AND ";
+
+            if("title".equals(searchType)) {
+                sql += "p.title LIKE ?";
+            } else if("content".equals(searchType)) {
+                sql += "p.content LIKE ?";
+            } else if("author".equals(searchType)) {
+                sql += "u.nickname LIKE ?";
+            } else {
+                sql += "(p.title LIKE ? OR p.content LIKE ? OR u.nickname LIKE ?)";
+            }
+            
+            pstmt = conn.prepareStatement(sql);
+            
+            if("title".equals(searchType) || "content".equals(searchType) || "author".equals(searchType)) {
+                pstmt.setString(1, "%" + keyword + "%");
+            } else {
+                pstmt.setString(1, "%" + keyword + "%");
+                pstmt.setString(2, "%" + keyword + "%");
+                pstmt.setString(3, "%" + keyword + "%");
+            }
+            
+            rs = pstmt.executeQuery();
+            if(rs.next()) {
+                count = rs.getInt("cnt");
             }
         } catch(Exception e) {
             e.printStackTrace();

@@ -141,7 +141,7 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
                     <div class="text-center">
                         <p class="text-sm text-gray-600">
                             계정이 없으신가요? 
-                            <a href="/User/NewAccount.jsp" class="text-primary hover:text-primary-dark font-medium">회원가입</a>
+                            <a href="../JSP/User/NewAccount.jsp" class="text-primary hover:text-primary-dark font-medium">회원가입</a>
                         </p>
                     </div>
                 </form>

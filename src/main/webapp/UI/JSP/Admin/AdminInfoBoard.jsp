@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>정보 검증 게시판 관리 - Newsrrect</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="../../CSS/fonts.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
     <script>
         tailwind.config = {
             theme: {
@@ -26,6 +26,15 @@
 </head>
 <body class="min-h-screen bg-gray-50">
 <%
+    // 세션 체크 - 로그인 여부 확인
+    Integer userIdObj = (Integer) session.getAttribute("userId");
+    
+    // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
+    if(userIdObj == null) {
+        response.sendRedirect(request.getContextPath() + "/UI/JSP/Login/Login.jsp");
+        return;
+    }
+
     // 페이징 처리
     int pageSize = 10; // 한 페이지에 보여줄 게시글 수
     String pageNum = request.getParameter("page");
@@ -56,35 +65,7 @@
     if(totalPages == 0) totalPages = 1;
 %>
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-center items-center h-16 relative">
-                <!-- Logo - Centered -->
-                <div class="flex-shrink-0">
-                    <a href="AdminMainPage.jsp"><h1 class="text-2xl font-bold text-primary font-newsrrect">Newsrrect</h1></a>
-                </div>
-                
-                <!-- User Menu - Absolute positioned right -->
-                <div class="absolute right-0 flex items-center space-x-4">
-                    <a href="#" onclick="logout()" class="text-primary hover:text-primary-dark text-sm font-medium">
-                        로그아웃
-                    </a>
-                </div>
-            </div>
-        </div>
-    </header>
-    
-    <!-- Navigation -->
-    <nav class="bg-white border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-center space-x-16 py-4">
-                <a href="AdminInfo.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판</a>
-                <a href="AdminCommu.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">소통 게시판</a>
-                <a href="AdminInfoBoard.jsp" class="text-white bg-primary px-3 py-2 text-sm font-medium rounded font-paperozi-medium">정보 검증 게시판 관리</a>
-                <a href="AdminUserReport.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">유저 / 신고 관리</a>
-            </div>
-        </div>
-    </nav>
+    <jsp:include page="../Common/AdminHeader.jsp" />
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -231,13 +212,5 @@
 
     <!-- Footer -->
     <jsp:include page="../Common/Footer.jsp" />
-
-    <script>
-        function logout() {
-            if(confirm('로그아웃 하시겠습니까?')) {
-                location.href = '../User/Login.jsp';
-            }
-        }
-    </script>
 </body>
 </html>

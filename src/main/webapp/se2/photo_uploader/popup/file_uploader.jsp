@@ -1,39 +1,61 @@
-﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"
+    import="java.nio.file.*, com.oreilly.servlet.*, com.oreilly.servlet.multipart.*, java.io.File, java.util.Date, java.text.SimpleDateFormat"
+%>
 <%
-    request.setCharacterEncoding("UTF-8");
+    response.setContentType("text/html; charset=UTF-8");
 
-    // SmartEditor2에서 전달되는 callback_func 파라미터
-    String callback = request.getParameter("callback_func"); 
-    if (callback == null || callback.equals("null")) {
-        callback = "se2_uploadCallback";  // 기본 콜백 함수 지정
-    }
+    String newFileName = null;
+    String errorMessage = null;
 
-    // 업로드 저장 경로
-    String savePath = application.getRealPath("/upload");
-    java.io.File uploadDir = new java.io.File(savePath);
-    if (!uploadDir.exists()) {
-        uploadDir.mkdirs();
-    }
-
-    String fileName = "";
-    String filePath = "";
     try {
-        // cos.jar 의 MultipartRequest 사용
-        com.oreilly.servlet.MultipartRequest multi = new com.oreilly.servlet.MultipartRequest(
-            request, savePath, 10*1024*1024, "UTF-8", new com.oreilly.servlet.multipart.DefaultFileRenamePolicy()
+        String workspaceProject_Path = "C:/JSP-B-team-Newsrrect/JSP-B-team-Newsrrect";
+        String savePath = workspaceProject_Path + "/src/main/webapp/se2/upload";
+
+        File uploadDir = new File(savePath);
+        if (!uploadDir.exists()) {
+            uploadDir.mkdirs();
+        }
+
+        MultipartRequest multi = new MultipartRequest(
+            request, savePath, 10 * 1024 * 1024, "UTF-8", new DefaultFileRenamePolicy()
         );
 
-        fileName = multi.getFilesystemName("Filedata");
-        if (fileName != null) {
-            filePath = "/upload/" + fileName; // 웹 접근 경로
+        String originalFileName = multi.getFilesystemName("Filedata");
+        if (originalFileName == null) {
+            throw new Exception("파일 데이터를 찾을 수 없습니다. (Filedata 파라미터 확인)");
         }
-    } catch(Exception e) {
+
+        String timeStamp = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS").format(new Date());
+        String fileExtension = "";
+        int dotIndex = originalFileName.lastIndexOf(".");
+        if (dotIndex != -1) {
+            fileExtension = originalFileName.substring(dotIndex);
+        }
+        newFileName = timeStamp + fileExtension;
+
+        Path sourcePath = Paths.get(savePath, originalFileName);
+        Path targetPath = Paths.get(savePath, newFileName);
+        Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+
+    } catch (Exception e) {
+        errorMessage = e.getMessage();
         e.printStackTrace();
     }
 %>
-<script type="text/javascript">
-    // complete.jsp 로 결과 전달
-    location.href = "complete.jsp?callback_func=<%=callback%>"
-        + "&uploadPath=<%=filePath%>"
-        + "&fileName=<%=fileName%>";
+<script>
+try {
+    <% if (errorMessage == null && newFileName != null) { %>
+        var contextPath = "<%= request.getContextPath() %>";
+        var uploadPath = contextPath + "/se2/upload/<%= newFileName %>";
+        var fileName = "<%= newFileName %>";
+        window.parent.se2_uploadCallback(uploadPath, fileName);
+
+    <% } else { %>
+        var errorMsg = "<%= errorMessage != null ? errorMessage.replace("'", "\\'") : "Unknown server error" %>";
+        console.error("Upload Failed. Server Error:", errorMsg);
+        window.parent.se2_uploadCallback(null, null);
+    <% } %>
+} catch (e) {
+    console.error("Error in JSP script tag:", e);
+}
 </script>

@@ -6,6 +6,18 @@
 		// 세션에서 User 정보 가져옴
 		beans.UserBean user = (beans.UserBean)session.getAttribute("loggedInUser");
 %>
+<%
+    if (user == null) {
+        String redirectUrl = request.getContextPath() + "/UI/JSP/Login.jsp";
+        
+        out.println("<script>");
+        out.println("alert('로그인이 필요한 서비스입니다.');");
+        out.println("window.location.replace('" + redirectUrl + "');");
+        out.println("</script>");
+
+        return; 
+    }
+%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -117,25 +129,27 @@
 
                 <!-- Statistics -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-blue-50 rounded-lg p-4 text-center">
-                        <div class="text-2xl font-bold text-blue-600 mb-1">
-                            ${not empty userStats.postCount ? userStats.postCount : 1234}
-                        </div>
-                        <div class="text-sm text-blue-800">작성한 게시글</div>
-                    </div>
-                    <div class="bg-green-50 rounded-lg p-4 text-center">
-                        <div class="text-2xl font-bold text-green-600 mb-1">
-                            ${not empty userStats.commentCount ? userStats.commentCount : 1234}
-                        </div>
-                        <div class="text-sm text-green-800">작성한 댓글</div>
-                    </div>
-                    <div class="bg-purple-50 rounded-lg p-4 text-center">
-                        <div class="text-2xl font-bold text-purple-600 mb-1">
-                            ${not empty userStats.likeCount ? userStats.likeCount : 567}
-                        </div>
-                        <div class="text-sm text-purple-800">받은 추천</div>
-                    </div>
-                </div>
+			    <div class="rounded-lg p-4 text-center" style="background-color: #85b9fd;"> 
+			        <div class="text-2xl font-bold mb-1 text-white">
+			            ${not empty userStats.postCount ? userStats.postCount : 1234}
+			        </div>
+			        <div class="text-sm text-white">작성한 게시글</div>
+			    </div>
+			    
+			    <div class="rounded-lg p-4 text-center" style="background-color: #738dff;"> 
+			        <div class="text-2xl font-bold mb-1 text-white">
+			            ${not empty userStats.commentCount ? userStats.commentCount : 1234}
+			        </div>
+			        <div class="text-sm text-white">작성한 댓글</div>
+			    </div>
+    
+    <div class="rounded-lg p-4 text-center" style="background-color: #7a6bfe;">
+        <div class="text-2xl font-bold mb-1 text-white">
+            ${not empty userStats.likeCount ? userStats.likeCount : 567}
+        </div>
+        <div class="text-sm text-white">받은 추천</div>
+    </div>
+</div>
 
                 <!-- Posts Section -->
                 <div class="mb-8">

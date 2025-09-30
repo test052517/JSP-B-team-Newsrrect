@@ -1,9 +1,15 @@
-<%@ page contentType="text/html; charset=UTF-8"%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%
-		//세션에서 email 가져옴
-		String email = (String)session.getAttribute("email");
+    // 세션 체크 - 로그인 여부 확인
+    Integer userIdObj = (Integer) session.getAttribute("userId");
+    
+    // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
+    if(userIdObj == null) {
+        response.sendRedirect(request.getContextPath() + "/UI/JSP/Login/Login.jsp");
+        return;
+    }
 %>
 <!DOCTYPE html>
 <html lang="ko">
@@ -13,7 +19,7 @@
     <title>Newsrrect - 관리자 페이지</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <link rel="stylesheet" href="../CSS/fonts.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
     <script>
         tailwind.config = {
             theme: {
@@ -29,48 +35,8 @@
     </script>
 </head>
 <body class="min-h-screen">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-center items-center h-16 relative">
-                <!-- Logo - Centered -->
-                <div class="flex-shrink-0">
-                    <h1 class="text-2xl font-bold text-primary font-newsrrect"
-                    style="
-                    background-image: linear-gradient(to bottom, #738dff, #6179f8);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    background-clip: text;
-                    color: transparent; /* fallback */">Newsrrect</h1>
-                </div>
-                
-                <!-- User Menu - Absolute positioned right -->
-                <div class="absolute right-0 flex items-center space-x-4">
-                    <%if(email!=null){ %>
-                    <a href="../JSP/Logout.jsp" class="text-primary hover:text-primary-dark text-sm font-medium">
-                        로그아웃
-                    </a>
-                    <%}else{%>
-                  <a href="../JSP/Login.jsp" class="text-primary hover:text-primary-dark text-sm font-medium">
-                        로그인
-                    </a>
-                  <% } %>
-                </div>
-            </div>
-        </div>
-    </header>
-    
-    <!-- Navigation -->
-    <nav class="bg-white border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-center space-x-16 py-4">
-                <a href="AdminInfo.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판</a>
-                <a href="AdminCommu.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">소통 게시판</a>
-                <a href="AdminInfoBoard.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">정보 검증 게시판 관리</a>
-                <a href="AdminUserReport.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium font-paperozi-medium">유저 / 신고 관리</a>
-            </div>
-        </div>
-    </nav>
+    <!-- Header & Navigation -->
+    <jsp:include page="../Common/AdminHeader.jsp" />
 
     <!-- Main Content -->
     <main>
@@ -203,7 +169,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto"> 
                             <!-- Today's Upload Statistics -->
                             <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200 text-center">
-                                <h3 class="text-lg font-medium text-gray-900 mb-4" style="font-family: 'Paperozi', sans-serif; font-weight: 400;">금일 업로드 정보 검증글</h3>
+                                <h3 class="text-lg font-medium text-gray-900 mb-4 font-paperozi-medium">금일 업로드 정보 검증글</h3>
                                 <div class="text-4xl font-bold text-primary mb-2">
                                     <c:choose>
                                         <c:when test="${not empty todayUploadCount}">
@@ -214,12 +180,12 @@
                                         </c:otherwise>
                                     </c:choose>
                                 </div>
-                                <div class="text-gray-900" style="font-family: 'Paperozi', sans-serif; font-weight: 400;">건</div>
+                                <div class="text-gray-900 font-paperozi-medium">건</div>
                             </div>
                             
                             <!-- Total Upload Statistics -->
                             <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200 text-center">
-                                <h3 class="text-lg font-medium text-gray-900 mb-4" style="font-family: 'Paperozi', sans-serif; font-weight: 400;">전체 업로드 정보 검증글</h3>
+                                <h3 class="text-lg font-medium text-gray-900 mb-4 font-paperozi-medium">전체 업로드 정보 검증글</h3>
                                 <div class="text-4xl font-bold text-primary mb-2">
                                     <c:choose>
                                         <c:when test="${not empty totalUploadCount}">
@@ -230,7 +196,7 @@
                                         </c:otherwise>
                                     </c:choose>
                                 </div>
-                                <div class="text-gray-900" style="font-family: 'Paperozi', sans-serif; font-weight: 400;">건</div>
+                                <div class="text-gray-900 font-paperozi-medium">건</div>
                             </div>
                         </div>
                     </section>
@@ -355,8 +321,7 @@
         // 최종 이동 거리: 선택된 카드의 중심을 중앙에 맞추기 위한 트랙의 이동 값
         const translateX = containerHalfWidth - cardCenterOffset;
         
-        //track.style.transform = `translateX(${translateX}px)`;
-		$('#carouselTrack').css('transform', 'translateX(' + translateX + 'px)');
+        $('#carouselTrack').css('transform', 'translateX(' + translateX + 'px)');
         
         // 중앙 위치에 따른 투명화 로직
         cards.forEach((card, index) => {
@@ -402,13 +367,6 @@
         }
     }
 
-    // 로그아웃 함수
-    function logout() {
-        if(confirm('로그아웃 하시겠습니까?')) {
-            location.href = 'Login.jsp';
-        }
-    }
-
     // 초기 로딩
     document.addEventListener('DOMContentLoaded', () => {
         // 슬라이드 초기 상태 설정
@@ -427,4 +385,5 @@
         });
     });
     </script>
-</body>    
+</body>
+</html>
