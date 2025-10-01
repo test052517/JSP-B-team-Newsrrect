@@ -19,7 +19,7 @@ public class CommentMgr {
         Connection conn = null;
         PreparedStatement pstmt = null;
         boolean flag = false;
-        String sql = "INSERT INTO comment (post_id, user_id, type, layer, parent_comment_id, content, status, created_at, judgment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO comment (post_id, user_id, type, layer, parent_comment_id, content, status, created_at, judgment, attache) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try {
             conn = pool.getConnection("user");
@@ -46,6 +46,13 @@ public class CommentMgr {
                 pstmt.setString(9, judgment); 
             }
             
+            String attache = commentBean.getAttache();
+            if (attache == null || attache.trim().isEmpty()) {
+                pstmt.setNull(10, Types.VARCHAR); 
+            } else {
+                pstmt.setString(10, attache); 
+            }
+            
             if (pstmt.executeUpdate() == 1) {
                 flag = true;
             }
@@ -57,7 +64,7 @@ public class CommentMgr {
         return flag;
     }
 
-    // 부모 댓글만 가져오기 (layer = 0인 댓글들)
+    // 부모 댓글 (layer = 0)
     public Vector<CommentBean> getCommentList(int postId) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -84,6 +91,8 @@ public class CommentMgr {
                 bean.setNickname(rs.getString("nickname")); 
                 bean.setJudgment(rs.getString("judgment"));
                 bean.setUpvotes(rs.getInt("upvotes"));
+                // attache 필드 추가
+                bean.setAttache(rs.getString("attache")); 
                 
                 vlist.add(bean);
             }
@@ -95,7 +104,7 @@ public class CommentMgr {
         return vlist;
     }
     
-    // 특정 댓글의 답글들을 가져오기 (모든 layer의 대댓글들)
+    // 대댓글
     public Vector<CommentBean> getReplyList(int parentCommentId) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -124,6 +133,7 @@ public class CommentMgr {
                 bean.setCreated_at(rs.getString("created_at"));
                 bean.setNickname(rs.getString("nickname"));
                 bean.setUpvotes(rs.getInt("upvotes"));
+                bean.setAttache(rs.getString("attache")); 
                 
                 vlist.add(bean);
             }
@@ -135,14 +145,12 @@ public class CommentMgr {
         return vlist;
     }
     
-    // 대대댓글 지원을 위한 새로운 메소드
     public Vector<CommentBean> getAllRepliesRecursive(int parentCommentId) {
         Vector<CommentBean> allReplies = new Vector<>();
         Vector<CommentBean> directReplies = getReplyList(parentCommentId);
         
         for(CommentBean reply : directReplies) {
             allReplies.add(reply);
-            // 재귀적으로 답글의 답글들도 가져오기
             Vector<CommentBean> subReplies = getAllRepliesRecursive(reply.getComment_id());
             allReplies.addAll(subReplies);
         }
@@ -194,13 +202,7 @@ public class CommentMgr {
         }
         return flag;
     }
- // 이 코드를 CommentMgr.java 클래스 내부에 추가하세요.
 
-    /**
-     * 댓글 추천수를 1 감소시키는 메소드 (추천 취소용)
-     * @param commentId 추천수를 감소시킬 댓글의 ID
-     * @return 성공 시 true, 실패 시 false
-     */
     public boolean downvoteComment(int commentId) {
         Connection con = null;
         PreparedStatement pstmt = null;
@@ -208,7 +210,6 @@ public class CommentMgr {
 
         try {
             con = pool.getConnection("user");
-            // 추천수가 0보다 클 때만 감소시키도록 조건을 추가하는 것이 좋습니다.
             String sql = "UPDATE comment SET upvotes = upvotes - 1 WHERE comment_id = ? AND upvotes > 0";
             pstmt = con.prepareStatement(sql);
             pstmt.setInt(1, commentId);
@@ -216,7 +217,7 @@ public class CommentMgr {
             int result = pstmt.executeUpdate();
             
             if (result == 1) {
-                flag = true; // 쿼리 실행 후 1개의 행이 영향을 받았다면 성공
+                flag = true;
             }
         } catch (Exception e) {
             e.printStackTrace();

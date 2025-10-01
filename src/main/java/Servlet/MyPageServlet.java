@@ -1,6 +1,8 @@
 package Servlet;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 
 import javax.servlet.RequestDispatcher;
@@ -11,13 +13,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import com.oreilly.servlet.MultipartRequest;
+import com.oreilly.servlet.multipart.DefaultFileRenamePolicy;
+
 import beans.UserBean;
 import beans.MyPageStatsBean;
 import beans.PostBean;
 import beans.CommentBean;
 import mgr.MyPageMgr;
 
-@WebServlet("/Servlet/MyPageServlet")
+@WebServlet({"/Servlet/MyPageServlet", "/updateProfile.do"}) 
 public class MyPageServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -81,7 +86,84 @@ public class MyPageServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        // GET 방식으로 처리하도록 유도하거나, 필요에 따라 POST 로직 구현
-        doGet(request, response);
-    }
+        
+        // JSON 응답을 위한 설정
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        PrintWriter out = response.getWriter();
+        
+     // 1. 세션 사용자 정보 확인
+        HttpSession session = request.getSession();
+        UserBean user = (UserBean) session.getAttribute("loggedInUser");
+        
+        if (user == null) {
+            // 로그인 정보가 없으면 에러 응답
+            out.print("{\"success\": false, \"message\": \"로그인이 필요합니다.\"}");
+            out.flush();
+            return;
+        }
+
+        // 파일이 저장될 서버상의 실제 경로 (예: 프로젝트의 /uploads/profiles 폴더)
+        String saveDirectory = request.getServletContext().getRealPath("/uploads/profiles"); 
+        
+        // [수정] maxPostSize, encoding 변수 선언
+        int maxPostSize = 1024 * 1024 * 5; // 5MB 제한
+        String encoding = "UTF-8";
+        
+        File uploadDir = new File(saveDirectory);
+        if (!uploadDir.exists()) {
+            System.out.println("DEBUG: 업로드 폴더가 없어 생성 시도: " + saveDirectory);
+            uploadDir.mkdirs(); // 폴더가 없으면 생성
+        }
+        
+        System.out.println("DEBUG: 파일 업로드 처리 직전. saveDirectory: " + saveDirectory);
+        
+        // 기본 변수 선언
+        String introduce = "";
+        String newProfileImageName = null;
+        String statusMessage = "프로필 업데이트 성공";
+
+        try {
+            // 3. MultipartRequest 생성 및 데이터 추출
+            MultipartRequest multi = new MultipartRequest(request, saveDirectory, maxPostSize, encoding, new DefaultFileRenamePolicy());
+            
+            // [수정] introduce 변수 할당 코드를 한 번으로 통합
+            introduce = multi.getParameter("introduce");
+            System.out.println("DEBUG: MultipartRequest 성공. introduce: " + introduce); 
+            
+            // 파일 데이터 추출 (프로필 이미지)
+            if (multi.getFilesystemName("profileImage") != null) {
+                newProfileImageName = multi.getFilesystemName("profileImage"); 
+            }
+            
+            // 4. DB 로직 실행 (MyPageMgr 사용)
+            MyPageMgr mgr = new MyPageMgr();
+            
+            boolean success = mgr.updateProfile(
+                user.getUserId(),               // 사용자 ID
+                introduce,                      // 새 자기소개
+                newProfileImageName             // 새 프로필 이미지 파일명 (null일 수 있음)
+            );
+
+            if (success) {
+                // 세션 정보 업데이트
+                user.setIntroduce(introduce);
+                if (newProfileImageName != null) {
+                    user.setProfileImage(newProfileImageName); 
+                }
+                session.setAttribute("loggedInUser", user);
+
+                out.print("{\"success\": true, \"message\": \"프로필이 성공적으로 업데이트되었습니다.\"}");
+            }  else {
+                statusMessage = "프로필 업데이트 중 DB 오류가 발생했습니다.";
+                out.print("{\"success\": false, \"message\": \"" + statusMessage + "\"}");
+            }
+            
+        } catch (Exception e) {
+            System.err.println("프로필 업데이트 서블릿 오류: " + e.getMessage());
+            out.print("{\"success\": false, \"message\": \"서버 처리 중 오류가 발생했습니다.\"}");
+        } finally {
+            out.flush();
+        }
+    }   
 }

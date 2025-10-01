@@ -173,7 +173,8 @@
             <div class="p-6">
                 <c:if test="${loggedInUser != null}">
                     <div class="mb-6">
-                        <form action="${pageContext.request.contextPath}/submitCommuComment" method="post" id="commentForm">
+                        <%-- 파일 첨부를 위해 enctype="multipart/form-data" 추가 --%>
+                        <form action="${pageContext.request.contextPath}/submitCommuComment" method="post" id="commentForm" enctype="multipart/form-data">
                             <input type="hidden" name="postId" value="${post.postId}">
                             <input type="hidden" name="userId" value="${loggedInUser.userId}">
                             <input type="hidden" name="type" value="소통">
@@ -183,6 +184,34 @@
                             <div class="mb-4">
                                 <textarea name="content" id="ir1" rows="10" cols="100" style="width:100%; height:300px; display:none;"></textarea>
                             </div>
+                            
+                            <%-- START: 첨부 파일 추가 섹션 --%>
+                            <div class="mb-4">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <%-- name="commentFile"로 파일 전송 --%>
+                                    <input type="file" name="commentFile" id="comment-file" class="hidden"> <%-- 'multiple' 속성 제거 --%>
+                                    <button type="button" onclick="document.getElementById('comment-file').click()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
+                                        첨부 파일
+                                    </button>
+                                    <span class="text-sm text-gray-500" id="file-count-display">파일을 선택하세요</span>
+                                </div>
+                                
+                                <!-- 선택된 파일 목록 표시 -->
+                                <div id="selected-files-display" class="hidden">
+                                    <div class="bg-gray-50 border border-gray-200 rounded-md p-3">
+                                        <div id="file-list-detail" class="space-y-1">
+                                            <!-- 파일 목록이 여기에 삽입됩니다 -->
+                                        </div>
+                                        <div class="mt-2 text-right">
+                                            <button type="button" onclick="clearFiles()" class="text-red-500 hover:text-red-700 text-sm font-medium">
+                                                전체 삭제
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <%-- END: 첨부 파일 추가 섹션 --%>
+
                             <div class="flex justify-end">
                                 <button type="button" onclick="submitContents();" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors">댓글등록</button>
                             </div>
@@ -221,6 +250,19 @@
                                 </div>
                                 <div class="mb-3">
                                     <p class="text-gray-900 font-medium"><c:out value="${bestComment.content}" escapeXml="false" /></p>
+                                    
+                                    <%-- [추가] BEST 댓글 첨부파일 표시 --%>
+                                    <c:if test="${not empty bestComment.attache}">
+                                        <div class="mt-2 p-2 bg-gray-100 border border-gray-300 rounded-md inline-flex items-center space-x-2 text-sm text-gray-700">
+                                            <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L18 14"></path>
+                                            </svg>
+                                            <a href="<%= request.getContextPath() %>/comment_file/${bestComment.attache}" class="hover:underline" target="_blank">
+                                                첨부파일 다운로드
+                                            </a>
+                                        </div>
+                                    </c:if>
+                                    
                                 </div>
                                 <div class="flex items-center space-x-4 text-sm">
                                     <c:choose>
@@ -295,6 +337,19 @@
                                                 </div>
                                             </div>
                                             <p class="text-sm text-gray-900"><c:out value="${reply.content}" escapeXml="false" /></p>
+                                            
+                                            <%-- [추가] 답글 첨부파일 표시 --%>
+                                            <c:if test="${not empty reply.attache}">
+                                                <div class="mt-1 text-xs text-gray-500 flex items-center space-x-1">
+                                                     <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L18 14"></path>
+                                                    </svg>
+                                                    <a href="<%= request.getContextPath() %>/comment_file/${reply.attache}" class="hover:underline" target="_blank">
+                                                        첨부파일 다운로드
+                                                    </a>
+                                                </div>
+                                            </c:if>
+                                            
                                             <div class="flex items-center space-x-3 mt-2 text-xs">
                                                 <c:choose>
                                                     <c:when test="${loggedInUser != null}">
@@ -377,6 +432,18 @@
                                         </div>
                                         <div class="mb-3">
                                             <p class="text-gray-900"><c:out value="${comment.content}" escapeXml="false" /></p>
+                                            
+                                            <%-- [추가] 일반 댓글 첨부파일 표시 --%>
+                                            <c:if test="${not empty comment.attache}">
+                                                <div class="mt-2 p-2 bg-gray-100 border border-gray-300 rounded-md inline-flex items-center space-x-2 text-sm text-gray-700">
+                                                     <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L18 14"></path>
+                                                    </svg>
+                                                    <a href="<%= request.getContextPath() %>/comment_file/${comment.attache}" class="hover:underline" target="_blank">
+                                                        첨부파일 다운로드
+                                                    </a>
+                                                </div>
+                                            </c:if>
                                         </div>
                                         <div class="flex items-center space-x-4 text-sm">
                                             <c:choose>
@@ -451,6 +518,19 @@
                                                         </div>
                                                     </div>
                                                     <p class="text-sm text-gray-900"><c:out value="${reply.content}" escapeXml="false" /></p>
+                                                    
+                                                    <%-- [추가] 답글 첨부파일 표시 --%>
+                                                    <c:if test="${not empty reply.attache}">
+                                                        <div class="mt-1 text-xs text-gray-500 flex items-center space-x-1">
+                                                             <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L18 14"></path>
+                                                            </svg>
+                                                            <a href="<%= request.getContextPath() %>/comment_file/${reply.attache}" class="hover:underline" target="_blank">
+                                                                첨부파일 다운로드
+                                                            </a>
+                                                        </div>
+                                                    </c:if>
+                                                    
                                                     <div class="flex items-center space-x-3 mt-2 text-xs">
                                                         <c:choose>
                                                             <c:when test="${loggedInUser != null}">
@@ -689,6 +769,53 @@
         document.getElementById('commentReportModal').addEventListener('click', function(e) {
             if(e.target === this) {
                 closeCommentReportModal();
+            }
+        });
+        
+        // 파일 선택 초기화
+        function clearFiles() {
+            document.getElementById('comment-file').value = '';
+            document.getElementById('selected-files-display').classList.add('hidden');
+            document.getElementById('file-count-display').textContent = '파일을 선택하세요';
+            document.getElementById('file-list-detail').innerHTML = '';
+        }
+        
+        // 파일 첨부 핸들러
+        function handleFileSelect(event) {
+            const fileInput = event.target;
+            const files = fileInput.files;
+            const selectedFilesDisplay = document.getElementById('selected-files-display');
+            const fileCountDisplay = document.getElementById('file-count-display');
+            const fileListDetail = document.getElementById('file-list-detail');
+
+            if (files.length === 1) {
+                selectedFilesDisplay.classList.remove('hidden');
+                fileCountDisplay.textContent = `1개 파일 선택됨`;
+                
+                fileListDetail.innerHTML = '';
+                const file = files[0];
+                const fileSizeKB = (file.size / 1024).toFixed(1);
+                const fileItem = document.createElement('div');
+                fileItem.className = 'flex items-center space-x-2 text-sm text-gray-700 p-1'; 
+                fileItem.innerHTML = `
+                    <svg class="w-4 h-4 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <span class="flex-1 truncate">${file.name}</span>
+                    <span class="text-xs text-gray-500">${fileSizeKB}</span>
+                `;
+                fileListDetail.appendChild(fileItem);
+                
+            } else {
+                clearFiles();
+            }
+        }
+
+        // 초기화 및 이벤트 리스너 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('comment-file');
+            if (fileInput) {
+                fileInput.addEventListener('change', handleFileSelect);
             }
         });
     </script>

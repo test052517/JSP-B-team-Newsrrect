@@ -3,6 +3,7 @@ package mgr;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Vector;
 import beans.PostBean;
 
@@ -726,5 +727,115 @@ public class PostMgr {
             pool.freeConnection(conn, pstmt, rs);
         }
         return count;
+    }
+    
+    /**
+     * 커뮤니티 게시글 최신 6개 
+     */
+    public Vector<PostBean> newListPosts(String type) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        Vector<PostBean> vlist = new Vector<>();
+        
+        try {
+            conn = pool.getConnection("user");
+            
+            String sql = "SELECT * FROM post WHERE type = ? AND status = '공개' order by post_id desc limit 6";
+           
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, type);
+            rs = pstmt.executeQuery();
+            
+            while(rs.next()) {
+                PostBean post = new PostBean();
+                post.setPostId(rs.getInt("post_id"));
+                post.setType(rs.getString("type"));
+                post.setTitle(rs.getString("title"));
+                post.setCreatedAt(rs.getString("created_at"));
+                vlist.add(post);
+            }
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        
+        return vlist;
+    }
+
+    /**
+     * 오늘의 인기 검증 게시물 카드(조회수 높은 순으로 6개, 조회수 동일하면 post_id 순서대로)
+     */
+    public Vector<PostBean> todayInfoCards(String type) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        Vector<PostBean> vlist = new Vector<>();
+        
+        try {
+            conn = pool.getConnection("user");
+            
+            String sql = "SELECT * FROM post WHERE type = ? AND status = '공개' order by view_count desc limit 6";
+           
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, type);
+            rs = pstmt.executeQuery();
+            
+            while(rs.next()) {
+                PostBean post = new PostBean();
+                post.setType(rs.getString("type"));
+                post.setTitle(rs.getString("title"));
+                post.setContent(rs.getString("content"));
+                post.setViewCount(rs.getInt("view_count"));
+                vlist.add(post);
+            }
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        
+        return vlist;
+    }
+    
+    public int createPostAndGetId(PostBean bean) {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        String sql = null;
+        int generatedId = 0;
+        try {
+            con = pool.getConnection("user");
+            sql = "INSERT INTO post(user_id, type, title, content, status, view_count, created_at, report_count, recommand_count, priority) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            
+            // Statement.RETURN_GENERATED_KEYS 옵션을 사용하여 INSERT 후 생성된 ID를 가져옵니다.
+            pstmt = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            
+            pstmt.setInt(1, bean.getUserId());
+            pstmt.setString(2, bean.getType());
+            pstmt.setString(3, bean.getTitle());
+            pstmt.setString(4, bean.getContent());
+            pstmt.setString(5, bean.getStatus());
+            pstmt.setInt(6, bean.getViewCount());
+            pstmt.setString(7, bean.getCreatedAt());
+            pstmt.setInt(8, bean.getReportCount());
+            pstmt.setInt(9, bean.getRecommandCount());
+            pstmt.setInt(10, bean.getPriority());
+            
+            pstmt.executeUpdate();
+
+            // 생성된 키(post_id) 가져오기
+            rs = pstmt.getGeneratedKeys();
+            if (rs.next()) {
+                generatedId = rs.getInt(1);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(con, pstmt, rs);
+        }
+        return generatedId;
     }
 }

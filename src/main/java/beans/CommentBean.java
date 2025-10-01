@@ -14,6 +14,7 @@ public class CommentBean {
     private int upvotes;
     private String created_at;
     private int report_count;
+    private String attache;
     
     // ===============================================================
     // [추가] 화면 표시를 위해 JOIN된 사용자 닉네임을 임시로 담을 필드
@@ -22,7 +23,6 @@ public class CommentBean {
     private String originalPostTitle;
     private int originalPostId;
     
-    // --- 기존 Getter/Setter 메소드 ---
     public int getComment_id() {
         return comment_id;
     }
@@ -149,5 +149,12 @@ public class CommentBean {
         }
         return created_at.substring(0, 10).replace("-", ".");
     }
-}
+    
+    public String getAttache() {
+        return attache;
+    }
 
+    public void setAttache(String attache) {
+        this.attache = attache;
+    }
+}

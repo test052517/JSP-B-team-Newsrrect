@@ -326,14 +326,15 @@
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="p-6">
-                <form id="commentForm" action="<%= request.getContextPath() %>/submitComment" method="post">
+                <%-- [수정]: enctype="multipart/form-data" 추가 --%>
+                <form id="commentForm" action="<%= request.getContextPath() %>/submitComment" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="postId" value="<%= postId %>">
                     <input type="hidden" name="type" value="정보">
                     <input type="hidden" name="status" value="공개">
                     <div class="mb-6">
                         <div class="mb-4">
                             <select name="judgment" class="w-32 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                                <option value="">선택</option>
+                                <option value="">판정 선택</option>
                                 <option value="참">참</option>
                                 <option value="거짓">거짓</option>
                                 <option value="모호">모호</option>
@@ -344,6 +345,32 @@
                              <textarea name="content" id="ir1" rows="10" cols="100" style="width:100%; height:300px; display:none;"></textarea>
                         </div>
                         
+                        <%-- [추가]: START: 첨부 파일 섹션 --%>
+                        <div class="mb-4">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <input type="file" name="commentFile" id="comment-file" class="hidden">
+                                <button type="button" onclick="document.getElementById('comment-file').click()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
+                                    첨부 파일
+                                </button>
+                                <span class="text-sm text-gray-500" id="file-count-display">파일을 선택하세요</span>
+                            </div>
+                            
+                            <!-- [UI]: 선택된 파일 표시 -->
+                            <div id="selected-files-display" class="hidden">
+                                <div class="bg-gray-50 border border-gray-200 rounded-md p-3">
+                                    <div class="flex items-center justify-between">
+                                        <div id="file-list-detail" class="flex items-center space-x-2">
+                                            <!-- 파일 정보가 여기에 삽입됩니다 -->
+                                        </div>
+                                        <button type="button" onclick="clearFiles()" class="text-red-500 hover:text-red-700 text-sm font-medium">
+                                            삭제
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <%-- [추가]: END: 첨부 파일 섹션 --%>
+
                         <div class="flex justify-end">
                             <button type="button" onclick="submitContents();" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors">
                                 댓글등록
@@ -394,6 +421,17 @@
                         
                         <div class="mb-3">
                             <p class="text-gray-900 font-medium"><%= bestComment.getContent() %></p>
+                            <%-- [추가]: BEST 댓글 첨부파일 표시 --%>
+                            <% if(bestComment.getAttache() != null && !bestComment.getAttache().isEmpty()) { %>
+                            <div class="mt-2 p-2 bg-gray-100 border border-gray-300 rounded-md inline-flex items-center space-x-2 text-sm text-gray-700">
+                                <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L18 14"></path>
+                                </svg>
+                                <a href="<%= request.getContextPath() %>/comment_file/<%= bestComment.getAttache() %>" class="hover:underline" target="_blank">
+                                    첨부파일 다운로드
+                                </a>
+                            </div>
+                            <% } %>
                         </div>
                         
                         <div class="flex items-center space-x-4 text-sm">
@@ -463,6 +501,19 @@
                                         </div>
                                     </div>
                                     <p class="text-sm text-gray-900"><%= reply.getContent() %></p>
+                                    
+                                    <%-- [추가]: BEST 답글 첨부파일 표시 --%>
+                                    <% if(reply.getAttache() != null && !reply.getAttache().isEmpty()) { %>
+                                    <div class="mt-1 text-xs text-gray-500 flex items-center space-x-1">
+                                        <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L18 14"></path>
+                                        </svg>
+                                        <a href="<%= request.getContextPath() %>/comment_file/<%= reply.getAttache() %>" class="hover:underline" target="_blank">
+                                            첨부파일 다운로드
+                                        </a>
+                                    </div>
+                                    <% } %>
+
                                     <div class="flex items-center space-x-3 mt-2 text-xs">
                                         <% if(isReplyLiked) { %>
                                             <button onclick="upvoteComment(<%= reply.getComment_id() %>, <%= postId %>)" 
@@ -539,6 +590,17 @@
                         
                         <div class="mb-3">
                             <p class="text-gray-900"><%= comment.getContent() %></p>
+                            <%-- [추가]: 일반 댓글 첨부파일 표시 --%>
+                            <% if(comment.getAttache() != null && !comment.getAttache().isEmpty()) { %>
+                            <div class="mt-2 p-2 bg-gray-100 border border-gray-300 rounded-md inline-flex items-center space-x-2 text-sm text-gray-700">
+                                <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L18 14"></path>
+                                </svg>
+                                <a href="<%= request.getContextPath() %>/comment_file/<%= comment.getAttache() %>" class="hover:underline" target="_blank">
+                                    첨부파일 다운로드
+                                </a>
+                            </div>
+                            <% } %>
                         </div>
                         
                         <div class="flex items-center space-x-4 text-sm">
@@ -608,6 +670,19 @@
                                         </div>
                                     </div>
                                     <p class="text-sm text-gray-900"><%= reply.getContent() %></p>
+                                    
+                                    <%-- [추가]: 일반 답글 첨부파일 표시 --%>
+                                    <% if(reply.getAttache() != null && !reply.getAttache().isEmpty()) { %>
+                                    <div class="mt-1 text-xs text-gray-500 flex items-center space-x-1">
+                                        <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L18 14"></path>
+                                        </svg>
+                                        <a href="<%= request.getContextPath() %>/comment_file/<%= reply.getAttache() %>" class="hover:underline" target="_blank">
+                                            첨부파일 다운로드
+                                        </a>
+                                    </div>
+                                    <% } %>
+                                    
                                     <div class="flex items-center space-x-3 mt-2 text-xs">
                                         <% if(isReplyLiked) { %>
                                             <button onclick="upvoteComment(<%= reply.getComment_id() %>, <%= postId %>)" 
@@ -666,9 +741,6 @@
                     <div class="p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-2">신고하기</h3>
                         <div class="border-b border-gray-200 mb-4"></div>
-                    </div>
-                    
-                    <div class="p-6">
                         <p class="text-gray-900 mb-4">해당 게시글을 아래와 같은 사유로 신고합니다.</p>
                         
                         <div class="mb-6">
@@ -744,6 +816,7 @@
             }
             
             try {
+                // [수정]: 파일 첨부가 있을 경우에도 폼 전송이 되도록 수정
                 form.submit();
             } catch(e) {
                 console.error(e);
@@ -833,6 +906,55 @@
         document.getElementById('commentReportModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeCommentReportModal();
+            }
+        });
+        
+        // [추가] 파일 선택 초기화
+        function clearFiles() {
+            document.getElementById('comment-file').value = '';
+            document.getElementById('selected-files-display').classList.add('hidden');
+            document.getElementById('file-count-display').textContent = '파일을 선택하세요';
+            document.getElementById('file-list-detail').innerHTML = '';
+        }
+        
+        // [추가] 파일 첨부 핸들러: 단일 파일 정보 상세 표시
+        function handleFileSelect(event) {
+            const fileInput = event.target;
+            const files = fileInput.files;
+            const selectedFilesDisplay = document.getElementById('selected-files-display');
+            const fileCountDisplay = document.getElementById('file-count-display');
+            const fileListDetail = document.getElementById('file-list-detail');
+
+            if (files.length === 1) {
+                selectedFilesDisplay.classList.remove('hidden');
+                fileCountDisplay.textContent = `1개 파일 선택됨`;
+                
+                fileListDetail.innerHTML = '';
+                const file = files[0];
+                // 파일 크기를 KB 단위로 표시 (소수점 첫째 자리까지)
+                const fileSizeKB = (file.size / 1024).toFixed(1); 
+                
+                // UI 구조에 맞게 상세 정보를 표시
+                fileListDetail.innerHTML = `
+                    <div class="flex items-center space-x-2 w-full">
+                        <svg class="w-4 h-4 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700 font-medium truncate flex-1">${file.name}</span>
+                        <span class="text-xs text-gray-500 whitespace-nowrap">${fileSizeKB}</span>
+                    </div>
+                `;
+                
+            } else {
+                clearFiles();
+            }
+        }
+
+        // [추가] 초기화 및 이벤트 리스너 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('comment-file');
+            if (fileInput) {
+                fileInput.addEventListener('change', handleFileSelect);
             }
         });
     </script>

@@ -43,7 +43,7 @@
 <nav class="bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-center space-x-20 py-4">
-            <a href="<%= request.getContextPath() %>/UI/JSP/User/InfoBoard.jsp" 
+            <a href="${pageContext.request.contextPath}/info/watch.do" 
                class="nav-link text-primary hover:text-white hover:bg-[#7d8ff9] px-3 py-2 text-sm font-medium font-paperozi-medium rounded transition-all duration-200 ease-in-out">
                정보 검증 게시판
             </a>

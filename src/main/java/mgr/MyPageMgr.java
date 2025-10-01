@@ -149,4 +149,44 @@ public class MyPageMgr {
         }
         return list;
     }
+    
+    public boolean updateProfile(int userId, String introduce, String profileImageName) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        boolean result = false;
+        
+        String sql = "";
+        
+        if (profileImageName != null) {
+            // 이미지도 변경할 경우: introduce와 profileimage 컬럼명을 사용
+            sql = "UPDATE user SET introduce = ?, profileimage = ? WHERE user_id = ?";
+        } else {
+            // 자기소개만 변경할 경우
+            sql = "UPDATE user SET introduce = ? WHERE user_id = ?";
+        }
+
+        try {
+            conn = pool.getConnection("user"); 
+            pstmt = conn.prepareStatement(sql);
+            
+            pstmt.setString(1, introduce);
+            
+            if (profileImageName != null) {
+                pstmt.setString(2, profileImageName);
+                pstmt.setInt(3, userId);
+            } else {
+                pstmt.setInt(2, userId);
+            }
+            
+            if (pstmt.executeUpdate() == 1) {
+                result = true;
+            }
+            
+        } catch (Exception e) {
+            System.out.println("프로필 업데이트 오류: " + e.getMessage());
+        } finally {
+            pool.freeConnection(conn, pstmt); // getConnection()이 Connection, PreparedStatement, ResultSet을 받지 않는다면 수정 필요
+        }
+        return result;
+    }
 }

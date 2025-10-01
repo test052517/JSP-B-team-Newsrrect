@@ -1,5 +1,6 @@
 package Servlet;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -7,13 +8,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.UUID; 
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig; 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part; 
 
 import beans.UserBean;
 import beans.CommentBean;
@@ -21,11 +25,19 @@ import mgr.CommentMgr;
 import mgr.DBConnectionMgr;
 
 @WebServlet("/submitCommuComment")
+// 파일 업로드를 위한 설정 (maxFileSize, maxRequestSize는 적절히 설정 필요)
+@MultipartConfig(
+    fileSizeThreshold = 1024 * 1024, // 1MB
+    maxFileSize = 1024 * 1024 * 5,   // 5MB
+    maxRequestSize = 1024 * 1024 * 10 // 10MB
+)
 public class CommuCommentServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     
     private CommentMgr commentMgr;
     private DBConnectionMgr pool;
+    // 파일 업로드 경로 설정
+    private static final String UPLOAD_DIR = "comment_file";
     
     @Override
     public void init() throws ServletException {
@@ -78,14 +90,61 @@ public class CommuCommentServlet extends HttpServlet {
         UserBean user = (UserBean) session.getAttribute("loggedInUser");
         int userId = user.getUserId();
         
+        // --- 1. 파일 업로드 처리 및 파일명 확보 ---
+        String uploadedFileName = null;
+        
+        // [핵심 수정] 요청의 Content-Type 확인: multipart/form-data 요청일 때만 파일 업로드 로직 실행
+        String contentType = request.getContentType();
+        boolean isMultipart = contentType != null && contentType.toLowerCase().contains("multipart/form-data");
+
+        if (isMultipart) {
+            String savePath = request.getServletContext().getRealPath("/") + UPLOAD_DIR; 
+            File fileSaveDir = new File(savePath);
+            
+            // 폴더 생성 로직
+            if (!fileSaveDir.exists()) {
+                fileSaveDir.mkdirs();
+                System.out.println("댓글 파일 저장 폴더 생성: " + savePath);
+            }
+            
+            try {
+                Part filePart = request.getPart("commentFile"); 
+                
+                String originalFileName = filePart.getSubmittedFileName();
+                
+                if (originalFileName != null && !originalFileName.isEmpty()) {
+                    originalFileName = new File(originalFileName).getName();
+                    
+                    String extension = "";
+                    int dotIndex = originalFileName.lastIndexOf('.');
+                    if (dotIndex > 0) {
+                        extension = originalFileName.substring(dotIndex);
+                    }
+                    String uniqueFileName = UUID.randomUUID().toString() + extension;
+                    
+                    // 파일 저장
+                    String filePath = savePath + File.separator + uniqueFileName;
+                    filePart.write(filePath);
+                    uploadedFileName = uniqueFileName;
+                    System.out.println("댓글 파일 업로드 성공: " + uploadedFileName);
+                    System.out.println(">> 실제 저장 경로: " + filePath); // **추가된 코드**
+                }
+            } catch (Exception e) {
+                System.err.println("댓글 파일 업로드 중 오류 발생: " + e.getMessage());
+                e.printStackTrace(); // 예외 추적 출력
+            }
+        }
+        
+        // --- 2. 폼 데이터 파라미터 받기 (Part 처리 여부와 관계없이 이후의 getParameter는 작동) ---
         String postIdStr = request.getParameter("postId");
         String content = request.getParameter("content");
         String nowPage = request.getParameter("nowPage");
+        String parentIdParam = request.getParameter("parentCommentId");
         
         String judgment = null; 
         
-        if (postIdStr == null || postIdStr.trim().isEmpty() || content == null || content.trim().isEmpty()) {
-            showAlertAndBack(response, "필수 정보가 누락되었습니다.");
+        if (postIdStr == null || postIdStr.trim().isEmpty() || content == null || content.trim().isEmpty() || content.equals("<p>&nbsp;</p>")) {
+            showAlertAndBack(response, "댓글 내용을 입력해주세요.");
             return;
         }
         
@@ -93,8 +152,8 @@ public class CommuCommentServlet extends HttpServlet {
             int postId = Integer.parseInt(postIdStr);
             
             String postType = commentMgr.getPostType(postId);
-            if (postType == null) {
-                 showAlertAndBack(response, "게시물 정보를 찾을 수 없습니다.");
+            if (postType == null || !"소통".equals(postType)) {
+                 showAlertAndBack(response, "소통 게시물 정보를 찾을 수 없습니다.");
                  return;
             }
             
@@ -106,34 +165,28 @@ public class CommuCommentServlet extends HttpServlet {
             comment.setJudgment(judgment); 
             comment.setStatus("공개");
             comment.setCreated_at(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            comment.setAttache(uploadedFileName); // 파일명 설정 (null일 경우 null 저장)
             
-            // 대댓글 처리 로직 (layer 자동 계산)
-            String parentIdParam = request.getParameter("parentCommentId");
+            // 대댓글 처리 로직
             if (parentIdParam != null && !parentIdParam.trim().isEmpty()) {
                 try {
                     int parentCommentId = Integer.parseInt(parentIdParam);
                     comment.setParent_comment_id(parentCommentId);
                     
-                    // 부모 댓글의 layer를 조회해서 +1로 설정
                     int parentLayer = getParentLayer(parentCommentId);
                     comment.setLayer(parentLayer + 1);
-                    
-                    System.out.println("답글 등록: 부모ID=" + parentCommentId + ", 부모Layer=" + parentLayer + ", 새댓글Layer=" + (parentLayer + 1));
                 } catch (NumberFormatException e) {
                     showAlertAndBack(response, "잘못된 부모 댓글 번호입니다.");
                     return;
                 }
             } else {
-                // 일반 댓글 (최상위)
                 comment.setParent_comment_id(0);
                 comment.setLayer(0);
-                System.out.println("일반 댓글 등록: Layer=0");
             }
             
             boolean isSuccess = commentMgr.insertComment(comment);
             
             if (isSuccess) {
-                // 성공 시 같은 페이지로 리다이렉트 (nowPage 파라미터 유지)
                 String redirectUrl = request.getContextPath() + "/UI/JSP/User/CommuWatch.jsp?id=" + postId;
                 if (nowPage != null && !nowPage.trim().isEmpty()) {
                     redirectUrl += "&nowPage=" + nowPage;

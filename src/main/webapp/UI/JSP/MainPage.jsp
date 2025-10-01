@@ -1,6 +1,9 @@
+<%@page import="beans.PostBean"%>
+<%@page import="java.util.Vector"%>
 <%@ page contentType="text/html; charset=UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<jsp:useBean id="pMgr" class="mgr.PostMgr"/>
 <%
 		// 세션에서 User 정보 가져옴
 		beans.UserBean user = (beans.UserBean)session.getAttribute("loggedInUser");
@@ -63,7 +66,7 @@
 <nav class="bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-center space-x-20 py-4">
-            <a href="<%= request.getContextPath() %>/UI/JSP/User/InfoBoard.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">정보 검증 게시판</a>
+            <a href="${pageContext.request.contextPath}/info/watch.do"  class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">정보 검증 게시판</a>
             <a href="<%= request.getContextPath() %>/UI/JSP/User/CommuBoard.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">소통 게시판</a>
             <a href="<%= request.getContextPath() %>/Servlet/MyPageServlet" 
 			   class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">
@@ -86,6 +89,10 @@
                     <!-- Featured Post Carousel -->
                     <div class="relative" id="carouselWrapper">
                         <div class="carousel-container relative overflow-hidden">
+                        <%
+                            	Vector <PostBean> featuredPosts = pMgr.todayInfoCards("정보");
+                        %>
+                        <c:set scope="request" var="featuredPosts" value="<%=featuredPosts%>" />
                             <div class="carousel-track flex transition-transform duration-500 ease-in-out" id="carouselTrack">
                                 <!-- JSP에서 동적으로 생성된 카드들 -->
                                 <c:choose>
@@ -94,88 +101,18 @@
                                             <div class="review-card flex-shrink-0" style="width: 500px; margin: 0 15px;">
                                                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 h-full text-center">
                                                     <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-6">
-                                                        ${featuredPost.author.substring(0,1).toUpperCase()}
+                                                        ${featuredPost.viewCount}
                                                     </div>
                                                     <h3 class="text-xl font-semibold text-gray-900 mb-6">
                                                         <c:out value="${featuredPost.title}"/>
                                                     </h3>
                                                     <p class="text-gray-700 leading-relaxed">
-                                                        <c:out value="${featuredPost.summary}"/>
+                                                        <c:out value="${featuredPost.content}"/>
                                                     </p>
                                                 </div>
                                             </div>
                                         </c:forEach>
                                     </c:when>
-                                    <c:otherwise>
-                                        <!-- 기본 카드들 (데이터가 없을 때) -->
-                                        <div class="review-card flex-shrink-0" style="width: 500px; margin: 0 15px;">
-                                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 h-full text-center">
-                                                <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-6">
-                                                    A
-                                                </div>
-                                                <h3 class="text-xl font-semibold text-gray-900 mb-6">정치 관련 정보 검증</h3>
-                                                <p class="text-gray-700 leading-relaxed">
-                                                    정말 유용한 정보였어요! 정치 관련해서 헷갈렸던 부분이 명확해졌습니다. 
-                                                    검증된 정보라서 믿고 참고할 수 있었어요. 앞으로도 이런 신뢰할 수 있는 정보를 
-                                                    계속 제공해주시면 좋겠습니다.
-                                                </p>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="review-card flex-shrink-0" style="width: 500px; margin: 0 15px;">
-                                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 h-full text-center">
-                                                <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-6">
-                                                    B
-                                                </div>
-                                                <h3 class="text-xl font-semibold text-gray-900 mb-6">경제 뉴스 검증</h3>
-                                                <p class="text-gray-700 leading-relaxed">
-                                                    경제 관련 정보가 너무 많아서 무엇이 진짜인지 헷갈렸는데, 
-                                                    여기서 검증된 정보를 보고 안심이 되었어요. 특히 투자 관련해서 
-                                                    잘못된 정보로 인한 손실을 방지할 수 있었습니다.
-                                                </p>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="review-card flex-shrink-0" style="width: 500px; margin: 0 15px;">
-                                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 h-full text-center">
-                                                <div class="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-6">
-                                                    C
-                                                </div>
-                                                <h3 class="text-xl font-semibold text-gray-900 mb-6">과학 연구 검증</h3>
-                                                <p class="text-gray-700 leading-relaxed">
-                                                    과학적 근거가 명확한 정보를 제공해주셔서 정말 감사합니다. 
-                                                    연구 결과를 바탕으로 한 검증된 정보라서 신뢰할 수 있었어요. 
-                                                    이런 플랫폼이 있어서 정말 다행입니다.
-                                                </p>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="review-card flex-shrink-0" style="width: 500px; margin: 0 15px;">
-                                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 h-full text-center">
-                                                <div class="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-6">
-                                                    D
-                                                </div>
-                                                <h3 class="text-xl font-semibold text-gray-900 mb-6">사회 이슈 검증</h3>
-                                                <p class="text-gray-700 leading-relaxed">
-                                                    사회적 이슈에 대한 정확한 정보를 제공해주셔서 정말 도움이 되었습니다. 
-                                                    다양한 관점에서 검증된 정보를 볼 수 있어서 균형잡힌 시각을 갖게 되었어요.
-                                                </p>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="review-card flex-shrink-0" style="width: 500px; margin: 0 15px;">
-                                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 h-full text-center">
-                                                <div class="w-16 h-16 bg-pink-500 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-6">
-                                                    E
-                                                </div>
-                                                <h3 class="text-xl font-semibold text-gray-900 mb-6">문화 콘텐츠 검증</h3>
-                                                <p class="text-gray-700 leading-relaxed">
-                                                    문화 관련 정보의 진위를 확인할 수 있어서 정말 유용했습니다. 
-                                                    잘못된 정보로 인한 오해를 방지할 수 있어서 감사합니다.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </c:otherwise>
                                 </c:choose>
                             </div>
                         </div>
@@ -249,13 +186,17 @@
                         <div class="text-center">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-xl font-semibold text-[#333437] font-paperozi-semibold">정보 검증 게시판</h3>
-                                <button onclick="location.href='AdminInfo.jsp'" class="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 ease-in-out group">
+                                <button onclick="location.href='../JSP/User/InfoBoard.jsp'" class="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 ease-in-out group">
                                     <svg class="w-5 h-5 text-primary group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                     </svg>
                                 </button>
                             </div>
                             <div class="bg-white rounded-lg h-64 overflow-hidden">
+                            <%
+                            	Vector <PostBean> recentInfoPosts = pMgr.newListPosts("정보");
+                            %>
+                            <c:set scope="request" var="recentInfoPosts" value="<%=recentInfoPosts%>" />
                                 <!-- 최근 정보 검증 게시글 목록 -->
                                 <div class="p-4">
                                     <c:choose>
@@ -266,10 +207,9 @@
                                                         <div class="text-sm text-gray-900 truncate">
                                                             <c:out value="${infoPost.title}"/>
                                                         </div>
-                                                        <div class="text-xs text-gray-500">${infoPost.author}</div>
                                                     </div>
                                                     <div class="text-xs text-gray-400">
-                                                        <fmt:formatDate value="${infoPost.createDate}" pattern="MM.dd"/>
+                                                        <div class="text-xs text-gray-500">${infoPost.createdAt}</div>
                                                     </div>
                                                 </div>
                                             </c:forEach>
@@ -286,13 +226,17 @@
                         <div class="text-center">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-xl font-semibold text-[#333437] font-paperozi-semibold">소통 게시판</h3>
-                                <button onclick="location.href='AdminCommu.jsp'" class="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 ease-in-out group">
+                                <button onclick="location.href='../JSP/User/CommuBoard.jsp'" class="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 ease-in-out group">
                                     <svg class="w-5 h-5 text-primary group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                     </svg>
                                 </button>
                             </div>
                             <div class="bg-white rounded-lg h-64 overflow-hidden">
+                            <%
+                            	Vector <PostBean> recentCommuPosts = pMgr.newListPosts("소통");
+                            %>
+                            <c:set scope="request" var="recentCommuPosts" value="<%=recentCommuPosts%>" />
                                 <!-- 최근 소통 게시글 목록 -->
                                 <div class="p-4">
                                     <c:choose>
@@ -303,10 +247,9 @@
                                                         <div class="text-sm text-gray-900 truncate">
                                                             <c:out value="${commuPost.title}"/>
                                                         </div>
-                                                        <div class="text-xs text-gray-500">${commuPost.author}</div>
                                                     </div>
                                                     <div class="text-xs text-gray-400">
-                                                        <fmt:formatDate value="${commuPost.createDate}" pattern="MM.dd"/>
+                                                        <div class="text-xs text-gray-500">${commuPost.createdAt}</div>
                                                     </div>
                                                 </div>
                                             </c:forEach>
