@@ -32,5 +32,8 @@
         <filter-name>encodingFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
+    <context-param>
+    <param-name>PROJECT_PATH</param-name>
+    <param-value>C:/JSP-B-team-Newsrrect/JSP-B-team-Newsrrect</param-value> </context-param>
 
 </web-app>
