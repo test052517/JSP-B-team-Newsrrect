@@ -17,9 +17,11 @@ public class CommentBean {
     private String attache;
     
     // ===============================================================
-    // [추가] 화면 표시를 위해 JOIN된 사용자 닉네임을 임시로 담을 필드
+    // [추가] 화면 표시를 위해 JOIN된 사용자 닉네임, 포인트, ROLE을 담을 필드
     // ===============================================================
     private String nickname;
+    private int point;
+    private String role;
     private String originalPostTitle;
     private int originalPostId;
     
@@ -141,6 +143,25 @@ public class CommentBean {
 
     public void setOriginalPostId(int originalPostId) {
         this.originalPostId = originalPostId;
+    }
+    
+    public int getPoint() {
+        return point;
+    }
+
+    public void setPoint(int point) {
+        this.point = point;
+    }
+    
+    // ===================================
+    // [추가] Role Getter/Setter
+    // ===================================
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
     
     public String getFormattedDate() {

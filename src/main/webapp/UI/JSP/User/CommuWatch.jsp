@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="mgr.PostMgr, beans.PostBean, mgr.CommentMgr, beans.CommentBean, mgr.CommentLikeMgr, java.util.Vector, java.util.HashMap, java.util.Map" %>
+<%@ page import="mgr.UserMgr, beans.UserBean" %> <%-- [추가] UserMgr, UserBean import --%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <jsp:useBean id="postMgr" class="mgr.PostMgr" scope="page" />
@@ -7,6 +8,9 @@
 <jsp:useBean id="commentLikeMgr" class="mgr.CommentLikeMgr" scope="page" />
 
 <%
+    // [추가] 포인트 이미지 처리를 위한 UserMgr 인스턴스화
+    UserMgr userMgr = new UserMgr();
+
     beans.UserBean loggedInUser = (beans.UserBean)session.getAttribute("loggedInUser");
     int postId = 0;
     String nowPage = request.getParameter("nowPage") != null ? request.getParameter("nowPage") : "1";
@@ -117,10 +121,25 @@
                     <div class="bg-blue-100 border border-gray-200 rounded-md p-3">
                         <div class="flex items-center justify-between text-sm text-gray-600">
                             <div class="flex items-center space-x-4">
+                                
+                                <%-- [수정 1] 게시글 작성자 닉네임 앞에 Point 이미지 삽입 --%>
+                                <%
+                                    // Post 작성자(UserBean) 조회 및 설정 (PostBean에는 point 정보가 없어 UserMgr 재조회 필요)
+                                    if (post != null) {
+                                        UserBean postAuthorUser = userMgr.getUserById(post.getUserId()); 
+                                        if (postAuthorUser != null) {
+                                            request.setAttribute("userBean", postAuthorUser);
+                                        }
+                                    }
+                                %>
+                                <jsp:include page="/UI/JSP/PointProc.jsp" /> 
                                 <div class="flex items-center space-x-1">
                                     <div class="w-3 h-3 bg-gray-600 rounded"></div>
+                                    <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
                                     <span><c:out value="${post.nickname}" /></span>
                                 </div>
+                                <% request.removeAttribute("userBean"); %>
+
                                 <div class="flex items-center space-x-1">
                                     <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path>
@@ -230,15 +249,27 @@
 
                 <!-- BEST 댓글 섹션 -->
                 <c:if test="${not empty bestComment && bestComment.upvotes > 0}">
-    <div class="mb-8 bg-blue-100 rounded-lg p-4">
-        <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
-            <span class="text-2xl mr-2"></span> BEST 댓글
-        </h4>
-        <div class="space-y-4">
+                    <div class="mb-8 bg-blue-100 rounded-lg p-4">
+                        <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                            <span class="text-2xl mr-2"></span> BEST 댓글
+                        </h4>
+                        <div class="space-y-4">
                             <div class="border border rounded-lg p-4 bg-white shadow-md">
                                 <div class="flex justify-between items-start mb-2">
                                     <div class="flex items-center space-x-2">
+                                        <%-- [수정 2-1] BEST 댓글 작성자 CommentBean 설정 --%>
+                                        <%
+                                            beans.CommentBean bestCommentAuthor = (beans.CommentBean) pageContext.getAttribute("bestComment"); 
+                                            if (bestCommentAuthor != null) {
+                                                request.setAttribute("userBean", bestCommentAuthor); // CommentBean을 userBean으로 임시 사용
+                                            }
+                                        %>
+                                        <jsp:include page="/UI/JSP/PointProc.jsp" /> 
+                                        
+                                        <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
                                         <span class="font-bold text-primary"><c:out value="${bestComment.nickname}" /></span>
+                                        <% request.removeAttribute("userBean"); %>
+
                                         <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">BEST</span>
                                     </div>
                                     <div class="flex items-center space-x-2">
@@ -323,12 +354,24 @@
                                 <div class="mt-4 ml-8 space-y-3">
                                     <c:set var="replyListKey" value="reply_${bestComment.comment_id}" />
                                     <c:forEach var="reply" items="${requestScope[replyListKey]}">
+                                        
+                                        <%-- [수정 3-1] 답글 작성자 CommentBean 설정 --%>
+                                        <%
+                                            beans.CommentBean currentReply = (beans.CommentBean) pageContext.getAttribute("reply"); 
+                                            if (currentReply != null) {
+                                                request.setAttribute("userBean", currentReply); // CommentBean을 userBean으로 임시 사용
+                                            }
+                                        %>
+                                        <jsp:include page="/UI/JSP/PointProc.jsp" /> 
                                         <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: ${reply.layer * 20}px;">
                                             <div class="flex justify-between items-start mb-2">
                                                 <span class="font-semibold text-sm text-gray-700">
                                                     <c:forEach begin="1" end="${reply.layer}">↳ </c:forEach>
+                                                    <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
                                                     <c:out value="${reply.nickname}" />
                                                 </span>
+                                                <% request.removeAttribute("userBean"); %>
+
                                                 <div class="flex items-center space-x-2">
                                                     <span class="text-xs text-gray-500">${reply.formattedDate}</span>
                                                     <c:if test="${loggedInUser != null}">
@@ -376,7 +419,7 @@
                                                     </c:when>
                                                     <c:otherwise>
                                                         <div class="flex items-center space-x-1 text-gray-600">
-                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                                                 <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
                                                             </svg>
                                                             <span>추천 ${reply.upvotes}</span>
@@ -420,9 +463,24 @@
                             <c:forEach var="comment" items="${commentList}">
                                 <!-- 베스트 댓글은 제외 -->
                                 <c:if test="${empty bestComment || comment.comment_id != bestComment.comment_id}">
+                                    
+                                    <%-- [수정 4-1] 일반 댓글 작성자 CommentBean 설정 --%>
+                                    <%
+                                        beans.CommentBean currentComment = (beans.CommentBean) pageContext.getAttribute("comment"); 
+                                        if (currentComment != null) {
+                                            request.setAttribute("userBean", currentComment); // CommentBean을 userBean으로 임시 사용
+                                        }
+                                    %>
+                                    <jsp:include page="/UI/JSP/PointProc.jsp" /> 
+
                                     <div class="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
                                         <div class="flex justify-between items-start mb-2">
-                                            <span class="font-semibold"><c:out value="${comment.nickname}" /></span>
+                                            <div class="flex items-center space-x-2">
+                                                <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
+                                                <span class="font-semibold"><c:out value="${comment.nickname}" /></span>
+                                            </div>
+                                            <% request.removeAttribute("userBean"); %>
+
                                             <div class="flex items-center space-x-2">
                                                 <span class="text-sm text-gray-500">${comment.formattedDate}</span>
                                                 <c:if test="${loggedInUser != null}">
@@ -504,12 +562,25 @@
                                         <div class="mt-4 ml-8 space-y-3">
                                             <c:set var="replyListKey" value="reply_${comment.comment_id}" />
                                             <c:forEach var="reply" items="${requestScope[replyListKey]}">
+                                                
+                                                <%-- [수정 5-1] 답글 작성자 CommentBean 설정 --%>
+                                                <%
+                                                    beans.CommentBean currentReply = (beans.CommentBean) pageContext.getAttribute("reply"); 
+                                                    if (currentReply != null) {
+                                                        request.setAttribute("userBean", currentReply); // CommentBean을 userBean으로 임시 사용
+                                                    }
+                                                %>
+                                                <jsp:include page="/UI/JSP/PointProc.jsp" /> 
+
                                                 <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: ${reply.layer * 20}px;">
                                                     <div class="flex justify-between items-start mb-2">
                                                         <span class="font-semibold text-sm text-gray-700">
                                                             <c:forEach begin="1" end="${reply.layer}">↳ </c:forEach>
+                                                            <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
                                                             <c:out value="${reply.nickname}" />
                                                         </span>
+                                                        <% request.removeAttribute("userBean"); %>
+
                                                         <div class="flex items-center space-x-2">
                                                             <span class="text-xs text-gray-500">${reply.formattedDate}</span>
                                                             <c:if test="${loggedInUser != null}">
@@ -557,7 +628,7 @@
                                                             </c:when>
                                                             <c:otherwise>
                                                                 <div class="flex items-center space-x-1 text-gray-600">
-                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                                                         <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
                                                                     </svg>
                                                                     <span>추천 ${reply.upvotes}</span>

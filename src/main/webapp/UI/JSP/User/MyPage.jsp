@@ -75,20 +75,23 @@
                     <form id="profileForm" action="<%= request.getContextPath() %>/updateProfile.do" method="post" enctype="multipart/form-data">
                         <div class="flex items-center">
                             <div class="relative">
-                                <input type="file" id="profileImageInput" name="profileImage" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
-                                <div id="profileImageContainer" class="w-32 h-32 bg-gray-400 rounded-full mr-6 flex-shrink-0 cursor-pointer hover:bg-gray-500 transition-colors flex items-center justify-center" onclick="document.getElementById('profileImageInput').click()">
-                                    <c:choose>
-                                        <c:when test="${not empty user.profileImage}">
-                                            <img id="profileImage" src="<%= request.getContextPath() %>/uploads/profiles/${user.profileImage}" 
-                                                 alt="프로필 이미지" class="w-full h-full object-cover rounded-full">
-                                        </c:when>
-                                        <c:otherwise>
-                                            <img id="profileImage" src="" alt="프로필 이미지" class="w-full h-full object-cover rounded-full hidden">
-                                            <span id="profileImagePlaceholder" class="text-white text-sm font-medium">이미지 선택</span>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </div>
-                            </div>
+						    <input type="file" id="profileImageInput" name="profileImage" accept="image/*" class="hidden" onchange="handleImageUpload(event)" disabled>
+						    
+						    <div id="profileImageContainer" 
+						         class="w-32 h-32 bg-gray-400 rounded-full mr-6 flex-shrink-0 cursor-pointer flex items-center justify-center"> 
+						        
+						        <c:choose>
+						            <c:when test="${not empty user.profileImage}">
+						                <img id="profileImage" src="<%= request.getContextPath() %>/uploads/profiles/${user.profileImage}" 
+						                     alt="프로필 이미지" class="w-full h-full object-cover rounded-full">
+						            </c:when>
+						            <c:otherwise>
+						                <img id="profileImage" src="" alt="프로필 이미지" class="w-full h-full object-cover rounded-full hidden">
+						                <span id="profileImagePlaceholder" class="text-white text-sm font-medium">이미지 선택</span>
+						            </c:otherwise>
+						        </c:choose>
+						    </div>
+						</div>
                             
                             <div class="flex-1">
                                 <div class="mb-2">
@@ -101,8 +104,8 @@
                                 <div class="mb-4">
                                     <label for="introduce" class="block text-sm font-medium text-gray-700 mb-1">자기소개</label>
                                     <textarea id="introduce" name="introduce" rows="3"
-                                              class="w-full max-w-lg px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                                              placeholder="자기소개를 입력하세요" maxlength="200" readonly><c:out value="${not empty user.introduce ? user.introduce : '자기 소개'}" /></textarea>
+          								class="w-full max-w-lg px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+          								placeholder="자기소개를 입력하세요" maxlength="200"><c:out value="${not empty user.introduce ? user.introduce : '자기 소개'}" /></textarea>
                                     <div class="text-sm text-gray-500 mt-1">
                                         <span id="introduceCount">${not empty user.introduce ? fn:length(user.introduce) : 0}</span>/200자
                                     </div>
@@ -350,13 +353,20 @@
             const editBtn = document.getElementById('editBtn');
             const saveBtn = document.getElementById('saveBtn');
             const cancelBtn = document.getElementById('cancelBtn');
+            const profileImageInput = document.getElementById('profileImageInput');
 
             if (!isEditing) {
-                originalNickname = nicknameInput.value;
+            	originalNickname = nicknameInput.value;
                 originalIntroduce = introduceTextarea.value;
                 
-                nicknameInput.readOnly = false;
-                introduceTextarea.readOnly = false;
+                introduceTextarea.disabled = false;
+                profileImageInput.disabled = false;
+                
+                profileImageContainer.classList.add('hover:bg-gray-500', 'transition-colors');
+                profileImageContainer.onclick = function() {
+                    document.getElementById('profileImageInput').click();
+                };
+                
                 nicknameInput.focus();
                 
                 editBtn.classList.add('hidden');
@@ -368,7 +378,7 @@
         }
 
         function cancelEdit() {
-            const nicknameInput = document.getElementById('nickname');
+        	const nicknameInput = document.getElementById('nickname');
             const introduceTextarea = document.getElementById('introduce');
             const editBtn = document.getElementById('editBtn');
             const saveBtn = document.getElementById('saveBtn');
@@ -380,9 +390,13 @@
             introduceCount.textContent = originalIntroduce.length;
             
             profileImageInput.value = '';
+            profileImageInput.disabled = true;
 
-            nicknameInput.readOnly = true;
             introduceTextarea.readOnly = true;
+            
+            profileImageContainer.classList.remove('hover:bg-gray-500', 'transition-colors');
+            profileImageContainer.onclick = null; // 클릭 이벤트 제거 (비활성화)
+
             
             editBtn.classList.remove('hidden');
             saveBtn.classList.add('hidden');

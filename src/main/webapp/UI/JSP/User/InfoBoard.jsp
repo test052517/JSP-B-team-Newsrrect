@@ -1,6 +1,10 @@
 <%-- 정보검증게시판 (View) --%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%
+		// 세션에서 User 정보 가져옴
+		beans.UserBean user = (beans.UserBean)session.getAttribute("loggedInUser");
+%>
 <%-- 
     이 페이지는 이제 View 역할만 수행합니다.
     모든 데이터는 InfoWatchServlet이 request 객체에 담아서 전달해줍니다.
@@ -33,7 +37,11 @@
     </script>
 </head>
 <body class="bg-white min-h-screen">
-    <jsp:include page="../Common/Header.jsp" />
+        	<%if(user.getRole().equals("관리자")){%>
+        <jsp:include page="../Common/AdminHeader.jsp" />
+    	<%}else{ %>
+    	<jsp:include page ="../Common/Header.jsp"/>
+    	<%} %>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="mb-6">

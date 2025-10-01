@@ -33,48 +33,12 @@
 </head>
 <body class="min-h-screen">
     <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-center items-center h-16 relative">
-                <!-- Logo - Centered -->
-                <div class="flex-shrink-0">
-                    <h1 class="text-2xl font-bold text-primary font-newsrrect"
-                    style="
-                    background-image: linear-gradient(to bottom, #738dff, #6179f8);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    background-clip: text;
-                    color: transparent; /* fallback */">Newsrrect</h1>
-                </div>
-                
-                <!-- User Menu - Absolute positioned right -->
-                <div class="absolute right-0 flex items-center space-x-4">
-                    <%if(user!=null){ %>
-                    <a href="<%= request.getContextPath() %>/UI/JSP/Logout.jsp" class="text-primary hover:text-primary-dark text-sm font-medium">
-                        로그아웃
-                    </a>
-                    <%}else{%>
-                  <a href="<%= request.getContextPath() %>/UI/JSP/Login.jsp" class="text-primary hover:text-primary-dark text-sm font-medium">
-                        로그인
-                    </a>
-                  <% } %>
-                </div>
-            </div>
-        </div>
-    </header>
-    
-<nav class="bg-white border-b border-gray-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-center space-x-20 py-4">
-            <a href="${pageContext.request.contextPath}/info/watch.do"  class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">정보 검증 게시판</a>
-            <a href="<%= request.getContextPath() %>/UI/JSP/User/CommuBoard.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">소통 게시판</a>
-            <a href="<%= request.getContextPath() %>/Servlet/MyPageServlet" 
-			   class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">
-			    마이 페이지
-			</a>
-        </div>
-    </div>
-</nav>
+    <jsp:include page ="Common/Header.jsp"/>
+<%--     	<%if(user.getRole().equals("관리자")){%>
+        <jsp:include page="Common/AdminHeader.jsp" />
+    	<%}else{ %>
+    	
+    	<%} %> --%>
 
     <!-- Main Content -->
     <main>

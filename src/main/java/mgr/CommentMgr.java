@@ -70,7 +70,8 @@ public class CommentMgr {
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         Vector<CommentBean> vlist = new Vector<>();
-        String sql = "SELECT c.*, u.nickname " +
+        // SQL: u.role 추가
+        String sql = "SELECT c.*, u.nickname, u.point, u.role " +
                      "FROM comment c JOIN user u ON c.user_id = u.user_id " +
                      "WHERE c.post_id = ? AND c.status = '공개' AND c.layer = 0 " +
                      "ORDER BY c.upvotes DESC, c.comment_id ASC";
@@ -91,7 +92,8 @@ public class CommentMgr {
                 bean.setNickname(rs.getString("nickname")); 
                 bean.setJudgment(rs.getString("judgment"));
                 bean.setUpvotes(rs.getInt("upvotes"));
-                // attache 필드 추가
+                bean.setPoint(rs.getInt("point")); 
+                bean.setRole(rs.getString("role")); // <<<<<<<<<<<<<<<< ROLE 설정 추가
                 bean.setAttache(rs.getString("attache")); 
                 
                 vlist.add(bean);
@@ -111,7 +113,8 @@ public class CommentMgr {
         ResultSet rs = null;
         Vector<CommentBean> vlist = new Vector<>();
         
-        String sql = "SELECT c.*, u.nickname " +
+        // SQL: u.role 추가
+        String sql = "SELECT c.*, u.nickname, u.point, u.role " +
                      "FROM comment c JOIN user u ON c.user_id = u.user_id " +
                      "WHERE c.parent_comment_id = ? AND c.status = '공개' " +
                      "ORDER BY c.comment_id ASC";
@@ -133,6 +136,8 @@ public class CommentMgr {
                 bean.setCreated_at(rs.getString("created_at"));
                 bean.setNickname(rs.getString("nickname"));
                 bean.setUpvotes(rs.getInt("upvotes"));
+                bean.setPoint(rs.getInt("point"));
+                bean.setRole(rs.getString("role")); // <<<<<<<<<<<<<<<< ROLE 설정 추가
                 bean.setAttache(rs.getString("attache")); 
                 
                 vlist.add(bean);
