@@ -3,9 +3,13 @@
 <%@ page import="mgr.PostMgr" %>
 <%@ page import="beans.AnalysisResultBean" %>
 <%@ page import="mgr.NewsAnalysisMgr" %>
+<%@ page import="beans.CommentBean" %>
+<%@ page import="mgr.CommentMgr" %>
+<%@ page import="mgr.CommentLikeMgr" %>
 <%@ page import="java.sql.*" %>
 <%@ page import="mgr.DBConnectionMgr" %>
 <%@ page import="java.util.*" %>
+<jsp:useBean id="commentLikeMgr" class="mgr.CommentLikeMgr" scope="page" />
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -53,21 +57,19 @@
         return;
     }
     
-    // news_analysis DB에서 분석 결과 조회
+    // AI 분석 결과 조회
     AnalysisResultBean analysisResult = null;
     
     try {
         NewsAnalysisMgr analysisMgr = new NewsAnalysisMgr();
         
-        System.out.println("=== 분석 결과 조회 시작 ===");
+        System.out.println("=== AI 분석 결과 조회 시작 ===");
         System.out.println("Post ID: " + postId);
         
-        // 방법 1: 게시글 내용에서 URL 추출하여 조회
         String content = post.getContent();
         System.out.println("게시글 내용 길이: " + (content != null ? content.length() : 0));
         
         if(content != null && !content.isEmpty()) {
-            // URL 패턴 매칭
             java.util.regex.Pattern urlPattern = java.util.regex.Pattern.compile(
                 "(https?://[^\\s<>\"]+|www\\.[^\\s<>\"]+)",
                 java.util.regex.Pattern.CASE_INSENSITIVE
@@ -80,7 +82,6 @@
                 }
                 System.out.println("추출된 URL: " + originalUrl);
                 
-                // news_analysis DB에서 URL로 분석 결과 조회
                 analysisResult = analysisMgr.findByUrl(originalUrl);
                 System.out.println("URL 기반 조회: " + (analysisResult != null ? "성공" : "실패"));
             } else {
@@ -88,7 +89,6 @@
             }
         }
         
-        // 방법 2: 텍스트 분석 - postId 기반 조회
         if(analysisResult == null) {
             System.out.println("텍스트 분석 결과 조회 시도 (postId 기반)...");
             String textKey = "text:postId:" + postId;
@@ -98,16 +98,49 @@
         }
         
         if(analysisResult != null) {
-            System.out.println("=== 최종 분석 결과 조회 성공! ===");
+            System.out.println("=== 최종 AI 분석 결과 조회 성공! ===");
             System.out.println("- 신뢰도: " + analysisResult.getReliabilityScore());
             System.out.println("- 요약 길이: " + (analysisResult.getSummary() != null ? analysisResult.getSummary().length() : 0));
         } else {
-            System.out.println("=== 분석 결과 없음 ===");
+            System.out.println("=== AI 분석 결과 없음 ===");
         }
     } catch(Exception e) {
-        System.err.println("분석 결과 조회 중 오류 발생: " + e.getMessage());
+        System.err.println("AI 분석 결과 조회 중 오류 발생: " + e.getMessage());
         e.printStackTrace();
         analysisResult = null;
+    }
+    
+    // CommentMgr를 사용하여 계층적 댓글 구조 가져오기
+    CommentMgr commentMgr = new CommentMgr();
+    Vector<CommentBean> commentList = commentMgr.getCommentList(postId);
+    
+    // 추천 상태 맵 생성
+    Map<Integer, Boolean> likeMap = new HashMap<Integer, Boolean>();
+    
+    // 각 댓글의 답글 목록을 가져와서 request에 설정 및 추천 상태 확인
+    for(CommentBean comment : commentList) {
+        Vector<CommentBean> replyList = commentMgr.getAllRepliesRecursive(comment.getComment_id());
+        request.setAttribute("reply_" + comment.getComment_id(), replyList);
+        
+        // 댓글의 추천 상태 확인
+        boolean isLiked = commentLikeMgr.isLiked(comment.getComment_id(), userIdObj);
+        likeMap.put(comment.getComment_id(), isLiked);
+        
+        // 답글의 추천 상태도 확인
+        for(CommentBean reply : replyList) {
+            boolean isReplyLiked = commentLikeMgr.isLiked(reply.getComment_id(), userIdObj);
+            likeMap.put(reply.getComment_id(), isReplyLiked);
+        }
+    }
+    
+    // BEST 댓글 찾기 (추천수가 가장 많은 댓글)
+    CommentBean bestComment = null;
+    int maxUpvotes = 0;
+    for(CommentBean comment : commentList) {
+        if(comment.getUpvotes() > maxUpvotes) {
+            maxUpvotes = comment.getUpvotes();
+            bestComment = comment;
+        }
     }
     
     DBConnectionMgr pool = DBConnectionMgr.getInstance();
@@ -119,23 +152,11 @@
     int falseCount = 0;
     int ambiguousCount = 0;
     int totalJudgmentCount = 0;
-    int commentCount = 0;
+    int commentCount = commentList.size();
     double credibilityScore = 0.0;
-    
-    List<Map<String, Object>> comments = new ArrayList<>();
     
     try {
         conn = pool.getConnection("user");
-        
-        String countSql = "SELECT COUNT(*) as cnt FROM comment WHERE post_id = ? AND status = '공개'";
-        pstmt = conn.prepareStatement(countSql);
-        pstmt.setInt(1, postId);
-        rs = pstmt.executeQuery();
-        if(rs.next()) {
-            commentCount = rs.getInt("cnt");
-        }
-        rs.close();
-        pstmt.close();
         
         String judgmentSql = "SELECT judgment, COUNT(*) as cnt FROM comment " +
                            "WHERE post_id = ? AND status = '공개' AND judgment IS NOT NULL " +
@@ -165,30 +186,6 @@
         
         rs.close();
         pstmt.close();
-        
-        String commentSql = "SELECT c.comment_id, c.user_id, c.layer, c.parent_comment_id, c.content, " +
-                          "c.judgment, c.upvotes, c.created_at, u.nickname " +
-                          "FROM comment c " +
-                          "JOIN user u ON c.user_id = u.user_id " +
-                          "WHERE c.post_id = ? AND c.status = '공개' " +
-                          "ORDER BY c.upvotes DESC, c.created_at ASC";
-        pstmt = conn.prepareStatement(commentSql);
-        pstmt.setInt(1, postId);
-        rs = pstmt.executeQuery();
-        
-        while(rs.next()) {
-            Map<String, Object> comment = new HashMap<>();
-            comment.put("id", rs.getInt("comment_id"));
-            comment.put("author", rs.getString("nickname"));
-            comment.put("content", rs.getString("content"));
-            comment.put("date", rs.getString("created_at"));
-            comment.put("recommendations", rs.getInt("upvotes"));
-            comment.put("type", rs.getString("judgment") != null ? rs.getString("judgment") : "");
-            comment.put("layer", rs.getInt("layer"));
-            comment.put("isReply", rs.getInt("layer") > 0);
-            comment.put("isBest", rs.getInt("upvotes") >= 50);
-            comments.add(comment);
-        }
         
     } catch(Exception e) {
         e.printStackTrace();
@@ -288,8 +285,6 @@
                         </div>
                         <% } %>
                         
-                        <!-- 키워드 섹션이 제거되었습니다. -->
-                        
                         <div class="mt-3 text-xs text-gray-600">
                             <span class="font-medium">관련 기사:</span> <%= analysisResult.getRelatedArticlesCount() %>건 발견
                         </div>
@@ -331,43 +326,22 @@
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="p-6">
-                <form id="commentForm" action="#" method="post" enctype="multipart/form-data">
+                <form id="commentForm" action="<%= request.getContextPath() %>/submitComment" method="post">
+                    <input type="hidden" name="postId" value="<%= postId %>">
+                    <input type="hidden" name="type" value="정보">
+                    <input type="hidden" name="status" value="공개">
                     <div class="mb-6">
                         <div class="mb-4">
-                            <select name="commentType" class="w-32 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                                <option>선택</option>
-                                <option>참</option>
-                                <option>거짓</option>
-                                <option>모호</option>
+                            <select name="judgment" class="w-32 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                                <option value="">선택</option>
+                                <option value="참">참</option>
+                                <option value="거짓">거짓</option>
+                                <option value="모호">모호</option>
                             </select>
                         </div>
                         
                         <div class="mb-4">
                              <textarea name="content" id="ir1" rows="10" cols="100" style="width:100%; height:300px; display:none;"></textarea>
-                        </div>
-                        
-                        <div class="mb-4">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <input type="file" id="comment-file" name="commentFile" class="hidden" multiple>
-                                <button type="button" onclick="document.getElementById('comment-file').click()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
-                                    첨부 파일
-                                </button>
-                                <span id="file-name-display" class="text-sm text-gray-500">파일을 선택하세요</span>
-                            </div>
-                            
-                            <div id="selected-files" class="hidden">
-                                <div class="bg-gray-50 border border-gray-200 rounded-md p-3">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center space-x-2">
-                                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg>
-                                            <span class="text-sm text-gray-700" id="file-name">선택된 파일 없음</span>
-                                        </div>
-                                        <button type="button" onclick="clearFiles()" class="text-red-500 hover:text-red-700 text-sm">삭제</button>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                         
                         <div class="flex justify-end">
@@ -378,8 +352,8 @@
                     </div>
                 </form>
                 
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">전체 댓글 <%= comments.size() %>개</h3>
+                <div class="flex justify-between items-center mb-4 border-t pt-6">
+                    <h3 class="text-lg font-semibold text-gray-900">전체 댓글 <%= commentCount %>개</h3>
                     <div class="flex space-x-2">
                         <select class="px-3 py-1 border border-gray-200 rounded text-sm">
                             <option>추천순</option>
@@ -389,28 +363,174 @@
                     </div>
                 </div>
 
+                <!-- BEST 댓글 섹션 -->
+                <% if(bestComment != null && bestComment.getUpvotes() > 0) { 
+                    String bestType = bestComment.getJudgment() != null ? bestComment.getJudgment() : "";
+                    String bestBadgeColor = "";
+                    if("참".equals(bestType)) bestBadgeColor = "bg-green-100 text-green-800";
+                    else if("거짓".equals(bestType)) bestBadgeColor = "bg-red-100 text-red-800";
+                    else if("모호".equals(bestType)) bestBadgeColor = "bg-yellow-100 text-yellow-800";
+                    
+                    boolean isBestLiked = likeMap.get(bestComment.getComment_id()) != null && likeMap.get(bestComment.getComment_id());
+                %>
                 <div class="mb-8 bg-blue-100 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">BEST 댓글</h4>
-                    <div class="space-y-4">
-                    <% for(Map<String, Object> comment : comments) { 
-                        if((Boolean)comment.get("isBest")) {
-                            String type = (String)comment.get("type");
-                            String badgeColor = "";
-                            if("참".equals(type)) badgeColor = "bg-green-100 text-green-800";
-                            else if("거짓".equals(type)) badgeColor = "bg-red-100 text-red-800";
-                            else if("모호".equals(type)) badgeColor = "bg-yellow-100 text-yellow-800";
-                    %>
-                    <div class="border border-gray-200 rounded-lg p-4 bg-white">
+                    <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                        <span class="text-2xl mr-2">⭐</span> BEST 댓글
+                    </h4>
+                    <div class="border border-gray-200 rounded-lg p-4 bg-white shadow-md">
                         <div class="flex justify-between items-start mb-2">
                             <div class="flex items-center space-x-2">
-                                <span class="font-semibold text-primary">BEST <%= comment.get("author") %></span>
-                                <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                </svg>
+                                <span class="font-bold text-primary"><%= bestComment.getNickname() %></span>
+                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">BEST</span>
                             </div>
                             <div class="flex items-center space-x-2">
-                                <span class="text-sm text-gray-500"><%= comment.get("date") %></span>
-                                <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal()">🚨</span>
+                                <span class="text-sm text-gray-500"><%= bestComment.getCreated_at() %></span>
+                                <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= bestComment.getComment_id() %>)">🚨</span>
+                                <% if(!"".equals(bestType)) { %>
+                                <span class="px-2 py-1 <%= bestBadgeColor %> rounded text-sm"><%= bestType %></span>
+                                <% } %>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <p class="text-gray-900 font-medium"><%= bestComment.getContent() %></p>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 text-sm">
+                            <% if(isBestLiked) { %>
+                                <button onclick="upvoteComment(<%= bestComment.getComment_id() %>, <%= postId %>)" 
+                                        class="flex items-center space-x-1 transition-colors text-red-500 font-semibold">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>추천 <%= bestComment.getUpvotes() %></span>
+                                </button>
+                            <% } else { %>
+                                <button onclick="upvoteComment(<%= bestComment.getComment_id() %>, <%= postId %>)" 
+                                        class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>추천 <%= bestComment.getUpvotes() %></span>
+                                </button>
+                            <% } %>
+                            <button type="button" onclick="toggleReplyForm(<%= bestComment.getComment_id() %>)" class="text-gray-600 hover:text-primary font-medium">답글쓰기</button>
+                        </div>
+
+                        <!-- BEST 댓글 답글 작성 폼 -->
+                        <div id="replyForm_<%= bestComment.getComment_id() %>" class="mt-4 hidden">
+                            <form action="<%= request.getContextPath() %>/submitComment" method="post" class="reply-form">
+                                <input type="hidden" name="postId" value="<%= postId %>">
+                                <input type="hidden" name="parentCommentId" value="<%= bestComment.getComment_id() %>">
+                                <input type="hidden" name="type" value="정보">
+                                <input type="hidden" name="status" value="공개">
+                                <div class="flex space-x-2">
+                                    <textarea name="content" rows="2" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" placeholder="답글을 입력하세요..." required></textarea>
+                                    <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark text-sm whitespace-nowrap">등록</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- BEST 댓글의 답글 목록 -->
+                        <div class="mt-4 ml-8 space-y-3">
+                            <%
+                            @SuppressWarnings("unchecked")
+                            Vector<CommentBean> bestReplyList = (Vector<CommentBean>) request.getAttribute("reply_" + bestComment.getComment_id());
+                            if(bestReplyList != null) {
+                                for(CommentBean reply : bestReplyList) {
+                                    String replyType = reply.getJudgment() != null ? reply.getJudgment() : "";
+                                    String replyBadgeColor = "";
+                                    if("참".equals(replyType)) replyBadgeColor = "bg-green-100 text-green-800";
+                                    else if("거짓".equals(replyType)) replyBadgeColor = "bg-red-100 text-red-800";
+                                    else if("모호".equals(replyType)) replyBadgeColor = "bg-yellow-100 text-yellow-800";
+                                    
+                                    boolean isReplyLiked = likeMap.get(reply.getComment_id()) != null && likeMap.get(reply.getComment_id());
+                            %>
+                                <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: <%= reply.getLayer() * 20 %>px;">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="font-semibold text-sm text-gray-700">
+                                                <% for(int i = 0; i < reply.getLayer(); i++) { %>↳ <% } %>
+                                                <%= reply.getNickname() %>
+                                            </span>
+                                            <% if(!"".equals(replyType)) { %>
+                                            <span class="px-2 py-1 <%= replyBadgeColor %> rounded text-xs"><%= replyType %></span>
+                                            <% } %>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-xs text-gray-500"><%= reply.getCreated_at() %></span>
+                                            <span class="text-gray-500 cursor-pointer text-xs" onclick="openCommentReportModal(<%= reply.getComment_id() %>)">🚨</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-gray-900"><%= reply.getContent() %></p>
+                                    <div class="flex items-center space-x-3 mt-2 text-xs">
+                                        <% if(isReplyLiked) { %>
+                                            <button onclick="upvoteComment(<%= reply.getComment_id() %>, <%= postId %>)" 
+                                                    class="flex items-center space-x-1 transition-colors text-red-500">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span>추천 <%= reply.getUpvotes() %></span>
+                                            </button>
+                                        <% } else { %>
+                                            <button onclick="upvoteComment(<%= reply.getComment_id() %>, <%= postId %>)" 
+                                                    class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span>추천 <%= reply.getUpvotes() %></span>
+                                            </button>
+                                        <% } %>
+                                        <button onclick="toggleReplyForm(<%= reply.getComment_id() %>)" class="text-gray-600 hover:text-primary">답글쓰기</button>
+                                    </div>
+
+                                    <!-- 답글에 대한 답글 작성 폼 -->
+                                    <div id="replyForm_<%= reply.getComment_id() %>" class="mt-3 hidden">
+                                        <form action="<%= request.getContextPath() %>/submitComment" method="post" class="reply-form">
+                                            <input type="hidden" name="postId" value="<%= postId %>">
+                                            <input type="hidden" name="parentCommentId" value="<%= reply.getComment_id() %>">
+                                            <input type="hidden" name="type" value="정보">
+                                            <input type="hidden" name="status" value="공개">
+                                            <div class="flex space-x-2">
+                                                <textarea name="content" rows="2" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" placeholder="답글을 입력하세요..." required></textarea>
+                                                <button type="submit" class="px-3 py-1 bg-primary text-white rounded-lg hover:bg-primary-dark text-xs whitespace-nowrap">등록</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            <%
+                                }
+                            }
+                            %>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
+
+                <!-- 일반 댓글 섹션 -->
+                <div class="space-y-4">
+                    <% for(CommentBean comment : commentList) { 
+                        // BEST 댓글은 이미 위에서 표시했으므로 제외
+                        if(bestComment != null && comment.getComment_id() == bestComment.getComment_id()) {
+                            continue;
+                        }
+                        
+                        String type = comment.getJudgment() != null ? comment.getJudgment() : "";
+                        String badgeColor = "";
+                        if("참".equals(type)) badgeColor = "bg-green-100 text-green-800";
+                        else if("거짓".equals(type)) badgeColor = "bg-red-100 text-red-800";
+                        else if("모호".equals(type)) badgeColor = "bg-yellow-100 text-yellow-800";
+                        
+                        boolean isLiked = likeMap.get(comment.getComment_id()) != null && likeMap.get(comment.getComment_id());
+                    %>
+                    <div class="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-semibold text-gray-900"><%= comment.getNickname() %></span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm text-gray-500"><%= comment.getCreated_at() %></span>
+                                <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= comment.getComment_id() %>)">🚨</span>
                                 <% if(!"".equals(type)) { %>
                                 <span class="px-2 py-1 <%= badgeColor %> rounded text-sm"><%= type %></span>
                                 <% } %>
@@ -418,108 +538,118 @@
                         </div>
                         
                         <div class="mb-3">
-                            <p class="text-gray-900"><%= comment.get("content") %></p>
-                            <div id="attached-files-comment<%= comment.get("id") %>" class="hidden mt-2"></div>
+                            <p class="text-gray-900"><%= comment.getContent() %></p>
                         </div>
                         
                         <div class="flex items-center space-x-4 text-sm">
-                            <button type="button" class="flex items-center space-x-1 text-gray-600 hover:text-red-500">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                </svg>
-                                <span>추천 <%= comment.get("recommendations") %></span>
-                            </button>
-                            <button type="button" class="text-gray-600 hover:text-primary">답글쓰기</button>
-                            <input type="file" id="file-comment<%= comment.get("id") %>" class="hidden" multiple>
-                            <button type="button" onclick="document.getElementById('file-comment<%= comment.get("id") %>').click()" class="text-gray-600 hover:text-primary">첨부파일</button>
-                        </div>
-                        
-                        <div id="selected-files-comment<%= comment.get("id") %>" class="hidden mt-3 p-3 bg-gray-50 rounded-md">
-                            <div class="bg-white border border-gray-200 rounded-md p-2">
-                                <div id="file-list-comment<%= comment.get("id") %>" class="space-y-1"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <% }} %>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="space-y-4">
-                    <% for(Map<String, Object> comment : comments) { 
-                         if(!(Boolean)comment.get("isBest")) {
-                            boolean isReply = (Boolean)comment.get("isReply");
-                            String type = (String)comment.get("type");
-                            String badgeColor = "";
-                            if("참".equals(type)) badgeColor = "bg-green-100 text-green-800";
-                            else if("거짓".equals(type)) badgeColor = "bg-red-100 text-red-800";
-                            else if("모호".equals(type)) badgeColor = "bg-yellow-100 text-yellow-800";
-                    %>
-                    <div class="<%= isReply ? "ml-6" : "" %>">
-                        <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                            <div class="flex justify-between items-start mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <% if(isReply) { %><span class="text-gray-500">→</span><% } %>
-                                    <span class="font-semibold"><%= comment.get("author") %></span>
-                                    <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                    </svg>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <span class="text-sm text-gray-500"><%= comment.get("date") %></span>
-                                    <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal()">🚨</span>
-                                    <% if(!"".equals(type)) { %>
-                                        <span class="px-2 py-1 <%= badgeColor %> rounded text-sm"><%= type %></span>
-                                    <% } %>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <p class="text-gray-900 mb-2"><%= comment.get("content") %></p>
-                                <div id="attached-files-comment<%= comment.get("id") %>" class="hidden mt-2"></div>
-                            </div>
-                            
-                            <div class="flex items-center space-x-4 text-sm">
-                                <button type="button" class="flex items-center space-x-1 text-gray-600 hover:text-red-500">
+                            <% if(isLiked) { %>
+                                <button onclick="upvoteComment(<%= comment.getComment_id() %>, <%= postId %>)" 
+                                        class="flex items-center space-x-1 transition-colors text-red-500">
                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
                                     </svg>
-                                    <span>추천 <%= comment.get("recommendations") %></span>
+                                    <span>추천 <%= comment.getUpvotes() %></span>
                                 </button>
-                                <button type="button" class="text-gray-600 hover:text-primary">답글쓰기</button>
-                                <input type="file" id="file-comment<%= comment.get("id") %>" class="hidden" multiple>
-                                <button type="button" onclick="document.getElementById('file-comment<%= comment.get("id") %>').click()" class="text-gray-600 hover:text-primary">첨부파일</button>
-                            </div>
-                            
-                            <div id="selected-files-comment<%= comment.get("id") %>" class="hidden mt-3 p-3 bg-gray-50 rounded-md">
-                                <div class="bg-white border border-gray-200 rounded-md p-2">
-                                    <div id="file-list-comment<%= comment.get("id") %>" class="space-y-1"></div>
+                            <% } else { %>
+                                <button onclick="upvoteComment(<%= comment.getComment_id() %>, <%= postId %>)" 
+                                        class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>추천 <%= comment.getUpvotes() %></span>
+                                </button>
+                            <% } %>
+                            <button type="button" onclick="toggleReplyForm(<%= comment.getComment_id() %>)" class="text-gray-600 hover:text-primary">답글쓰기</button>
+                        </div>
+
+                        <!-- 일반 댓글 답글 작성 폼 -->
+                        <div id="replyForm_<%= comment.getComment_id() %>" class="mt-4 hidden">
+                            <form action="<%= request.getContextPath() %>/submitComment" method="post" class="reply-form">
+                                <input type="hidden" name="postId" value="<%= postId %>">
+                                <input type="hidden" name="parentCommentId" value="<%= comment.getComment_id() %>">
+                                <input type="hidden" name="type" value="정보">
+                                <input type="hidden" name="status" value="공개">
+                                <div class="flex space-x-2">
+                                    <textarea name="content" rows="2" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" placeholder="답글을 입력하세요..." required></textarea>
+                                    <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark text-sm whitespace-nowrap">등록</button>
                                 </div>
-                            </div>
+                            </form>
+                        </div>
+
+                        <!-- 일반 댓글의 답글 목록 -->
+                        <div class="mt-4 ml-8 space-y-3">
+                            <%
+                            @SuppressWarnings("unchecked")
+                            Vector<CommentBean> replyList = (Vector<CommentBean>) request.getAttribute("reply_" + comment.getComment_id());
+                            if(replyList != null) {
+                                for(CommentBean reply : replyList) {
+                                    String replyType = reply.getJudgment() != null ? reply.getJudgment() : "";
+                                    String replyBadgeColor = "";
+                                    if("참".equals(replyType)) replyBadgeColor = "bg-green-100 text-green-800";
+                                    else if("거짓".equals(replyType)) replyBadgeColor = "bg-red-100 text-red-800";
+                                    else if("모호".equals(replyType)) replyBadgeColor = "bg-yellow-100 text-yellow-800";
+                                    
+                                    boolean isReplyLiked = likeMap.get(reply.getComment_id()) != null && likeMap.get(reply.getComment_id());
+                            %>
+                                <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: <%= reply.getLayer() * 20 %>px;">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="font-semibold text-sm text-gray-700">
+                                                <% for(int i = 0; i < reply.getLayer(); i++) { %>↳ <% } %>
+                                                <%= reply.getNickname() %>
+                                            </span>
+                                            <% if(!"".equals(replyType)) { %>
+                                            <span class="px-2 py-1 <%= replyBadgeColor %> rounded text-xs"><%= replyType %></span>
+                                            <% } %>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-xs text-gray-500"><%= reply.getCreated_at() %></span>
+                                            <span class="text-gray-500 cursor-pointer text-xs" onclick="openCommentReportModal(<%= reply.getComment_id() %>)">🚨</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-gray-900"><%= reply.getContent() %></p>
+                                    <div class="flex items-center space-x-3 mt-2 text-xs">
+                                        <% if(isReplyLiked) { %>
+                                            <button onclick="upvoteComment(<%= reply.getComment_id() %>, <%= postId %>)" 
+                                                    class="flex items-center space-x-1 transition-colors text-red-500">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span>추천 <%= reply.getUpvotes() %></span>
+                                            </button>
+                                        <% } else { %>
+                                            <button onclick="upvoteComment(<%= reply.getComment_id() %>, <%= postId %>)" 
+                                                    class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span>추천 <%= reply.getUpvotes() %></span>
+                                            </button>
+                                        <% } %>
+                                        <button onclick="toggleReplyForm(<%= reply.getComment_id() %>)" class="text-gray-600 hover:text-primary">답글쓰기</button>
+                                    </div>
+
+                                    <!-- 대댓글에 대한 답글 작성 폼 -->
+                                    <div id="replyForm_<%= reply.getComment_id() %>" class="mt-3 hidden">
+                                        <form action="<%= request.getContextPath() %>/submitComment" method="post" class="reply-form">
+                                            <input type="hidden" name="postId" value="<%= postId %>">
+                                            <input type="hidden" name="parentCommentId" value="<%= reply.getComment_id() %>">
+                                            <input type="hidden" name="type" value="정보">
+                                            <input type="hidden" name="status" value="공개">
+                                            <div class="flex space-x-2">
+                                                <textarea name="content" rows="2" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" placeholder="답글을 입력하세요..." required></textarea>
+                                                <button type="submit" class="px-3 py-1 bg-primary text-white rounded-lg hover:bg-primary-dark text-xs whitespace-nowrap">등록</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            <%
+                                }
+                            }
+                            %>
                         </div>
                     </div>
-                    <% }} %>
-                    </div>
-                </div>
-
-                <div class="flex justify-center items-center mt-6 space-x-2">
-                    <div class="flex space-x-1">
-                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[1]</button>
-                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[2]</button>
-                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[3]</button>
-                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[4]</button>
-                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[5]</button>
-                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[6]</button>
-                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[7]</button>
-                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[8]</button>
-                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[9]</button>
-                        <span class="px-2 text-gray-400">....</span>
-                    </div>
-                    <button class="ml-4 px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </button>
+                    <% } %>
                 </div>
             </div>
         </div>
@@ -527,134 +657,154 @@
 
     <jsp:include page="../Common/Footer.jsp" />
 
+    <!-- 신고 모달 -->
     <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
-                <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">신고하기</h3>
-                    <div class="border-b border-gray-200 mb-4"></div>
-                </div>
-                
-                <div class="p-6">
-                    <p class="text-gray-900 mb-4">해당 게시글을 아래와 같은 사유로 신고합니다.</p>
+                <form action="<%= request.getContextPath() %>/UI/JSP/Admin/AdminReportPostProc.jsp" method="post">
+                    <input type="hidden" name="postId" value="<%= postId %>"/>
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">신고하기</h3>
+                        <div class="border-b border-gray-200 mb-4"></div>
+                    </div>
                     
-                    <div class="mb-4">
-                        <div class="bg-gray-100 border border-gray-200 rounded-md p-3 mb-2">
-                            <div class="flex justify-between">
-                                <span class="text-gray-900"><%= post.getTitle() %></span>
-                                <span class="text-gray-900"><%= post.getNickname() %></span>
-                            </div>
+                    <div class="p-6">
+                        <p class="text-gray-900 mb-4">해당 게시글을 아래와 같은 사유로 신고합니다.</p>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-900 mb-2">신고사유</label>
+                            <textarea name="reportReason" class="w-full bg-gray-100 border border-gray-200 rounded-md p-3 text-gray-900" rows="3" placeholder="신고 사유를 입력해주세요" required></textarea>
                         </div>
-                        <div class="bg-gray-100 border border-gray-200 rounded-md p-3">
-                            <span class="text-gray-900"><%= post.getContent() != null && post.getContent().length() > 50 ? post.getContent().substring(0, 50) + "..." : post.getContent() %></span>
+                        
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" onclick="closeReportModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
+                                취소
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+                                신고
+                            </button>
                         </div>
                     </div>
-                    
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-900 mb-2">신고사유</label>
-                        <textarea class="w-full bg-gray-100 border border-gray-200 rounded-md p-3 text-gray-900" rows="3" placeholder="신고 사유를 입력해주세요"></textarea>
-                    </div>
-                    
-                    <div class="flex justify-end space-x-3">
-                        <button onclick="closeReportModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
-                            취소
-                        </button>
-                        <button onclick="submitReport()" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
-                            신고
-                        </button>
-                    </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
 
+    <!-- 댓글 신고 모달 -->
     <div id="commentReportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-                <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">신고하기</h3>
-                    <div class="border-b border-gray-200 mb-4"></div>
-                    <p class="text-sm text-gray-600 mb-4">해당 댓글을 아래와 같은 사유로 신고합니다.</p>
+                <form action="<%= request.getContextPath() %>/UI/JSP/Admin/AdminReportCommentProc.jsp" method="post">
+                    <input type="hidden" name="commentId" id="reportCommentId"/>
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">신고하기</h3>
+                        <div class="border-b border-gray-200 mb-4"></div>
+                        <p class="text-sm text-gray-600 mb-4">해당 댓글을 아래와 같은 사유로 신고합니다.</p>
                     
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">작성자</label>
-                        <div class="bg-gray-100 p-3 rounded text-gray-600">작성자</div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">신고사유</label>
+                            <textarea name="reportReason" class="w-full bg-gray-100 p-3 rounded text-gray-600 border border-gray-200" rows="3" placeholder="신고 사유를 입력해주세요" required></textarea>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" onclick="closeCommentReportModal()" class="px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300">취소</button>
+                            <button type="submit" class="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700">신고</button>
+                        </div>
                     </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">댓글 내용</label>
-                        <div class="bg-gray-100 p-3 rounded text-gray-600">댓글 내용</div>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">신고사유</label>
-                        <textarea class="w-full bg-gray-100 p-3 rounded text-gray-600 border border-gray-200" rows="3" placeholder="신고 사유를 입력해주세요"></textarea>
-                    </div>
-                    
-                    <div class="flex justify-end space-x-3">
-                        <button onclick="closeCommentReportModal()" class="px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300">취소</button>
-                        <button onclick="submitCommentReport()" class="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700">신고</button>
-                    </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
 
-    <script>
+    <script type="text/javascript">
         var oEditors = [];
-
+        
         nhn.husky.EZCreator.createInIFrame({
             oAppRef: oEditors,
             elPlaceHolder: "ir1",
-            sSkinURI: "<%= request.getContextPath() %>/se2/SmartEditor2Skin.html",	
-            htParams : {
-                bUseToolbar : true,
-                bUseVerticalResizer : true,
-                bUseModeChanger : true,
+            sSkinURI: "<%= request.getContextPath() %>/se2/SmartEditor2Skin.html",
+            htParams: {
+                bUseToolbar: true,
+                bUseVerticalResizer: true,
+                bUseModeChanger: true,
             },
             fCreator: "createSEditor2"
         });
-
+        
         function submitContents() {
             oEditors.getById["ir1"].exec("UPDATE_CONTENTS_FIELD", []);
+            
             var form = document.getElementById("commentForm");
-
-            if(form.content.value == "<p>&nbsp;</p>" || form.content.value == "") {
-                alert("내용을 입력해주세요.");
+            var content = form.content.value;
+            
+            if(content == "" || content == "<p>&nbsp;</p>") {
+                alert("댓글 내용을 입력해주세요.");
                 oEditors.getById["ir1"].exec("FOCUS");
-                return;
+                return false;
             }
-
+            
             try {
                 form.submit();
-            } catch(e) {}
+            } catch(e) {
+                console.error(e);
+            }
         }
 
-        document.getElementById('comment-file').addEventListener('change', function(e) {
-            const files = e.target.files;
-            const selectedFilesDiv = document.getElementById('selected-files');
-            const fileNameSpan = document.getElementById('file-name');
-            const fileNameDisplay = document.getElementById('file-name-display');
-            
-            if (files.length > 0) {
-                selectedFilesDiv.classList.remove('hidden');
-                fileNameDisplay.classList.add('hidden');
-                if (files.length === 1) {
-                    fileNameSpan.textContent = files[0].name;
+        // 추천 기능
+        function upvoteComment(commentId, postId) {
+            fetch('<%= request.getContextPath() %>/upvoteComment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'commentId=' + commentId + '&userId=<%= userIdObj %>'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    location.reload();
                 } else {
-                    fileNameSpan.textContent = files.length + '개 파일 선택됨';
+                    alert(data.message || '추천 처리 중 오류가 발생했습니다.');
                 }
-            } else {
-                selectedFilesDiv.classList.add('hidden');
-                fileNameDisplay.classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('추천 처리 중 오류가 발생했습니다.');
+            });
+        }
+
+        // 답글 폼 토글 함수
+        function toggleReplyForm(commentId) {
+            var replyForm = document.getElementById('replyForm_' + commentId);
+            if (replyForm) {
+                // 다른 열린 답글 폼들 닫기
+                document.querySelectorAll('[id^="replyForm_"]').forEach(function(form) {
+                    if (form.id !== 'replyForm_' + commentId) {
+                        form.classList.add('hidden');
+                    }
+                });
+                // 현재 답글 폼 토글
+                replyForm.classList.toggle('hidden');
+                if (!replyForm.classList.contains('hidden')) {
+                    replyForm.querySelector('textarea').focus();
+                }
+            }
+        }
+
+        // 답글 폼 제출 처리
+        document.addEventListener('submit', function(e) {
+            if (e.target.classList.contains('reply-form')) {
+                var textarea = e.target.querySelector('textarea[name="content"]');
+                var content = textarea.value.trim();
+                
+                if (content === "") {
+                    e.preventDefault();
+                    alert("답글 내용을 입력해주세요.");
+                    textarea.focus();
+                    return false;
+                }
             }
         });
-
-        function clearFiles() {
-            document.getElementById('comment-file').value = '';
-            document.getElementById('selected-files').classList.add('hidden');
-            document.getElementById('file-name-display').classList.remove('hidden');
-        }
 
         function openReportModal() {
             document.getElementById('reportModal').classList.remove('hidden');
@@ -664,12 +814,8 @@
             document.getElementById('reportModal').classList.add('hidden');
         }
 
-        function submitReport() {
-            alert('신고가 접수되었습니다.');
-            closeReportModal();
-        }
-
-        function openCommentReportModal() {
+        function openCommentReportModal(commentId) {
+            document.getElementById('reportCommentId').value = commentId;
             document.getElementById('commentReportModal').classList.remove('hidden');
         }
 
@@ -677,78 +823,18 @@
             document.getElementById('commentReportModal').classList.add('hidden');
         }
 
-        function submitCommentReport() {
-            alert('댓글 신고가 접수되었습니다.');
-            closeCommentReportModal();
-        }
-
+        // 모달 배경 클릭시 닫기
         document.getElementById('reportModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeReportModal();
             }
         });
-
+        
         document.getElementById('commentReportModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeCommentReportModal();
             }
         });
-
-        function setupFileUpload(commentId) {
-            const fileInput = document.getElementById('file-comment' + commentId);
-            if (!fileInput) return;
-
-            const selectedFilesDiv = document.getElementById('selected-files-comment' + commentId);
-            const fileList = document.getElementById('file-list-comment' + commentId);
-            const attachedFilesDiv = document.getElementById('attached-files-comment' + commentId);
-
-            fileInput.addEventListener('change', function(e) {
-                const files = e.target.files;
-                
-                if (files.length > 0) {
-                    selectedFilesDiv.classList.remove('hidden');
-                    fileList.innerHTML = '';
-                    
-                    if (attachedFilesDiv) {
-                        const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
-                        if (imageFiles.length > 0) {
-                            attachedFilesDiv.classList.remove('hidden');
-                            const reader = new FileReader();
-                            reader.onload = function(e) {
-                                attachedFilesDiv.innerHTML = '<img src="' + e.target.result + '" alt="' + imageFiles[0].name + '" class="max-w-full h-auto rounded-lg border border-gray-200" style="max-height: 200px;">';
-                            };
-                            reader.readAsDataURL(imageFiles[0]);
-                        } else {
-                            attachedFilesDiv.classList.add('hidden');
-                        }
-                    }
-                    
-                    Array.from(files).forEach(function(file, index) {
-                        const fileItem = document.createElement('div');
-                        fileItem.className = 'flex items-center p-2 bg-white rounded border';
-                        fileItem.innerHTML = 
-                            '<div class="flex items-center space-x-2">' +
-                                '<svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>' +
-                                '<span class="text-sm text-gray-700">' + file.name + '</span>' +
-                                '<span class="text-xs text-gray-500">(' + (file.size / 1024).toFixed(1) + 'KB)</span>' +
-                            '</div>';
-                        fileList.appendChild(fileItem);
-                    });
-                } else {
-                    selectedFilesDiv.classList.add('hidden');
-                    if (attachedFilesDiv) {
-                        attachedFilesDiv.classList.add('hidden');
-                    }
-                }
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            <% for(Map<String, Object> comment : comments) { %>
-            setupFileUpload(<%= comment.get("id") %>);
-            <% } %>
-        });
     </script>
 </body>
 </html>
-

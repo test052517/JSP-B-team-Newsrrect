@@ -60,7 +60,7 @@
                         <label for="ir1" class="block text-sm font-medium text-gray-900 mb-2">
                             내용 <span class="text-red-500">*</span>
                         </label>
-                        <textarea name="content" id="ir1" rows="10" style="width:100%; height:400px;"></textarea>
+                        <textarea name="ir1" id="ir1" rows="10" style="width:100%; height:400px;"></textarea>
                     </div>
                     
                     <!-- 파일 첨부 -->
@@ -221,7 +221,7 @@
         function submitContents() {
             // 스마트에디터 내용을 textarea에 반영
             oEditors.getById["ir1"].exec("UPDATE_CONTENTS_FIELD", []);
-
+            console.log("textarea(ir1)의 값:", document.getElementById("ir1").value);
             const title = document.getElementById("title").value.trim();
             if (!title) {
                 alert("제목을 입력해주세요.");
@@ -283,7 +283,7 @@
                 window.location.href = contextPath + '/UI/JSP/User/CommuBoard.jsp';
             }
         }
-
+	
         // 페이지 떠날 때 경고
         window.addEventListener('beforeunload', function(e) {
             if (titleInput.value.trim() || selectedFiles.length > 0) {
@@ -292,7 +292,7 @@
             }
         });
 
-        // 로그인 체크
+        
         <c:if test="${empty sessionScope.user}">
             alert('로그인이 필요합니다.');
             location.href = contextPath + '/UI/JSP/Login.jsp';

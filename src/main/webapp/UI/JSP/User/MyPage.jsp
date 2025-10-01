@@ -131,129 +131,135 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 			    <div class="rounded-lg p-4 text-center" style="background-color: #85b9fd;"> 
 			        <div class="text-2xl font-bold mb-1 text-white">
-			            ${not empty userStats.postCount ? userStats.postCount : 1234}
+			            <c:out value="${userStats.postCount}" default="0"/>
 			        </div>
 			        <div class="text-sm text-white">작성한 게시글</div>
 			    </div>
 			    
 			    <div class="rounded-lg p-4 text-center" style="background-color: #738dff;"> 
 			        <div class="text-2xl font-bold mb-1 text-white">
-			            ${not empty userStats.commentCount ? userStats.commentCount : 1234}
+			             <c:out value="${userStats.commentCount}" default="0"/>
 			        </div>
 			        <div class="text-sm text-white">작성한 댓글</div>
 			    </div>
-    
-    <div class="rounded-lg p-4 text-center" style="background-color: #7a6bfe;">
-        <div class="text-2xl font-bold mb-1 text-white">
-            ${not empty userStats.likeCount ? userStats.likeCount : 567}
-        </div>
-        <div class="text-sm text-white">받은 추천</div>
-    </div>
-</div>
+			    
+			    <div class="rounded-lg p-4 text-center" style="background-color: #7a6bfe;">
+			        <div class="text-2xl font-bold mb-1 text-white">
+			             <c:out value="${userStats.receivedRecomCount}" default="0"/>
+			        </div>
+			        <div class="text-sm text-white">받은 추천</div>
+			    </div>
+			</div>
 
                 <!-- Posts Section -->
                 <div class="mb-8">
-                    <h3 class="text-xl font-semibold text-gray-900 mb-4">
-                        작성한 게시글(${not empty userPosts ? fn:length(userPosts) : 1234})
-                    </h3>
-                    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                        <table class="w-full">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">번호</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">제목</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">작성일</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">글 심사상태</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <c:choose>
-                                    <c:when test="${not empty userPosts}">
-                                        <c:forEach var="post" items="${userPosts}">
-                                            <tr class="hover:bg-gray-50">
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${post.id}</td>
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    <a href="<%= request.getContextPath() %>/UI/JSP/User/InfoWatch.jsp?id=${post.id}" 
-                                                       class="text-sm text-gray-900 hover:text-primary">
-                                                        <c:out value="${post.title}" />
-                                                    </a>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    <fmt:formatDate value="${post.createdDate}" pattern="yyyy.MM.dd" />
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap">
-                                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-                                                        일반
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        </c:forEach>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <tr>
-                                            <td colspan="4" class="px-6 py-12 text-center text-gray-500">
-                                                <div class="bg-gray-100 h-32 rounded-lg flex items-center justify-center">
-                                                    <span class="text-gray-400">작성한 게시글이 없습니다.</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </c:otherwise>
-                                </c:choose>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+			    <h3 class="text-xl font-semibold text-gray-900 mb-4">
+			        작성한 게시글(<c:out value="${fn:length(recentPosts)}" default="0"/>)
+			    </h3>
+			    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+			        <table class="w-full">
+			            <thead class="bg-gray-50">
+			                <tr>
+			                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">번호</th>
+			                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">제목</th>
+			                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">작성일</th>
+			                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">글 유형</th>
+			                </tr>
+			            </thead>
+			            <tbody class="bg-white divide-y divide-gray-200">
+			                <c:choose>
+			                    <c:when test="${not empty recentPosts}">
+			                        <c:forEach var="post" items="${recentPosts}" varStatus="status">
+			                            <tr class="hover:bg-gray-50">
+			                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+			                                    <c:out value="${fn:length(recentPosts) - status.index}" />
+			                                </td>
+			                                <td class="px-6 py-4 whitespace-nowrap">
+			                                    <a href="<%= request.getContextPath() %>/UI/JSP/User/InfoWatch.jsp?id=${post.postId}" 
+			                                       class="text-sm text-gray-900 hover:text-primary">
+			                                        <c:out value="${post.title}" />
+			                                    </a>
+			                                </td>
+			                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+			                                    <c:out value="${post.formattedDate}" /> 
+			                                </td>
+			                                <td class="px-6 py-4 whitespace-nowrap">
+			                                    <span class="px-2 py-1 text-xs font-semibold rounded-full 
+			                                          <c:if test='${post.type eq "정보"}'>bg-blue-100 text-blue-800</c:if>
+			                                          <c:if test='${post.type eq "소통"}'>bg-green-100 text-green-800</c:if>">
+			                                        <c:out value="${post.type}" />
+			                                    </span>
+			                                </td>
+			                            </tr>
+			                        </c:forEach>
+			                    </c:when>
+			                    <c:otherwise>
+			                        <tr>
+			                            <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+			                                <div class="bg-gray-100 h-32 rounded-lg flex items-center justify-center">
+			                                    <span class="text-gray-400">작성한 게시글이 없습니다.</span>
+			                                </div>
+			                            </td>
+			                        </tr>
+			                    </c:otherwise>
+			                </c:choose>
+			            </tbody>
+			        </table>
+			    </div>
+			</div>
 
                 <!-- Comments Section -->
                 <div class="mb-8">
-                    <h3 class="text-xl font-semibold text-gray-900 mb-4">
-                        작성한 댓글(${not empty userComments ? fn:length(userComments) : 1234})
-                    </h3>
-                    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                        <table class="w-full">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">번호</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">제목</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">원글 작성자</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">작성일</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <c:choose>
-                                    <c:when test="${not empty userComments}">
-                                        <c:forEach var="comment" items="${userComments}">
-                                            <tr class="hover:bg-gray-50">
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${comment.id}</td>
-                                                <td class="px-6 py-4">
-                                                    <a href="<%= request.getContextPath() %>/UI/JSP/User/InfoWatch.jsp?id=${comment.postId}" 
-                                                       class="text-sm text-gray-900 hover:text-primary">
-                                                        <c:out value="${comment.postTitle}" />
-                                                    </a>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                                    <c:out value="${comment.postAuthor}" />
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    <fmt:formatDate value="${comment.createdDate}" pattern="yyyy.MM.dd" />
-                                                </td>
-                                            </tr>
-                                        </c:forEach>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <tr>
-                                            <td colspan="4" class="px-6 py-12 text-center text-gray-500">
-                                                <div class="bg-gray-100 h-32 rounded-lg flex items-center justify-center">
-                                                    <span class="text-gray-400">작성한 댓글이 없습니다.</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </c:otherwise>
-                                </c:choose>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+				    <h3 class="text-xl font-semibold text-gray-900 mb-4">
+				        작성한 댓글(<c:out value="${fn:length(recentComments)}" default="0"/>)
+				    </h3>
+				    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+				        <table class="w-full">
+				            <thead class="bg-gray-50">
+				                <tr>
+				                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">번호</th>
+				                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">원문 제목</th>
+				                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">댓글 내용 미리보기</th>
+				                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">작성일</th>
+				                </tr>
+				            </thead>
+				            <tbody class="bg-white divide-y divide-gray-200">
+				                <c:choose>
+				                    <c:when test="${not empty recentComments}">
+				                        <c:forEach var="comment" items="${recentComments}" varStatus="status">
+				                            <tr class="hover:bg-gray-50">
+				                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+				                                    <c:out value="${fn:length(recentComments) - status.index}" />
+				                                </td>
+				                                <td class="px-6 py-4">
+				                                    <a href="<%= request.getContextPath() %>/UI/JSP/User/InfoWatch.jsp?id=${comment.originalPostId}" 
+				                                       class="text-sm text-gray-900 hover:text-primary truncate max-w-xs block">
+				                                        <c:out value="${comment.originalPostTitle}" />
+				                                    </a>
+				                                </td>
+				                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 truncate max-w-sm">
+				                                     <c:out value="${fn:substring(comment.content, 0, 30)}" />...
+				                                </td>
+				                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+				                                    <c:out value="${comment.formattedDate}" />
+				                                </td>
+				                            </tr>
+				                        </c:forEach>
+				                    </c:when>
+				                    <c:otherwise>
+				                        <tr>
+				                            <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+				                                <div class="bg-gray-100 h-32 rounded-lg flex items-center justify-center">
+				                                    <span class="text-gray-400">작성한 댓글이 없습니다.</span>
+				                                </div>
+				                            </td>
+				                        </tr>
+				                    </c:otherwise>
+				                </c:choose>
+				            </tbody>
+				        </table>
+				    </div>
+				</div>
 
                 <!-- Action Buttons -->
                 <div class="flex justify-between">

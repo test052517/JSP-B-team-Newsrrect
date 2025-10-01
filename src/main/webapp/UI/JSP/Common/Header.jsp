@@ -51,7 +51,7 @@
                class="nav-link text-primary hover:text-white hover:bg-[#7d8ff9] px-3 py-2 text-sm font-medium font-paperozi-medium rounded transition-all duration-200 ease-in-out">
                소통 게시판
             </a>
-            <a href="<%= request.getContextPath() %>/UI/JSP/User/MyPage.jsp" 
+            <a href="<%= request.getContextPath() %>/Servlet/MyPageServlet" 
                class="nav-link text-primary hover:text-white hover:bg-[#7d8ff9] px-3 py-2 text-sm font-medium font-paperozi-medium rounded transition-all duration-200 ease-in-out">
                마이 페이지
             </a>

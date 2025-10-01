@@ -24,6 +24,9 @@ INSERT INTO `user` (
     '안녕하세요! 새로 가입한 테스트 유저입니다. 뉴스렉트에서 좋은 기사들을 많이 읽고 싶어요!'
 );
 
+INSERT INTO `user` (`email`, `password`, `role`, `nickname`, `created_at`, `is_active`, `ban_count`, `report_count`, `point`, `attend`, `introduce`) VALUES
+('admin@test.com', '1234', '관리자', 'Newsrrect_Admin', '2025-09-29 16:06:41', 1, 0, 0, 1000, '2025-09-29 16:06:41', 'Newsrrect 서비스의 모든 기능을 관리하는 공식 관리자 계정입니다.');
+
 INSERT INTO `post` (`post_id`, `user_id`, `type`, `title`, `content`, `status`, `view_count`, `created_at`, `report_count`, `recommand_count`, `priority`) VALUES (1, 1, '정보', '2025년 최신 기술 트렌드 분석', '올해 주목해야 할 주요 기술 트렌드는 AI, 양자 컴퓨팅, 그리고 지속 가능한 기술입니다. 특히 생성형 AI는 모든 산업 분야에 큰 영향을 미칠 것으로 보입니다.', '공개', 152, '2025-09-27 10:00:00', 0, 15, 0);
 INSERT INTO `post` (`post_id`, `user_id`, `type`, `title`, `content`, `status`, `view_count`, `created_at`, `report_count`, `recommand_count`, `priority`) VALUES (2, 1, '소통', '뉴스렉트 사용자분들, 가장 인상 깊었던 뉴스는 무엇인가요?', '최근에 접한 뉴스 중에서 오랫동안 기억에 남거나, 큰 영향을 주었던 뉴스가 있다면 함께 이야기 나누고 싶습니다. 댓글로 자유롭게 공유해주세요!', '공개', 89, '2025-09-27 14:20:00', 0, 8, 0);
 INSERT INTO `post` (`post_id`, `user_id`, `type`, `title`, `content`, `status`, `view_count`, `created_at`, `report_count`, `recommand_count`, `priority`) VALUES (3, 1, '정보', '[스크랩] 기후 변화가 우리 식탁에 미치는 영향', '기후 변화로 인해 주요 곡물 생산량이 감소하고 있으며, 이는 곧 식량 가격 상승으로 이어질 수 있다는 전문가들의 경고가 나왔습니다. 이에 대한 대비가 필요해 보입니다.', '공개', 234, '2025-09-28 09:30:00', 0, 25, 0);

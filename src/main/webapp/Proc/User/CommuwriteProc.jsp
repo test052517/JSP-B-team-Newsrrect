@@ -29,12 +29,12 @@
         PostBean post = new PostBean();
         
         // 실제 운영 시에는 세션 등에서 사용자 정보를 가져와야 합니다.
-        int userId = 1; // 예시: session.getAttribute("userId");
+        int userId = (int)session.getAttribute("userId");
         
         post.setUserId(userId);
         post.setTitle(title);
         post.setContent(content);
-        post.setType("정보");
+        post.setType("소통");
         post.setStatus("공개"); // 관리자가 승인하기 전까지 '비공개'로 설정할 수도 있습니다.
         post.setViewCount(0);
         post.setReportCount(0);

@@ -92,4 +92,67 @@ public class WatchUserPostMgr {
         }
         return vlist;
     }
+    
+    
+    public void increaseViewCount(int postId) {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        String sql = null;
+        
+        try {
+            con = pool.getConnection("user");
+            // viewCount 컬럼의 값을 1 증가시키는 UPDATE 쿼리
+            sql = "UPDATE post SET view_count = view_count + 1 WHERE post_id = ?";
+            pstmt = con.prepareStatement(sql);
+            pstmt.setInt(1, postId);
+            pstmt.executeUpdate(); // 쿼리 실행
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(con, pstmt);
+        }
+    }
+    
+    public PostBean getPost(int postId) {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        String sql = null;
+        PostBean post = null;
+
+        try {
+            con = pool.getConnection("user");
+            // post 테이블과 user 테이블을 JOIN하여 게시물 정보와 작성자 닉네임을 함께 조회
+            sql = "SELECT p.*, u.nickname FROM post p "
+                + "JOIN user u ON p.user_id = u.user_id "
+                + "WHERE p.post_id = ?";
+            pstmt = con.prepareStatement(sql);
+            pstmt.setInt(1, postId);
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                post = new PostBean();
+                post.setPostId(rs.getInt("post_id"));
+                post.setUserId(rs.getInt("user_id"));
+                post.setType(rs.getString("type"));
+                post.setTitle(rs.getString("title"));
+                post.setContent(rs.getString("content"));
+                post.setStatus(rs.getString("status"));
+                post.setViewCount(rs.getInt("view_count"));
+                post.setCreatedAt(rs.getString("created_at"));
+                post.setReportCount(rs.getInt("report_count"));
+                post.setRecommandCount(rs.getInt("recommand_count"));
+                post.setPriority(rs.getInt("priority"));
+                
+                // JOIN을 통해 가져온 작성자 닉네임을 PostBean에 설정
+                post.setNickname(rs.getString("nickname")); 
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(con, pstmt, rs);
+        }
+        return post;
+    }
+
 }

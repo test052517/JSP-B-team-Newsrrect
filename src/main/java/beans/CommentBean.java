@@ -19,7 +19,8 @@ public class CommentBean {
     // [추가] 화면 표시를 위해 JOIN된 사용자 닉네임을 임시로 담을 필드
     // ===============================================================
     private String nickname;
-
+    private String originalPostTitle;
+    private int originalPostId;
     
     // --- 기존 Getter/Setter 메소드 ---
     public int getComment_id() {
@@ -124,6 +125,22 @@ public class CommentBean {
 
     public void setNickname(String nickname) {
         this.nickname = nickname;
+    }
+    
+    public String getOriginalPostTitle() {
+        return originalPostTitle;
+    }
+
+    public void setOriginalPostTitle(String originalPostTitle) {
+        this.originalPostTitle = originalPostTitle;
+    }
+
+    public int getOriginalPostId() {
+        return originalPostId;
+    }
+
+    public void setOriginalPostId(int originalPostId) {
+        this.originalPostId = originalPostId;
     }
     
     public String getFormattedDate() {

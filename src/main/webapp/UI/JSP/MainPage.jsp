@@ -47,11 +47,11 @@
                 <!-- User Menu - Absolute positioned right -->
                 <div class="absolute right-0 flex items-center space-x-4">
                     <%if(user!=null){ %>
-                    <a href="../JSP/Logout.jsp" class="text-primary hover:text-primary-dark text-sm font-medium">
+                    <a href="<%= request.getContextPath() %>/UI/JSP/Logout.jsp" class="text-primary hover:text-primary-dark text-sm font-medium">
                         로그아웃
                     </a>
                     <%}else{%>
-                  <a href="../JSP/Login.jsp" class="text-primary hover:text-primary-dark text-sm font-medium">
+                  <a href="<%= request.getContextPath() %>/UI/JSP/Login.jsp" class="text-primary hover:text-primary-dark text-sm font-medium">
                         로그인
                     </a>
                   <% } %>
@@ -63,9 +63,12 @@
 <nav class="bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-center space-x-20 py-4">
-            <a href="User/InfoBoard.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">정보 검증 게시판</a>
-            <a href="User/CommuBoard.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">소통 게시판</a>
-            <a href="User/MyPage.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">마이 페이지</a>
+            <a href="<%= request.getContextPath() %>/UI/JSP/User/InfoBoard.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">정보 검증 게시판</a>
+            <a href="<%= request.getContextPath() %>/UI/JSP/User/CommuBoard.jsp" class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">소통 게시판</a>
+            <a href="<%= request.getContextPath() %>/Servlet/MyPageServlet" 
+			   class="text-primary hover:text-primary-dark px-3 py-2 text-sm font-medium">
+			    마이 페이지
+			</a>
         </div>
     </div>
 </nav>

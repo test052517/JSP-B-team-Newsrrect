@@ -3,9 +3,11 @@
 <%@ page import="mgr.PostMgr" %>
 <%@ page import="beans.CommentBean" %>
 <%@ page import="mgr.CommentMgr" %>
+<%@ page import="mgr.CommentLikeMgr" %>
 <%@ page import="mgr.DBConnectionMgr" %>
 <%@ page import="java.sql.*" %>
 <%@ page import="java.util.*" %>
+<jsp:useBean id="commentLikeMgr" class="mgr.CommentLikeMgr" scope="page" />
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -53,53 +55,34 @@
         return;
     }
     
-    DBConnectionMgr pool = DBConnectionMgr.getInstance();
-    Connection conn = null;
-    PreparedStatement pstmt = null;
-    ResultSet rs = null;
+    CommentMgr commentMgr = new CommentMgr();
+    Vector<CommentBean> commentList = commentMgr.getCommentList(postId);
     
-    int commentCount = 0;
-    List<Map<String, Object>> comments = new ArrayList<>();
-    try {
-        conn = pool.getConnection("user");
-        String countSql = "SELECT COUNT(*) as cnt FROM comment WHERE post_id = ? AND status = '공개'";
-        pstmt = conn.prepareStatement(countSql);
-        pstmt.setInt(1, postId);
-        rs = pstmt.executeQuery();
-        if(rs.next()) {
-            commentCount = rs.getInt("cnt");
+    Map<Integer, Boolean> likeMap = new HashMap<Integer, Boolean>();
+    
+    for(CommentBean comment : commentList) {
+        Vector<CommentBean> replyList = commentMgr.getAllRepliesRecursive(comment.getComment_id());
+        request.setAttribute("reply_" + comment.getComment_id(), replyList);
+        
+        boolean isLiked = commentLikeMgr.isLiked(comment.getComment_id(), userIdObj);
+        likeMap.put(comment.getComment_id(), isLiked);
+        
+        for(CommentBean reply : replyList) {
+            boolean isReplyLiked = commentLikeMgr.isLiked(reply.getComment_id(), userIdObj);
+            likeMap.put(reply.getComment_id(), isReplyLiked);
         }
-        rs.close();
-        pstmt.close();
-        
-        String commentSql = "SELECT c.comment_id, c.user_id, c.layer, c.parent_comment_id, c.content, " +
-                          "c.upvotes, c.created_at, u.nickname " +
-                          "FROM comment c " +
-                          "JOIN user u ON c.user_id = u.user_id " +
-                          "WHERE c.post_id = ? AND c.status = '공개' " +
-                          "ORDER BY c.upvotes DESC, c.created_at ASC";
-        pstmt = conn.prepareStatement(commentSql);
-        pstmt.setInt(1, postId);
-        rs = pstmt.executeQuery();
-        
-        while(rs.next()) {
-            Map<String, Object> comment = new HashMap<>();
-            comment.put("id", rs.getInt("comment_id"));
-            comment.put("author", rs.getString("nickname"));
-            comment.put("content", rs.getString("content"));
-            comment.put("date", rs.getString("created_at"));
-            comment.put("recommendations", rs.getInt("upvotes"));
-            comment.put("layer", rs.getInt("layer"));
-            comment.put("isReply", rs.getInt("layer") > 0);
-            comment.put("isBest", rs.getInt("upvotes") >= 50);
-            comments.add(comment);
-        }
-        
-    } catch(Exception e) {
-        e.printStackTrace();
-    } finally {
-        pool.freeConnection(conn, pstmt, rs);
     }
+    
+    CommentBean bestComment = null;
+    int maxUpvotes = 0;
+    for(CommentBean comment : commentList) {
+        if(comment.getUpvotes() > maxUpvotes) {
+            maxUpvotes = comment.getUpvotes();
+            bestComment = comment;
+        }
+    }
+    
+    int commentCount = commentList.size();
 %>
 
     <jsp:include page="../Common/AdminHeader.jsp" />
@@ -156,36 +139,16 @@
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="p-6">
-                <form id="commentForm" action="<%= request.getContextPath() %>/UI/JSP/Admin/AdminCommentProc.jsp" method="post" enctype="multipart/form-data">
+                <form id="commentForm" action="<%= request.getContextPath() %>/submitCommuComment" method="post">
                     <input type="hidden" name="postId" value="<%= postId %>">
+                    <input type="hidden" name="userId" value="<%= userIdObj %>">
+                    <input type="hidden" name="type" value="소통">
+                    <input type="hidden" name="status" value="공개">
+                    <input type="hidden" name="judgment" value="">
                     
                     <div class="mb-6">
                         <div class="mb-4">
                             <textarea name="content" id="ir1" rows="10" cols="100" style="width:100%; height:300px; display:none;"></textarea>
-                        </div>
-                        
-                        <div class="mb-4">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <input type="file" id="comment-file" name="commentFile" class="hidden" multiple>
-                                <button type="button" onclick="document.getElementById('comment-file').click()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
-                                    첨부 파일
-                                </button>
-                                <span id="file-name-display" class="text-sm text-gray-500">파일을 선택하세요</span>
-                            </div>
-                            
-                            <div id="selected-files" class="hidden">
-                                <div class="bg-gray-50 border border-gray-200 rounded-md p-3">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center space-x-2">
-                                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg>
-                                            <span class="text-sm text-gray-700" id="file-name">선택된 파일 없음</span>
-                                        </div>
-                                        <button type="button" onclick="clearFiles()" class="text-red-500 hover:text-red-700 text-sm">삭제</button>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                         
                         <div class="flex justify-end">
@@ -196,87 +159,248 @@
                     </div>
                 </form>
                 
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">전체 댓글 <%= comments.size() %>개</h3>
+                <div class="flex justify-between items-center mb-4 border-t pt-6">
+                    <h3 class="text-lg font-semibold text-gray-900">전체 댓글 <%= commentCount %>개</h3>
                 </div>
 
+                <% if(bestComment != null && bestComment.getUpvotes() > 0) { %>
                 <div class="mb-8 bg-blue-100 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">BEST 댓글</h4>
-                    <div class="space-y-4">
-                    <% for(Map<String, Object> comment : comments) { 
-                        if((Boolean)comment.get("isBest")) {
-                    %>
-                    <div class="border border-gray-200 rounded-lg p-4 bg-white">
+                    <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                        <span class="text-2xl mr-2">⭐</span> BEST 댓글
+                    </h4>
+                    <div class="border border-gray-200 rounded-lg p-4 bg-white shadow-md">
                         <div class="flex justify-between items-start mb-2">
                             <div class="flex items-center space-x-2">
-                                <span class="font-semibold text-primary">BEST <%= comment.get("author") %></span>
-                                <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                </svg>
+                                <span class="font-bold text-primary"><%= bestComment.getNickname() %></span>
+                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">BEST</span>
                             </div>
                             <div class="flex items-center space-x-2">
-                                <span class="text-sm text-gray-500"><%= comment.get("date") %></span>
-                                <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= comment.get("id") %>)">🚨</span>
+                                <span class="text-sm text-gray-500"><%= bestComment.getCreated_at() %></span>
+                                <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= bestComment.getComment_id() %>)">🚨</span>
                             </div>
                         </div>
                         
                         <div class="mb-3">
-                            <p class="text-gray-900"><%= comment.get("content") %></p>
+                            <p class="text-gray-900 font-medium"><%= bestComment.getContent() %></p>
                         </div>
                         
                         <div class="flex items-center space-x-4 text-sm">
-                            <button type="button" class="flex items-center space-x-1 text-gray-600 hover:text-red-500">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                </svg>
-                                <span>추천 <%= comment.get("recommendations") %></span>
-                            </button>
-                            <button type="button" class="text-gray-600 hover:text-primary">답글쓰기</button>
-                        </div>
-                    </div>
-                    <% }} %>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="space-y-4">
-                    <% for(Map<String, Object> comment : comments) { 
-                         if(!(Boolean)comment.get("isBest")) {
-                            boolean isReply = (Boolean)comment.get("isReply");
-                    %>
-                    <div class="<%= isReply ? "ml-6" : "" %>">
-                        <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                            <div class="flex justify-between items-start mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <% if(isReply) { %><span class="text-gray-500">→</span><% } %>
-                                    <span class="font-semibold"><%= comment.get("author") %></span>
-                                    <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                            <% if(likeMap.get(bestComment.getComment_id()) != null && likeMap.get(bestComment.getComment_id())) { %>
+                                <button onclick="upvoteComment(<%= bestComment.getComment_id() %>, <%= postId %>)" 
+                                        class="flex items-center space-x-1 transition-colors text-red-500 font-semibold">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
                                     </svg>
+                                    <span>추천 <%= bestComment.getUpvotes() %></span>
+                                </button>
+                            <% } else { %>
+                                <button onclick="upvoteComment(<%= bestComment.getComment_id() %>, <%= postId %>)" 
+                                        class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>추천 <%= bestComment.getUpvotes() %></span>
+                                </button>
+                            <% } %>
+                            <button type="button" onclick="toggleReplyForm(<%= bestComment.getComment_id() %>)" class="text-gray-600 hover:text-primary font-medium">답글쓰기</button>
+                        </div>
+
+                        <div id="replyForm_<%= bestComment.getComment_id() %>" class="mt-4 hidden">
+                            <form action="<%= request.getContextPath() %>/submitCommuComment" method="post" class="reply-form">
+                                <input type="hidden" name="postId" value="<%= postId %>">
+                                <input type="hidden" name="parentCommentId" value="<%= bestComment.getComment_id() %>">
+                                <input type="hidden" name="userId" value="<%= userIdObj %>">
+                                <input type="hidden" name="type" value="소통">
+                                <input type="hidden" name="status" value="공개">
+                                <input type="hidden" name="judgment" value="">
+                                <div class="flex space-x-2">
+                                    <textarea name="content" rows="2" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" placeholder="답글을 입력하세요..." required></textarea>
+                                    <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark text-sm whitespace-nowrap">등록</button>
                                 </div>
+                            </form>
+                        </div>
+
+                        <div class="mt-4 ml-8 space-y-3">
+                            <%
+                            @SuppressWarnings("unchecked")
+                            Vector<CommentBean> bestReplyList = (Vector<CommentBean>) request.getAttribute("reply_" + bestComment.getComment_id());
+                            if(bestReplyList != null) {
+                                for(CommentBean reply : bestReplyList) {
+                            %>
+                                <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: <%= reply.getLayer() * 20 %>px;">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="font-semibold text-sm text-gray-700">
+                                            <% for(int i = 0; i < reply.getLayer(); i++) { %>↳ <% } %>
+                                            <%= reply.getNickname() %>
+                                        </span>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-xs text-gray-500"><%= reply.getCreated_at() %></span>
+                                            <span class="text-gray-500 cursor-pointer text-xs" onclick="openCommentReportModal(<%= reply.getComment_id() %>)">🚨</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-gray-900"><%= reply.getContent() %></p>
+                                    <div class="flex items-center space-x-3 mt-2 text-xs">
+                                        <% if(likeMap.get(reply.getComment_id()) != null && likeMap.get(reply.getComment_id())) { %>
+                                            <button onclick="upvoteComment(<%= reply.getComment_id() %>, <%= postId %>)" 
+                                                    class="flex items-center space-x-1 transition-colors text-red-500">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span>추천 <%= reply.getUpvotes() %></span>
+                                            </button>
+                                        <% } else { %>
+                                            <button onclick="upvoteComment(<%= reply.getComment_id() %>, <%= postId %>)" 
+                                                    class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span>추천 <%= reply.getUpvotes() %></span>
+                                            </button>
+                                        <% } %>
+                                        <button onclick="toggleReplyForm(<%= reply.getComment_id() %>)" class="text-gray-600 hover:text-primary">답글쓰기</button>
+                                    </div>
+
+                                    <div id="replyForm_<%= reply.getComment_id() %>" class="mt-3 hidden">
+                                        <form action="<%= request.getContextPath() %>/submitCommuComment" method="post" class="reply-form">
+                                            <input type="hidden" name="postId" value="<%= postId %>">
+                                            <input type="hidden" name="parentCommentId" value="<%= reply.getComment_id() %>">
+                                            <input type="hidden" name="userId" value="<%= userIdObj %>">
+                                            <input type="hidden" name="type" value="소통">
+                                            <input type="hidden" name="status" value="공개">
+                                            <input type="hidden" name="judgment" value="">
+                                            <div class="flex space-x-2">
+                                                <textarea name="content" rows="2" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" placeholder="답글을 입력하세요..." required></textarea>
+                                                <button type="submit" class="px-3 py-1 bg-primary text-white rounded-lg hover:bg-primary-dark text-xs whitespace-nowrap">등록</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            <%
+                                }
+                            }
+                            %>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
+
+                <div class="space-y-4">
+                    <% for(CommentBean comment : commentList) { 
+                        if(bestComment != null && comment.getComment_id() == bestComment.getComment_id()) {
+                            continue;
+                        }
+                    %>
+                        <div class="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-semibold"><%= comment.getNickname() %></span>
                                 <div class="flex items-center space-x-2">
-                                    <span class="text-sm text-gray-500"><%= comment.get("date") %></span>
-                                    <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= comment.get("id") %>)">🚨</span>
+                                    <span class="text-sm text-gray-500"><%= comment.getCreated_at() %></span>
+                                    <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= comment.getComment_id() %>)">🚨</span>
                                 </div>
                             </div>
                             
                             <div class="mb-3">
-                                <p class="text-gray-900 mb-2"><%= comment.get("content") %></p>
+                                <p class="text-gray-900"><%= comment.getContent() %></p>
                             </div>
                             
                             <div class="flex items-center space-x-4 text-sm">
-                                <button type="button" class="flex items-center space-x-1 text-gray-600 hover:text-red-500">
-                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <span>추천 <%= comment.get("recommendations") %></span>
-                                </button>
-                                <button type="button" class="text-gray-600 hover:text-primary">답글쓰기</button>
+                                <% if(likeMap.get(comment.getComment_id()) != null && likeMap.get(comment.getComment_id())) { %>
+                                    <button onclick="upvoteComment(<%= comment.getComment_id() %>, <%= postId %>)" 
+                                            class="flex items-center space-x-1 transition-colors text-red-500">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span>추천 <%= comment.getUpvotes() %></span>
+                                    </button>
+                                <% } else { %>
+                                    <button onclick="upvoteComment(<%= comment.getComment_id() %>, <%= postId %>)" 
+                                            class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span>추천 <%= comment.getUpvotes() %></span>
+                                    </button>
+                                <% } %>
+                                <button onclick="toggleReplyForm(<%= comment.getComment_id() %>)" class="text-gray-600 hover:text-primary">답글쓰기</button>
+                            </div>
+
+                            <div id="replyForm_<%= comment.getComment_id() %>" class="mt-4 hidden">
+                                <form action="<%= request.getContextPath() %>/submitCommuComment" method="post" class="reply-form">
+                                    <input type="hidden" name="postId" value="<%= postId %>">
+                                    <input type="hidden" name="parentCommentId" value="<%= comment.getComment_id() %>">
+                                    <input type="hidden" name="userId" value="<%= userIdObj %>">
+                                    <input type="hidden" name="type" value="소통">
+                                    <input type="hidden" name="status" value="공개">
+                                    <input type="hidden" name="judgment" value="">
+                                    <div class="flex space-x-2">
+                                        <textarea name="content" rows="2" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" placeholder="답글을 입력하세요..." required></textarea>
+                                        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark text-sm whitespace-nowrap">등록</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="mt-4 ml-8 space-y-3">
+                                <%
+                                @SuppressWarnings("unchecked")
+                                Vector<CommentBean> replyList = (Vector<CommentBean>) request.getAttribute("reply_" + comment.getComment_id());
+                                if(replyList != null) {
+                                    for(CommentBean reply : replyList) {
+                                %>
+                                    <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: <%= reply.getLayer() * 20 %>px;">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <span class="font-semibold text-sm text-gray-700">
+                                                <% for(int i = 0; i < reply.getLayer(); i++) { %>↳ <% } %>
+                                                <%= reply.getNickname() %>
+                                            </span>
+                                            <div class="flex items-center space-x-2">
+                                                <span class="text-xs text-gray-500"><%= reply.getCreated_at() %></span>
+                                                <span class="text-gray-500 cursor-pointer text-xs" onclick="openCommentReportModal(<%= reply.getComment_id() %>)">🚨</span>
+                                            </div>
+                                        </div>
+                                        <p class="text-sm text-gray-900"><%= reply.getContent() %></p>
+                                        <div class="flex items-center space-x-3 mt-2 text-xs">
+                                            <% if(likeMap.get(reply.getComment_id()) != null && likeMap.get(reply.getComment_id())) { %>
+                                                <button onclick="upvoteComment(<%= reply.getComment_id() %>, <%= postId %>)" 
+                                                        class="flex items-center space-x-1 transition-colors text-red-500">
+                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                    <span>추천 <%= reply.getUpvotes() %></span>
+                                                </button>
+                                            <% } else { %>
+                                                <button onclick="upvoteComment(<%= reply.getComment_id() %>, <%= postId %>)" 
+                                                        class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                    <span>추천 <%= reply.getUpvotes() %></span>
+                                                </button>
+                                            <% } %>
+                                            <button onclick="toggleReplyForm(<%= reply.getComment_id() %>)" class="text-gray-600 hover:text-primary">답글쓰기</button>
+                                        </div>
+
+                                        <div id="replyForm_<%= reply.getComment_id() %>" class="mt-3 hidden">
+                                            <form action="<%= request.getContextPath() %>/submitCommuComment" method="post" class="reply-form">
+                                                <input type="hidden" name="postId" value="<%= postId %>">
+                                                <input type="hidden" name="parentCommentId" value="<%= reply.getComment_id() %>">
+                                                <input type="hidden" name="userId" value="<%= userIdObj %>">
+                                                <input type="hidden" name="type" value="소통">
+                                                <input type="hidden" name="status" value="공개">
+                                                <input type="hidden" name="judgment" value="">
+                                                <div class="flex space-x-2">
+                                                    <textarea name="content" rows="2" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" placeholder="답글을 입력하세요..." required></textarea>
+                                                    <button type="submit" class="px-3 py-1 bg-primary text-white rounded-lg hover:bg-primary-dark text-xs whitespace-nowrap">등록</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                <%
+                                    }
+                                }
+                                %>
                             </div>
                         </div>
-                    </div>
-                    <% }} %>
-                    </div>
+                    <% } %>
                 </div>
             </div>
         </div>
@@ -292,9 +416,6 @@
                     <div class="p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-2">신고하기</h3>
                         <div class="border-b border-gray-200 mb-4"></div>
-                    </div>
-                    
-                    <div class="p-6">
                         <p class="text-gray-900 mb-4">해당 게시글을 아래와 같은 사유로 신고합니다.</p>
                         
                         <div class="mb-6">
@@ -369,31 +490,56 @@
             } catch(e) {}
         }
 
-        document.getElementById('comment-file').addEventListener('change', function(e) {
-            const files = e.target.files;
-            const selectedFilesDiv = document.getElementById('selected-files');
-            const fileNameSpan = document.getElementById('file-name');
-            const fileNameDisplay = document.getElementById('file-name-display');
-            
-            if (files.length > 0) {
-                selectedFilesDiv.classList.remove('hidden');
-                fileNameDisplay.classList.add('hidden');
-                if (files.length === 1) {
-                    fileNameSpan.textContent = files[0].name;
+        function upvoteComment(commentId, postId) {
+            fetch('<%= request.getContextPath() %>/upvoteComment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'commentId=' + commentId + '&userId=<%= userIdObj %>'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    location.reload();
                 } else {
-                    fileNameSpan.textContent = files.length + '개 파일 선택됨';
+                    alert(data.message || '추천 처리 중 오류가 발생했습니다.');
                 }
-            } else {
-                selectedFilesDiv.classList.add('hidden');
-                fileNameDisplay.classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('추천 처리 중 오류가 발생했습니다.');
+            });
+        }
+
+        function toggleReplyForm(commentId) {
+            var replyForm = document.getElementById('replyForm_' + commentId);
+            if (replyForm) {
+                document.querySelectorAll('[id^="replyForm_"]').forEach(function(form) {
+                    if (form.id !== 'replyForm_' + commentId) {
+                        form.classList.add('hidden');
+                    }
+                });
+                replyForm.classList.toggle('hidden');
+                if (!replyForm.classList.contains('hidden')) {
+                    replyForm.querySelector('textarea').focus();
+                }
+            }
+        }
+
+        document.addEventListener('submit', function(e) {
+            if (e.target.classList.contains('reply-form')) {
+                var textarea = e.target.querySelector('textarea[name="content"]');
+                var content = textarea.value.trim();
+                
+                if (content === "") {
+                    e.preventDefault();
+                    alert("답글 내용을 입력해주세요.");
+                    textarea.focus();
+                    return false;
+                }
             }
         });
-
-        function clearFiles() {
-            document.getElementById('comment-file').value = '';
-            document.getElementById('selected-files').classList.add('hidden');
-            document.getElementById('file-name-display').classList.remove('hidden');
-        }
 
         function openReportModal() {
             document.getElementById('reportModal').classList.remove('hidden');

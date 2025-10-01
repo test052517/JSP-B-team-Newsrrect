@@ -14,7 +14,8 @@ CREATE TABLE `user` (
     `report_count` INT NOT NULL DEFAULT 0,
     `point` INT NOT NULL DEFAULT 0,
     `attend` VARCHAR(19),
-    `introduce` TEXT(1000)
+    `introduce` TEXT(1000),
+    `profileimage` VARCHAR(255)
 );
 
 -- 2. post 테이블
@@ -32,7 +33,8 @@ CREATE TABLE `post` (
     `priority` INT NOT NULL DEFAULT 0,
     INDEX idx_status (status),
     INDEX idx_type (type),
-    INDEX idx_created_at (created_at)
+    INDEX idx_created_at (created_at),
+    `attache` VARCHAR(255)
 );
 
 -- 3. comment 테이블
@@ -51,7 +53,8 @@ CREATE TABLE `comment` (
     `report_count` INT NOT NULL DEFAULT 0,
     INDEX idx_judgment (judgment),
     INDEX idx_post_id (post_id),
-    INDEX idx_created_at (created_at)
+    INDEX idx_created_at (created_at),
+    `attache` VARCHAR(255)
 );
 
 -- 4. post_report 테이블
@@ -83,6 +86,16 @@ CREATE TABLE `ban` (
     INDEX idx_banned_user (banned_user_id)
 );
 
+-- 7. Comment_like 테이블
+CREATE TABLE `Comment_like` (
+    `likeComment_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `comment_id` INT NOT NULL,
+    `like_id` INT NOT NULL, -- (user_id)
+    `created_at` VARCHAR(19) NOT NULL,
+    
+    UNIQUE KEY `uk_comment_user_like` (`comment_id`, `like_id`) 
+);
+
 -- ============================================
 -- 외래키(FK) 제약조건 추가
 -- ============================================
@@ -110,3 +123,53 @@ ALTER TABLE `comment_report`
 -- ban 테이블 FK
 ALTER TABLE `ban`
     ADD CONSTRAINT `fk_ban_banned_user` FOREIGN KEY (`banned_user_id`) REFERENCES `user`(`user_id`) ON DELETE CASCADE;
+    
+-- Comment_like 테이블 FK
+ALTER TABLE `Comment_like`
+    ADD CONSTRAINT `fk_comment_like_comment` FOREIGN KEY (`comment_id`) REFERENCES `comment`(`comment_id`) ON DELETE CASCADE,
+    ADD CONSTRAINT `fk_comment_like_user` FOREIGN KEY (`like_id`) REFERENCES `user`(`user_id`) ON DELETE CASCADE;
+
+DROP TRIGGER IF EXISTS after_post_report_insert;
+
+-- 2. 새로운 트리거를 생성합니다.
+DELIMITER $$
+CREATE TRIGGER after_post_report_insert
+AFTER INSERT ON post_report
+FOR EACH ROW
+BEGIN
+    -- post 테이블의 report_count를 1 증가시킵니다.
+    UPDATE post 
+    SET report_count = report_count + 1 
+    WHERE post_id = NEW.post_id;
+
+    -- report_count가 5 이상이고, 현재 상태가 '공개'인 경우에만 '신고 처리 중'으로 변경합니다.
+    UPDATE post
+    SET status = '신고 처리 중'
+    WHERE post_id = NEW.post_id 
+      AND report_count >= 5
+      AND status = '공개';
+END$$
+DELIMITER ;
+    
+    -- 1. 기존 트리거가 있다면 삭제합니다.
+DROP TRIGGER IF EXISTS after_comment_report_insert;
+
+-- 2. 새로운 트리거를 생성합니다.
+DELIMITER $$
+CREATE TRIGGER after_comment_report_insert
+AFTER INSERT ON comment_report
+FOR EACH ROW
+BEGIN
+    -- comment 테이블의 report_count를 1 증가시킵니다.
+    UPDATE comment 
+    SET report_count = report_count + 1 
+    WHERE comment_id = NEW.comment_id;
+    
+    -- report_count가 5 이상이고, 현재 상태가 '공개'인 경우에만 '신고 처리 중'으로 변경합니다.
+    UPDATE comment
+    SET status = '신고 처리 중'
+    WHERE comment_id = NEW.comment_id 
+      AND report_count >= 5
+      AND status = '공개';
+END$$
+DELIMITER ;

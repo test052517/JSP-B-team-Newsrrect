@@ -1,18 +1,87 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="mgr.PostMgr, beans.PostBean, mgr.CommentMgr, beans.CommentBean, mgr.CommentLikeMgr, java.util.Vector, java.util.HashMap, java.util.Map" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<jsp:useBean id="postMgr" class="mgr.PostMgr" scope="page" />
+<jsp:useBean id="commentMgr" class="mgr.CommentMgr" scope="page" />
+<jsp:useBean id="commentLikeMgr" class="mgr.CommentLikeMgr" scope="page" />
+
+<%
+    beans.UserBean loggedInUser = (beans.UserBean)session.getAttribute("loggedInUser");
+    int postId = 0;
+    String nowPage = request.getParameter("nowPage") != null ? request.getParameter("nowPage") : "1";
+    
+    if(request.getParameter("id") != null) {
+        try {
+            postId = Integer.parseInt(request.getParameter("id"));
+        } catch (NumberFormatException e) {
+            response.sendRedirect("CommuBoard.jsp");
+            return;
+        }
+    } else {
+        response.sendRedirect("CommuBoard.jsp");
+        return;
+    }
+    
+    PostBean post = postMgr.getPostByPostID(postId);
+    
+    if(post == null || !"소통".equals(post.getType())) {
+        out.println("<script>alert('게시물이 존재하지 않거나 접근할 수 없습니다.'); location.href='CommuBoard.jsp';</script>");
+        return;
+    }
+    
+    Vector<CommentBean> commentList = commentMgr.getCommentList(postId);
+    
+    // 추천 여부를 저장할 Map 생성
+    Map<Integer, Boolean> likeMap = new HashMap<Integer, Boolean>();
+    
+    // 각 댓글의 답글 목록을 가져와서 request에 설정 (재귀적으로)
+    for(CommentBean comment : commentList) {
+        Vector<CommentBean> replyList = commentMgr.getAllRepliesRecursive(comment.getComment_id());
+        request.setAttribute("reply_" + comment.getComment_id(), replyList);
+        
+        // 로그인한 사용자가 추천했는지 확인
+        if(loggedInUser != null) {
+            boolean isLiked = commentLikeMgr.isLiked(comment.getComment_id(), loggedInUser.getUserId());
+            likeMap.put(comment.getComment_id(), isLiked);
+            
+            // 답글들도 추천 여부 확인
+            for(CommentBean reply : replyList) {
+                boolean isReplyLiked = commentLikeMgr.isLiked(reply.getComment_id(), loggedInUser.getUserId());
+                likeMap.put(reply.getComment_id(), isReplyLiked);
+            }
+        }
+    }
+    
+    // 베스트 댓글 선정 (추천 수가 가장 많은 댓글)
+    CommentBean bestComment = null;
+    int maxUpvotes = 0;
+    for(CommentBean comment : commentList) {
+        if(comment.getUpvotes() > maxUpvotes) {
+            maxUpvotes = comment.getUpvotes();
+            bestComment = comment;
+        }
+    }
+    
+    request.setAttribute("likeMap", likeMap);
+    request.setAttribute("bestComment", bestComment);
+    
+    pageContext.setAttribute("post", post);
+    pageContext.setAttribute("commentList", commentList);
+    pageContext.setAttribute("commentCount", commentList.size());
+    pageContext.setAttribute("nowPage", nowPage);
+    pageContext.setAttribute("loggedInUser", loggedInUser);
+%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>글 보기 - 소통 게시판 - Newsrrect</title>
+    <title><c:out value="${post.title}" /> - 소통 게시판 - Newsrrect</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
     <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
     <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/styles.css">
-    
-    <!-- SmartEditor2 스크립트 추가 -->
     <script type="text/javascript" src="<%= request.getContextPath() %>/se2/js/HuskyEZCreator.js" charset="utf-8"></script>
-
     <script>
         tailwind.config = {
             theme: {
@@ -41,7 +110,7 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
             <div class="p-6">
                 <div class="mb-4">
-                    <h1 class="text-2xl font-bold text-gray-900">제목</h1>
+                    <h1 class="text-2xl font-bold text-gray-900"><c:out value="${post.title}" /></h1>
                 </div>
 
                 <div class="mb-6">
@@ -50,197 +119,578 @@
                             <div class="flex items-center space-x-4">
                                 <div class="flex items-center space-x-1">
                                     <div class="w-3 h-3 bg-gray-600 rounded"></div>
-                                    <span>학생</span>
+                                    <span><c:out value="${post.nickname}" /></span>
                                 </div>
                                 <div class="flex items-center space-x-1">
                                     <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path>
                                     </svg>
-                                    <span>3</span>
+                                    <span>${commentCount}</span>
                                 </div>
                                 <div class="flex items-center space-x-1">
                                     <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
-                                    <span>17441</span>
+                                    <span>${post.viewCount}</span>
                                 </div>
                             </div>
                             <div class="flex items-center space-x-2">
-                                <span>작성일자</span>
-                                <button onclick="openReportModal()" class="text-gray-500 hover:text-red-500 transition-colors">🚨</button>
+                                <span>${post.createdAt}</span>
+                                <c:if test="${loggedInUser != null}">
+                                    <button onclick="openReportModal(${post.postId})" class="text-gray-500 hover:text-red-500 transition-colors">🚨</button>
+                                </c:if>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="mb-6">
-                    <div class="text-gray-900 leading-relaxed">
-                        <p>글내용</p>
+                    <div class="text-gray-900 leading-relaxed post-content">
+                        <c:out value="${post.content}" escapeXml="false" />
                     </div>
+                </div>
+
+                <div class="flex justify-between items-center mt-6">
+                    <c:url var="listUrl" value="CommuBoard.jsp">
+                        <c:param name="nowPage" value="${nowPage}" />
+                    </c:url>
+                    <a href="${listUrl}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors font-medium">목록</a>
+                    
+                    <c:if test="${loggedInUser != null && loggedInUser.userId == post.userId}">
+                        <div class="flex space-x-2">
+                            <c:url var="editUrl" value="CommuEdit.jsp">
+                                <c:param name="id" value="${post.postId}" />
+                                <c:param name="nowPage" value="${nowPage}" />
+                            </c:url>
+                        </div>
+                    </c:if>
                 </div>
             </div>
         </div>
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="p-6">
-                <!-- Comment Input with SmartEditor -->
-                <div class="mb-6">
-                    <form action="#" method="post" id="commentForm">
-                        <div class="mb-4">
-                            <textarea name="content" id="ir1" rows="10" cols="100" style="width:100%; height:300px; display:none;"></textarea>
-                        </div>
-                        <div class="flex justify-end">
-                            <button type="button" onclick="submitContents();" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors">
-                                댓글등록
-                            </button>
-                        </div>
-                    </form>
+                <c:if test="${loggedInUser != null}">
+                    <div class="mb-6">
+                        <form action="${pageContext.request.contextPath}/submitCommuComment" method="post" id="commentForm">
+                            <input type="hidden" name="postId" value="${post.postId}">
+                            <input type="hidden" name="userId" value="${loggedInUser.userId}">
+                            <input type="hidden" name="type" value="소통">
+                            <input type="hidden" name="status" value="공개">
+                            <input type="hidden" name="judgment" value="">
+                            <input type="hidden" name="nowPage" value="${nowPage}"> 
+                            <div class="mb-4">
+                                <textarea name="content" id="ir1" rows="10" cols="100" style="width:100%; height:300px; display:none;"></textarea>
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="button" onclick="submitContents();" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors">댓글등록</button>
+                            </div>
+                        </form>
+                    </div>
+                </c:if>
+                <c:if test="${loggedInUser == null}">
+                    <div class="text-center py-4 text-gray-500 border border-gray-200 rounded-lg mb-6">
+                        로그인 후 댓글을 작성할 수 있습니다.
+                    </div>
+                </c:if>
+
+                <div class="flex justify-between items-center mb-4 border-t pt-6">
+                    <h3 class="text-lg font-semibold text-gray-900">전체 댓글 ${commentCount}개</h3>
                 </div>
 
-                <div class="mb-8 bg-blue-100 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">BEST 댓글</h4>
-                    <div class="space-y-4">
-                    <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="flex items-center space-x-2">
-                                <span class="font-semibold text-primary">BEST 사용자1</span>
-                                <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                </svg>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <span class="text-sm text-gray-500">작성일자</span>
-                                <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal()">🚨</span>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <p class="text-gray-900">확실한 정보를 가져왔어요!</p>
-                        </div>
-                        
-                        <div class="flex items-center space-x-4 text-sm">
-                            <button class="flex items-center space-x-1 text-gray-600 hover:text-red-500">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                </svg>
-                                <span>추천 123</span>
-                            </button>
-                            <button class="text-gray-600 hover:text-primary">답글쓰기</button>
-                        </div>
-                    </div>
-
-                    <div class="ml-6">
-                        <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                            <div class="flex justify-between items-start mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <span class="text-gray-500">→</span>
-                                    <span class="font-semibold">사용자2</span>
+                <!-- BEST 댓글 섹션 -->
+                <c:if test="${not empty bestComment && bestComment.upvotes > 0}">
+    <div class="mb-8 bg-blue-100 rounded-lg p-4">
+        <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+            <span class="text-2xl mr-2"></span> BEST 댓글
+        </h4>
+        <div class="space-y-4">
+                            <div class="border border rounded-lg p-4 bg-white shadow-md">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-bold text-primary"><c:out value="${bestComment.nickname}" /></span>
+                                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">BEST</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-sm text-gray-500">${bestComment.formattedDate}</span>
+                                        <c:if test="${loggedInUser != null}">
+                                            <span class="text-gray-500 cursor-pointer hover:text-red-500" onclick="openCommentReportModal(${bestComment.comment_id})">🚨</span>
+                                        </c:if>
+                                    </div>
                                 </div>
-                                <div class="flex items-center space-x-2">
-                                    <span class="text-sm text-gray-500">작성일자</span>
-                                    <span class="text-gray-500 cursor-pointer">🚨</span>
+                                <div class="mb-3">
+                                    <p class="text-gray-900 font-medium"><c:out value="${bestComment.content}" escapeXml="false" /></p>
                                 </div>
-                            </div>
-                            
-                            <p class="text-gray-900 mb-2">좋은 정보네요~</p>
-                            
-                            <div class="flex items-center space-x-4 text-sm">
-                                <button class="flex items-center space-x-1 text-gray-600 hover:text-red-500">
-                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <span>추천 45</span>
-                                </button>
-                                <button class="text-gray-600 hover:text-primary">답글쓰기</button>
+                                <div class="flex items-center space-x-4 text-sm">
+                                    <c:choose>
+                                        <c:when test="${loggedInUser != null}">
+                                            <c:choose>
+                                                <c:when test="${likeMap[bestComment.comment_id]}">
+                                                    <button onclick="upvoteComment(${bestComment.comment_id}, ${post.postId})" 
+                                                            class="flex items-center space-x-1 transition-colors text-red-500 font-semibold">
+                                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                        </svg>
+                                                        <span>추천 ${bestComment.upvotes}</span>
+                                                    </button>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <button onclick="upvoteComment(${bestComment.comment_id}, ${post.postId})" 
+                                                            class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                        </svg>
+                                                        <span>추천 ${bestComment.upvotes}</span>
+                                                    </button>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <div class="flex items-center space-x-1 text-gray-600">
+                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span>추천 ${bestComment.upvotes}</span>
+                                            </div>
+                                        </c:otherwise>
+                                    </c:choose>
+                                    <c:if test="${loggedInUser != null}">
+                                        <button onclick="toggleReplyForm(${bestComment.comment_id})" class="text-gray-600 hover:text-primary font-medium">답글쓰기</button>
+                                    </c:if>
+                                </div>
+                                <c:if test="${loggedInUser != null}">
+                                    <div id="replyForm_${bestComment.comment_id}" class="mt-4 hidden">
+                                        <form action="${pageContext.request.contextPath}/submitCommuComment" method="post" class="reply-form">
+                                            <input type="hidden" name="postId" value="${post.postId}">
+                                            <input type="hidden" name="parentCommentId" value="${bestComment.comment_id}">
+                                            <input type="hidden" name="userId" value="${loggedInUser.userId}">
+                                            <input type="hidden" name="type" value="소통">
+                                            <input type="hidden" name="status" value="공개">
+                                            <input type="hidden" name="judgment" value="">
+                                            <input type="hidden" name="nowPage" value="${nowPage}">
+                                            <div class="flex space-x-2">
+                                                <textarea name="content" rows="2" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" placeholder="답글을 입력하세요..." required></textarea>
+                                                <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark text-sm whitespace-nowrap">등록</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </c:if>
+                                
+                                <!-- 베스트 댓글의 답글들 -->
+                                <div class="mt-4 ml-8 space-y-3">
+                                    <c:set var="replyListKey" value="reply_${bestComment.comment_id}" />
+                                    <c:forEach var="reply" items="${requestScope[replyListKey]}">
+                                        <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: ${reply.layer * 20}px;">
+                                            <div class="flex justify-between items-start mb-2">
+                                                <span class="font-semibold text-sm text-gray-700">
+                                                    <c:forEach begin="1" end="${reply.layer}">↳ </c:forEach>
+                                                    <c:out value="${reply.nickname}" />
+                                                </span>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-xs text-gray-500">${reply.formattedDate}</span>
+                                                    <c:if test="${loggedInUser != null}">
+                                                        <span class="text-gray-500 cursor-pointer text-xs hover:text-red-500" onclick="openCommentReportModal(${reply.comment_id})">🚨</span>
+                                                    </c:if>
+                                                </div>
+                                            </div>
+                                            <p class="text-sm text-gray-900"><c:out value="${reply.content}" escapeXml="false" /></p>
+                                            <div class="flex items-center space-x-3 mt-2 text-xs">
+                                                <c:choose>
+                                                    <c:when test="${loggedInUser != null}">
+                                                        <c:choose>
+                                                            <c:when test="${likeMap[reply.comment_id]}">
+                                                                <button onclick="upvoteComment(${reply.comment_id}, ${post.postId})" 
+                                                                        class="flex items-center space-x-1 transition-colors text-red-500">
+                                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                                    </svg>
+                                                                    <span>추천 ${reply.upvotes}</span>
+                                                                </button>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <button onclick="upvoteComment(${reply.comment_id}, ${post.postId})" 
+                                                                        class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
+                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                                    </svg>
+                                                                    <span>추천 ${reply.upvotes}</span>
+                                                                </button>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <div class="flex items-center space-x-1 text-gray-600">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                            </svg>
+                                                            <span>추천 ${reply.upvotes}</span>
+                                                        </div>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                                <c:if test="${loggedInUser != null}">
+                                                    <button onclick="toggleReplyForm(${reply.comment_id})" class="text-gray-600 hover:text-primary">답글쓰기</button>
+                                                </c:if>
+                                            </div>
+
+                                            <c:if test="${loggedInUser != null}">
+                                                <div id="replyForm_${reply.comment_id}" class="mt-3 hidden">
+                                                    <form action="${pageContext.request.contextPath}/submitCommuComment" method="post" class="reply-form">
+                                                        <input type="hidden" name="postId" value="${post.postId}">
+                                                        <input type="hidden" name="parentCommentId" value="${reply.comment_id}">
+                                                        <input type="hidden" name="userId" value="${loggedInUser.userId}">
+                                                        <input type="hidden" name="type" value="소통">
+                                                        <input type="hidden" name="status" value="공개">
+                                                        <input type="hidden" name="judgment" value="">
+                                                        <input type="hidden" name="nowPage" value="${nowPage}">
+                                                        <div class="flex space-x-2">
+                                                            <textarea name="content" rows="2" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" placeholder="답글을 입력하세요..." required></textarea>
+                                                            <button type="submit" class="px-3 py-1 bg-primary text-white rounded-lg hover:bg-primary-dark text-xs whitespace-nowrap">등록</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </c:if>
+                                        </div>
+                                    </c:forEach>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    </div>
-                </div>
+                </c:if>
 
+                <!-- 일반 댓글 목록 -->
                 <div class="space-y-4">
-                    <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="flex items-center space-x-2">
-                                <span class="font-semibold">사용자4</span>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <span class="text-sm text-gray-500">작성일자</span>
-                                <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal()">🚨</span>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <p class="text-gray-900 mb-2">일반 댓글입니다.</p>
-                        </div>
-                        
-                        <div class="flex items-center space-x-4 text-sm">
-                            <button class="flex items-center space-x-1 text-gray-600 hover:text-red-500">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                </svg>
-                                <span>추천 12</span>
-                            </button>
-                            <button class="text-gray-600 hover:text-primary">답글쓰기</button>
-                        </div>
-                    </div>
-                </div>
+                    <c:choose>
+                        <c:when test="${commentCount > 0}">
+                            <c:forEach var="comment" items="${commentList}">
+                                <!-- 베스트 댓글은 제외 -->
+                                <c:if test="${empty bestComment || comment.comment_id != bestComment.comment_id}">
+                                    <div class="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <span class="font-semibold"><c:out value="${comment.nickname}" /></span>
+                                            <div class="flex items-center space-x-2">
+                                                <span class="text-sm text-gray-500">${comment.formattedDate}</span>
+                                                <c:if test="${loggedInUser != null}">
+                                                    <span class="text-gray-500 cursor-pointer hover:text-red-500" onclick="openCommentReportModal(${comment.comment_id})">🚨</span>
+                                                </c:if>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <p class="text-gray-900"><c:out value="${comment.content}" escapeXml="false" /></p>
+                                        </div>
+                                        <div class="flex items-center space-x-4 text-sm">
+                                            <c:choose>
+                                                <c:when test="${loggedInUser != null}">
+                                                    <c:choose>
+                                                        <c:when test="${likeMap[comment.comment_id]}">
+                                                            <button onclick="upvoteComment(${comment.comment_id}, ${post.postId})" 
+                                                                    class="flex items-center space-x-1 transition-colors text-red-500">
+                                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                                </svg>
+                                                                <span>추천 ${comment.upvotes}</span>
+                                                            </button>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <button onclick="upvoteComment(${comment.comment_id}, ${post.postId})" 
+                                                                    class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                                </svg>
+                                                                <span>추천 ${comment.upvotes}</span>
+                                                            </button>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <div class="flex items-center space-x-1 text-gray-600">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                        </svg>
+                                                        <span>추천 ${comment.upvotes}</span>
+                                                    </div>
+                                                </c:otherwise>
+                                            </c:choose>
+                                            <c:if test="${loggedInUser != null}">
+                                                <button onclick="toggleReplyForm(${comment.comment_id})" class="text-gray-600 hover:text-primary">답글쓰기</button>
+                                            </c:if>
+                                        </div>
+                                        <c:if test="${loggedInUser != null}">
+                                            <div id="replyForm_${comment.comment_id}" class="mt-4 hidden">
+                                                <form action="${pageContext.request.contextPath}/submitCommuComment" method="post" class="reply-form">
+                                                    <input type="hidden" name="postId" value="${post.postId}">
+                                                    <input type="hidden" name="parentCommentId" value="${comment.comment_id}">
+                                                    <input type="hidden" name="userId" value="${loggedInUser.userId}">
+                                                    <input type="hidden" name="type" value="소통">
+                                                    <input type="hidden" name="status" value="공개">
+                                                    <input type="hidden" name="judgment" value="">
+                                                    <input type="hidden" name="nowPage" value="${nowPage}">
+                                                    <div class="flex space-x-2">
+                                                        <textarea name="content" rows="2" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" placeholder="답글을 입력하세요..." required></textarea>
+                                                        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark text-sm whitespace-nowrap">등록</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </c:if>
+                                        
+                                        <!-- 일반 댓글의 답글들 -->
+                                        <div class="mt-4 ml-8 space-y-3">
+                                            <c:set var="replyListKey" value="reply_${comment.comment_id}" />
+                                            <c:forEach var="reply" items="${requestScope[replyListKey]}">
+                                                <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: ${reply.layer * 20}px;">
+                                                    <div class="flex justify-between items-start mb-2">
+                                                        <span class="font-semibold text-sm text-gray-700">
+                                                            <c:forEach begin="1" end="${reply.layer}">↳ </c:forEach>
+                                                            <c:out value="${reply.nickname}" />
+                                                        </span>
+                                                        <div class="flex items-center space-x-2">
+                                                            <span class="text-xs text-gray-500">${reply.formattedDate}</span>
+                                                            <c:if test="${loggedInUser != null}">
+                                                                <span class="text-gray-500 cursor-pointer text-xs hover:text-red-500" onclick="openCommentReportModal(${reply.comment_id})">🚨</span>
+                                                            </c:if>
+                                                        </div>
+                                                    </div>
+                                                    <p class="text-sm text-gray-900"><c:out value="${reply.content}" escapeXml="false" /></p>
+                                                    <div class="flex items-center space-x-3 mt-2 text-xs">
+                                                        <c:choose>
+                                                            <c:when test="${loggedInUser != null}">
+                                                                <c:choose>
+                                                                    <c:when test="${likeMap[reply.comment_id]}">
+                                                                        <button onclick="upvoteComment(${reply.comment_id}, ${post.postId})" 
+                                                                                class="flex items-center space-x-1 transition-colors text-red-500">
+                                                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                                            </svg>
+                                                                            <span>추천 ${reply.upvotes}</span>
+                                                                        </button>
+                                                                    </c:when>
+                                                                    <c:otherwise>
+                                                                        <button onclick="upvoteComment(${reply.comment_id}, ${post.postId})" 
+                                                                                class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
+                                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                                                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                                            </svg>
+                                                                            <span>추천 ${reply.upvotes}</span>
+                                                                        </button>
+                                                                    </c:otherwise>
+                                                                </c:choose>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <div class="flex items-center space-x-1 text-gray-600">
+                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                                    </svg>
+                                                                    <span>추천 ${reply.upvotes}</span>
+                                                                </div>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                        <c:if test="${loggedInUser != null}">
+                                                            <button onclick="toggleReplyForm(${reply.comment_id})" class="text-gray-600 hover:text-primary">답글쓰기</button>
+                                                        </c:if>
+                                                    </div>
 
-                <div class="flex justify-center items-center mt-6 space-x-2">
-                    <div class="flex space-x-1">
-                        <button class="px-3 py-2 text-sm font-medium text-primary hover:text-white hover:bg-primary border border-gray-200 rounded transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md">[1]</button>
-                    </div>
+                                                    <c:if test="${loggedInUser != null}">
+                                                        <div id="replyForm_${reply.comment_id}" class="mt-3 hidden">
+                                                            <form action="${pageContext.request.contextPath}/submitCommuComment" method="post" class="reply-form">
+                                                                <input type="hidden" name="postId" value="${post.postId}">
+                                                                <input type="hidden" name="parentCommentId" value="${reply.comment_id}">
+                                                                <input type="hidden" name="userId" value="${loggedInUser.userId}">
+                                                                <input type="hidden" name="type" value="소통">
+                                                                <input type="hidden" name="status" value="공개">
+                                                                <input type="hidden" name="judgment" value="">
+                                                                <input type="hidden" name="nowPage" value="${nowPage}">
+                                                                <div class="flex space-x-2">
+                                                                    <textarea name="content" rows="2" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" placeholder="답글을 입력하세요..." required></textarea>
+                                                                    <button type="submit" class="px-3 py-1 bg-primary text-white rounded-lg hover:bg-primary-dark text-xs whitespace-nowrap">등록</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </c:if>
+                                                </div>
+                                            </c:forEach>
+                                        </div>
+                                    </div>
+                                </c:if>
+                            </c:forEach>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="text-center py-8 text-gray-500">
+                                아직 댓글이 없습니다. 첫 댓글을 작성해보세요!
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
             </div>
         </div>
     </main>
 
-    <jsp:include page="../Common/Footer.jsp" />
-
-    <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
-        <!-- Report Modal Content -->
+    <!-- 게시글 신고 모달 -->
+    <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-96">
+            <h3 class="text-xl font-bold mb-4">게시글 신고</h3>
+            <form action="${pageContext.request.contextPath}/submitReport" method="post">
+                <input type="hidden" name="postId" id="reportPostId">
+                <input type="hidden" name="reporterId" value="${loggedInUser != null ? loggedInUser.userId : ''}">
+                <input type="hidden" name="type" value="게시글">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">신고 사유</label>
+                    <select name="reason" class="w-full p-2 border border-gray-300 rounded-lg" required>
+                        <option value="">선택하세요</option>
+                        <option value="스팸">스팸</option>
+                        <option value="욕설/비방">욕설/비방</option>
+                        <option value="음란물">음란물</option>
+                        <option value="개인정보 노출">개인정보 노출</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">상세 내용</label>
+                    <textarea name="description" rows="3" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="신고 사유를 자세히 작성해주세요"></textarea>
+                </div>
+                <div class="flex space-x-2">
+                    <button type="submit" class="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600">신고하기</button>
+                    <button type="button" onclick="closeReportModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">취소</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <div id="commentReportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
-        <!-- Comment Report Modal Content -->
+    <!-- 댓글 신고 모달 -->
+    <div id="commentReportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-96">
+            <h3 class="text-xl font-bold mb-4">댓글 신고</h3>
+            <form action="${pageContext.request.contextPath}/submitCommentReport" method="post">
+                <input type="hidden" name="commentId" id="reportCommentId">
+                <input type="hidden" name="reporterId" value="${loggedInUser != null ? loggedInUser.userId : ''}">
+                <input type="hidden" name="type" value="댓글">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">신고 사유</label>
+                    <select name="reason" class="w-full p-2 border border-gray-300 rounded-lg" required>
+                        <option value="">선택하세요</option>
+                        <option value="스팸">스팸</option>
+                        <option value="욕설/비방">욕설/비방</option>
+                        <option value="음란물">음란물</option>
+                        <option value="개인정보 노출">개인정보 노출</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">상세 내용</label>
+                    <textarea name="description" rows="3" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="신고 사유를 자세히 작성해주세요"></textarea>
+                </div>
+                <div class="flex space-x-2">
+                    <button type="submit" class="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600">신고하기</button>
+                    <button type="button" onclick="closeCommentReportModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">취소</button>
+                </div>
+            </form>
+        </div>
     </div>
+
+    <footer class="bg-gray-100 mt-12">
+        <jsp:include page="../Common/Footer.jsp" />
+    </footer>
 
     <script>
-        // SmartEditor2 초기화
         var oEditors = [];
+        
         nhn.husky.EZCreator.createInIFrame({
             oAppRef: oEditors,
             elPlaceHolder: "ir1",
-            sSkinURI: "<%= request.getContextPath() %>/se2/SmartEditor2Skin.html",	
-            htParams : {
-                bUseToolbar : true,
-                bUseVerticalResizer : true,
-                bUseModeChanger : true,
-            },
+            sSkinURI: "<%= request.getContextPath() %>/se2/SmartEditor2Skin.html",
             fCreator: "createSEditor2"
         });
-
+        
         function submitContents() {
             oEditors.getById["ir1"].exec("UPDATE_CONTENTS_FIELD", []);
-            var form = document.getElementById("commentForm");
-            if(form.content.value == "<p>&nbsp;</p>" || form.content.value == "") {
-                alert("내용을 입력해주세요.");
-                oEditors.getById["ir1"].exec("FOCUS");
-                return;
+            var content = document.getElementById("ir1").value;
+            
+            if(content === '' || content === '<p>&nbsp;</p>' || content.trim() === '') {
+                alert('댓글 내용을 입력해주세요.');
+                return false;
             }
-            try {
-                form.submit();
-            } catch(e) {}
+            
+            document.getElementById("commentForm").submit();
         }
-
-        // Modal functions
-        function openReportModal() { /* ... */ }
-        function closeReportModal() { /* ... */ }
-        function submitReport() { /* ... */ }
-        function openCommentReportModal() { /* ... */ }
-        function closeCommentReportModal() { /* ... */ }
-        function submitCommentReport() { /* ... */ }
+        
+        // 답글 작성 폼 토글
+        function toggleReplyForm(commentId) {
+            var replyForm = document.getElementById('replyForm_' + commentId);
+            if(replyForm.classList.contains('hidden')) {
+                // 모든 답글 폼 숨기기
+                document.querySelectorAll('[id^="replyForm_"]').forEach(function(form) {
+                    form.classList.add('hidden');
+                });
+                // 선택한 답글 폼만 표시
+                replyForm.classList.remove('hidden');
+            } else {
+                replyForm.classList.add('hidden');
+            }
+        }
+        
+        // 댓글 추천 기능
+        function upvoteComment(commentId, postId) {
+            <c:choose>
+                <c:when test="${loggedInUser == null}">
+                    alert('로그인이 필요한 기능입니다.');
+                    return;
+                </c:when>
+                <c:otherwise>
+                    fetch('${pageContext.request.contextPath}/upvoteComment', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'commentId=' + commentId + '&userId=${loggedInUser.userId}'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.success) {
+                            // 페이지 새로고침으로 추천 상태 업데이트
+                            location.reload();
+                        } else {
+                            alert(data.message || '추천 처리 중 오류가 발생했습니다.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('추천 처리 중 오류가 발생했습니다.');
+                    });
+                </c:otherwise>
+            </c:choose>
+        }
+        
+        // 게시글 신고 모달
+        function openReportModal(postId) {
+            document.getElementById('reportPostId').value = postId;
+            document.getElementById('reportModal').classList.remove('hidden');
+        }
+        
+        function closeReportModal() {
+            document.getElementById('reportModal').classList.add('hidden');
+        }
+        
+        // 댓글 신고 모달
+        function openCommentReportModal(commentId) {
+            document.getElementById('reportCommentId').value = commentId;
+            document.getElementById('commentReportModal').classList.remove('hidden');
+        }
+        
+        function closeCommentReportModal() {
+            document.getElementById('commentReportModal').classList.add('hidden');
+        }
+        
+        // 모달 외부 클릭시 닫기
+        document.getElementById('reportModal').addEventListener('click', function(e) {
+            if(e.target === this) {
+                closeReportModal();
+            }
+        });
+        
+        document.getElementById('commentReportModal').addEventListener('click', function(e) {
+            if(e.target === this) {
+                closeCommentReportModal();
+            }
+        });
     </script>
 </body>
 </html>
