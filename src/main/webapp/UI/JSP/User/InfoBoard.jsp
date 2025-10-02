@@ -5,10 +5,6 @@
 		// 세션에서 User 정보 가져옴
 		beans.UserBean user = (beans.UserBean)session.getAttribute("loggedInUser");
 %>
-<%-- 
-    이 페이지는 이제 View 역할만 수행합니다.
-    모든 데이터는 InfoWatchServlet이 request 객체에 담아서 전달해줍니다.
---%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>

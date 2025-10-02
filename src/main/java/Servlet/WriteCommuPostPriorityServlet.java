@@ -36,9 +36,9 @@ import mgr.PostMgr;
  * CommuWriteProc.jsp의 로직을 서블릿으로 구현한 클래스.
  * submitContents.js의 fetch 요청을 받아 게시글과 파일을 저장하고 JSON으로 응답합니다.
  */
-@WebServlet("/writeCommuPost.do")
+@WebServlet("/writeCommuPostPriority.do")
 @MultipartConfig
-public class WriteCommuPostServlet extends HttpServlet {
+public class WriteCommuPostPriorityServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     
     // JSP의 application.getRealPath("/upload")와 동일한 로직
@@ -112,9 +112,9 @@ public class WriteCommuPostServlet extends HttpServlet {
             post.setReportCount(0);
             post.setRecommandCount(0);
     
-
-            post.setPriority(0);
             
+            post.setPriority(1);	
+
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             post.setCreatedAt(sdf.format(new Date()));
 

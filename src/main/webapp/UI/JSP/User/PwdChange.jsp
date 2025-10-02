@@ -8,9 +8,7 @@
     <title>비밀번호 변경 - Newsrrect</title>
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <%-- CSS 경로를 절대 경로로 수정하여 404 오류 방지 --%>
     <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/styles.css">
 
     <script>
         tailwind.config = {
@@ -31,7 +29,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-center items-center h-16 relative">
                 <div class="flex-shrink-0">
-                    <a href="../../Html/MainPage.html"><h1 class="text-2xl font-bold text-primary font-newsrrect">Newsrrect</h1></a>
+                    <a href="../../JSP/MainPage.jsp"><h1 class="text-2xl font-bold text-primary font-newsrrect">Newsrrect</h1></a>
                 </div>
                 
                 <div class="absolute right-0 flex items-center space-x-4">
@@ -94,37 +92,9 @@
     <footer class="bg-white border-t border-gray-200 mt-16">
         <%-- Footer.html 내용을 Common/Footer.jsp로 include 합니다. --%>
         <jsp:include page="../Common/Footer.jsp" />
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div class="col-span-1 md:col-span-2">
-                    <h4 class="text-lg font-semibold mb-4" style="font-family: 'Aggravo', sans-serif;">Newsrrect</h4>
-                    <p class="text-gray-600 text-sm leading-relaxed">
-                        AI 기반 정보 검증 플랫폼으로 신뢰할 수 있는 정보를 제공합니다.
-                    </p>
-                </div>
-                <div>
-                    <h5 class="font-semibold text-gray-900 mb-3">서비스</h5>
-                    <ul class="space-y-2 text-sm text-gray-600">
-                        <li>정보 검증</li>
-                        <li>커뮤니티</li>
-                        <li>AI 분석</li>
-                    </ul>
-                </div>
-                <div>
-                    <h5 class="font-semibold text-gray-900 mb-3">고객지원</h5>
-                    <ul class="space-y-2 text-sm text-gray-600">
-                        <li>이메일: info@newsrrect.com</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="border-t border-gray-200 mt-8 pt-8">
-                <p style="font-family: 'Aggravo', sans-serif;">&copy; 2024 Newsrrect. All rights reserved.</p>
-            </div>
-        </div>
     </footer>
 
     <script>
-        // Form submission handling
         document.querySelector('form').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -132,7 +102,6 @@
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             
-            // Basic validation
             if (!currentPassword) {
                 alert('현재 비밀번호를 입력해주세요.');
                 return;
@@ -153,10 +122,8 @@
                 return;
             }
             
-            // Here you would typically send the data to your server
             alert('비밀번호가 성공적으로 변경되었습니다.');
             
-            // Reset form
             document.getElementById('currentPassword').value = '';
             document.getElementById('newPassword').value = '';
             document.getElementById('confirmPassword').value = '';

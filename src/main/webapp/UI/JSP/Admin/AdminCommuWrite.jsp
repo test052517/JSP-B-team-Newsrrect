@@ -33,7 +33,7 @@
     </script>
 </head>
 <body class="bg-white min-h-screen">
-        <%if(user.getRole().equals("관리자")){%>
+        <%if(user != null && "관리자".equals(user.getRole())){%>
         <jsp:include page="../Common/AdminHeader.jsp" />
     	<%}else{ %>
     	<jsp:include page ="../Common/Header.jsp"/>
@@ -50,9 +50,16 @@
                 <form id="writeForm" action="<%= request.getContextPath() %>/writeCommuPost.do" method="post" enctype="multipart/form-data" class="space-y-6">
                     <!-- 제목 입력 -->
                     <div>
-                        <label for="title" class="block text-sm font-medium text-gray-900 mb-2">
-                            제목 <span class="text-red-500">*</span>
-                        </label>
+                        <%-- [수정] 제목 레이블과 공지 체크박스를 한 줄에 배치 --%>
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="title" class="block text-sm font-medium text-gray-900">
+                                제목 <span class="text-red-500">*</span>
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="priorityCheck" name="priorityCheck" class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary">
+                                <label for="priorityCheck" class="text-sm font-medium text-gray-700 cursor-pointer">공지로 등록</label>
+                            </div>
+                        </div>
                         <input type="text" id="title" name="title" 
                                class="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" 
                                placeholder="제목을 입력하세요" 
@@ -71,7 +78,7 @@
                         <textarea name="ir1" id="ir1" rows="10" style="width:100%; height:400px;"></textarea>
                     </div>
                     
-                    <!-- 파일 첨부 -->
+                    <!-- 파일 첨부 (기존과 동일) -->
                     <div>
                         <label for="file" class="block text-sm font-medium text-gray-900 mb-2">파일첨부</label>
                         <div class="flex items-center space-x-2 mb-2">
@@ -83,7 +90,6 @@
                             <span class="text-sm text-gray-500">이미지, PDF, 문서 파일 (최대 5개, 각 10MB 이하)</span>
                         </div>
                         
-                        <!-- 선택된 파일 표시 -->
                         <div id="selectedFiles" class="hidden">
                             <div class="bg-gray-50 border border-gray-200 rounded-md p-3">
                                 <div class="flex items-center justify-between mb-2">
@@ -97,7 +103,7 @@
                         </div>
                     </div>
 
-                    <!-- 작성 가이드 -->
+                    <!-- 작성 가이드 (기존과 동일) -->
                     <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
                         <h4 class="text-sm font-medium text-blue-900 mb-2">📝 작성 가이드라인</h4>
                         <ul class="text-sm text-blue-800 space-y-1">
@@ -108,7 +114,7 @@
                         </ul>
                     </div>
                     
-                    <!-- 버튼 -->
+                    <!-- 버튼 (기존과 동일) -->
                     <div class="flex justify-end space-x-3">
                         <button type="button" onclick="goBack()" 
                                 class="px-6 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors font-medium">
@@ -131,80 +137,38 @@
         const contextPath = '<%= request.getContextPath() %>';
         let selectedFiles = [];
 
-        // 제목 글자 수 카운트
+        // ... 기존 파일 처리 및 제목 카운트 스크립트 (변경 없음) ...
         const titleInput = document.getElementById('title');
         const titleCount = document.getElementById('titleCount');
-
-        titleInput.addEventListener('input', function() {
-            titleCount.textContent = this.value.length;
-        });
-
-        // 파일 선택 처리
+        titleInput.addEventListener('input', function() { titleCount.textContent = this.value.length; });
         const fileInput = document.getElementById('file');
         const selectedFilesDiv = document.getElementById('selectedFiles');
         const fileListDiv = document.getElementById('fileList');
-
         fileInput.addEventListener('change', function(e) {
             const files = Array.from(e.target.files);
-            
-            if (selectedFiles.length + files.length > 5) {
-                alert('최대 5개의 파일만 업로드할 수 있습니다.');
-                return;
-            }
-
+            if (selectedFiles.length + files.length > 5) { alert('최대 5개의 파일만 업로드할 수 있습니다.'); return; }
             files.forEach(file => {
-                if (file.size > 10 * 1024 * 1024) {
-                    alert(file.name + '은(는) 10MB를 초과합니다.');
-                    return;
-                }
+                if (file.size > 10 * 1024 * 1024) { alert(file.name + '은(는) 10MB를 초과합니다.'); return; }
                 selectedFiles.push(file);
             });
-
             updateFileList();
             e.target.value = '';
         });
-
         function updateFileList() {
-            if (selectedFiles.length === 0) {
-                selectedFilesDiv.classList.add('hidden');
-                return;
-            }
-
+            if (selectedFiles.length === 0) { selectedFilesDiv.classList.add('hidden'); return; }
             selectedFilesDiv.classList.remove('hidden');
             fileListDiv.innerHTML = '';
-
             selectedFiles.forEach((file, index) => {
                 const fileItem = document.createElement('div');
                 fileItem.className = 'flex items-center justify-between p-2 bg-white rounded border';
-                
                 const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
-                fileItem.innerHTML = 
-                    '<div class="flex items-center space-x-2">' +
-                        '<svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>' +
-                        '</svg>' +
-                        '<span class="text-sm text-gray-700">' + file.name + '</span>' +
-                        '<span class="text-xs text-gray-500">(' + fileSizeMB + 'MB)</span>' +
-                    '</div>' +
-                    '<button type="button" onclick="removeFile(' + index + ')" class="text-red-500 hover:text-red-700">' +
-                        '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>' +
-                        '</svg>' +
-                    '</button>';
-                
+                fileItem.innerHTML = `<div class="flex items-center space-x-2"><svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><span class="text-sm text-gray-700">${file.name}</span><span class="text-xs text-gray-500">(${fileSizeMB}MB)</span></div><button type="button" onclick="removeFile(${index})" class="text-red-500 hover:text-red-700"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>`;
                 fileListDiv.appendChild(fileItem);
             });
         }
+        function removeFile(index) { selectedFiles.splice(index, 1); updateFileList(); }
+        function clearAllFiles() { selectedFiles = []; updateFileList(); }
 
-        function removeFile(index) {
-            selectedFiles.splice(index, 1);
-            updateFileList();
-        }
-
-        function clearAllFiles() {
-            selectedFiles = [];
-            updateFileList();
-        }
 
         // DOM 로딩 완료 후 스마트에디터 초기화
         document.addEventListener('DOMContentLoaded', function() {
@@ -225,63 +189,95 @@
             });
         });
 
-        // 폼 전송
+        // [수정] 폼 전송 로직
         function submitContents() {
-            // 스마트에디터 내용을 textarea에 반영
+            // 스마트에디터 내용 및 입력값 유효성 검사
             oEditors.getById["ir1"].exec("UPDATE_CONTENTS_FIELD", []);
-            console.log("textarea(ir1)의 값:", document.getElementById("ir1").value);
             const title = document.getElementById("title").value.trim();
             if (!title) {
                 alert("제목을 입력해주세요.");
                 document.getElementById("title").focus();
                 return;
             }
-
             const content = document.getElementById("ir1").value.trim();
             if (!content || content === "<p>&nbsp;</p>" || content === "<p><br></p>") {
                 alert("내용을 입력해주세요.");
                 oEditors.getById["ir1"].exec("FOCUS");
                 return;
             }
-
-            // 로딩 상태
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = '작성 중...';
-
-            // FormData 생성
-            const formData = new FormData(document.getElementById('writeForm'));
             
-            // 선택된 파일 추가
-            selectedFiles.forEach(file => {
-                formData.append('files', file);
-            });
+            // 체크박스 상태 확인
+            const isPriority = document.getElementById('priorityCheck').checked;
+            const submitBtn = document.getElementById('submitBtn');
 
-            // 서버로 전송
-            fetch(contextPath + '/writeCommuPost.do', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('게시글이 성공적으로 작성되었습니다.');
-                    location.href = contextPath + '/UI/JSP/Admin/AdminCommu.jsp?id=' + data.postId;
-                } else {
-                    alert(data.message || '게시글 작성에 실패했습니다.');
+            if (isPriority) {
+                // '공지로 등록'이 체크된 경우
+                submitBtn.disabled = true;
+                submitBtn.textContent = '등록 중...';
+
+                const formData = new FormData(document.getElementById('writeForm'));
+                selectedFiles.forEach(file => {
+                    formData.append('files', file);
+                });
+                
+                // '/writeCommuPostPriority.do' 서블릿으로 데이터 전송
+                fetch(contextPath + '/writeCommuPostPriority.do', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('공지사항이 성공적으로 등록되었습니다.');
+                        location.href = contextPath + '/UI/JSP/Admin/AdminCommu.jsp';
+                    } else {
+                        alert(data.message || '공지사항 등록에 실패했습니다.');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = '작성';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('공지사항 등록 중 오류가 발생했습니다.');
                     submitBtn.disabled = false;
                     submitBtn.textContent = '작성';
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('게시글 작성 중 오류가 발생했습니다.');
-                submitBtn.disabled = false;
-                submitBtn.textContent = '작성';
-            });
+                });
+                
+            } else {
+                // 체크박스가 선택되지 않은 경우 (기존 로직)
+                submitBtn.disabled = true;
+                submitBtn.textContent = '작성 중...';
+
+                const formData = new FormData(document.getElementById('writeForm'));
+                selectedFiles.forEach(file => {
+                    formData.append('files', file);
+                });
+
+                fetch(contextPath + '/writeCommuPost.do', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('게시글이 성공적으로 작성되었습니다.');
+                        location.href = contextPath + '/UI/JSP/Admin/AdminCommu.jsp';
+                    } else {
+                        alert(data.message || '게시글 작성에 실패했습니다.');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = '작성';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('게시글 작성 중 오류가 발생했습니다.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '작성';
+                });
+            }
         }
 
-        // 취소
+        // ... 기존 취소 및 페이지 이탈 방지 스크립트 (변경 없음) ...
         function goBack() {
             if (titleInput.value.trim() || selectedFiles.length > 0) {
                 if (confirm('작성 중인 내용이 있습니다. 정말 취소하시겠습니까?')) {
@@ -291,8 +287,6 @@
                 window.location.href = contextPath + '/UI/JSP/Admin/AdminCommu.jsp';
             }
         }
-	
-        // 페이지 떠날 때 경고
         window.addEventListener('beforeunload', function(e) {
             if (titleInput.value.trim() || selectedFiles.length > 0) {
                 e.preventDefault();
@@ -300,11 +294,12 @@
             }
         });
 
-        
-        <c:if test="${empty sessionScope.user}">
+        // 로그인 확인
+        <c:if test="${empty sessionScope.loggedInUser}">
             alert('로그인이 필요합니다.');
-            location.href = contextPath + '/UI/JSP/Login.jsp';
+            location.href = '<%= request.getContextPath() %>/UI/JSP/Login.jsp';
         </c:if>
     </script>
 </body>
 </html>
+

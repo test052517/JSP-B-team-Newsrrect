@@ -194,12 +194,25 @@
 			                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
 			                                    <c:out value="${fn:length(recentPosts) - status.index}" />
 			                                </td>
-			                                <td class="px-6 py-4 whitespace-nowrap">
-			                                    <a href="<%= request.getContextPath() %>/UI/JSP/User/InfoWatch.jsp?id=${post.postId}" 
-			                                       class="text-sm text-gray-900 hover:text-primary">
-			                                        <c:out value="${post.title}" />
-			                                    </a>
-			                                </td>
+											<td class="px-6 py-4 whitespace-nowrap">
+											    <c:choose>
+											        <c:when test="${post.type eq '정보'}">
+											            <a href="<%= request.getContextPath() %>/UI/JSP/User/InfoWatch.jsp?id=${post.postId}" 
+											               class="text-sm text-gray-900 hover:text-primary">
+											                <c:out value="${post.title}" />
+											            </a>
+											        </c:when>
+											        <c:when test="${post.type eq '소통'}">
+											            <a href="<%= request.getContextPath() %>/UI/JSP/User/CommuWatch.jsp?id=${post.postId}" 
+											               class="text-sm text-gray-900 hover:text-primary">
+											                <c:out value="${post.title}" />
+											            </a>
+											        </c:when>
+											        <c:otherwise>
+											            <c:out value="${post.title}" />
+											        </c:otherwise>
+											    </c:choose>
+											</td>
 			                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
 			                                    <c:out value="${post.formattedDate}" /> 
 			                                </td>
@@ -251,12 +264,27 @@
 				                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
 				                                    <c:out value="${fn:length(recentComments) - status.index}" />
 				                                </td>
-				                                <td class="px-6 py-4">
-				                                    <a href="<%= request.getContextPath() %>/UI/JSP/User/InfoWatch.jsp?id=${comment.originalPostId}" 
-				                                       class="text-sm text-gray-900 hover:text-primary truncate max-w-xs block">
-				                                        <c:out value="${comment.originalPostTitle}" />
-				                                    </a>
-				                                </td>
+												<td class="px-6 py-4">
+												    <c:choose>
+												        <%-- 댓글의 원문 글 type이 '정보'일 경우 InfoWatch.jsp로 연결 --%>
+												        <c:when test="${comment.originalPostType eq '정보'}">
+												            <a href="<%= request.getContextPath() %>/UI/JSP/User/InfoWatch.jsp?id=${comment.originalPostId}" 
+												               class="text-sm text-gray-900 hover:text-primary truncate max-w-xs block">
+												                <c:out value="${comment.originalPostTitle}" />
+												            </a>
+												        </c:when>
+												        <%-- 댓글의 원문 글 type이 '소통'일 경우 CommuWatch.jsp로 연결 --%>
+												        <c:when test="${comment.originalPostType eq '소통'}">
+												            <a href="<%= request.getContextPath() %>/UI/JSP/User/CommuWatch.jsp?id=${comment.originalPostId}" 
+												               class="text-sm text-gray-900 hover:text-primary truncate max-w-xs block">
+												                <c:out value="${comment.originalPostTitle}" />
+												            </a>
+												        </c:when>
+												        <c:otherwise>
+												            <c:out value="${comment.originalPostTitle}" />
+												        </c:otherwise>
+												    </c:choose>
+												</td>
 				                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 truncate max-w-sm">
 				                                     <c:out value="${fn:substring(comment.content, 0, 30)}" />...
 				                                </td>

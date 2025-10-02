@@ -90,7 +90,6 @@
     <title><c:out value="${post.title}" /> - 소통 게시판 - Newsrrect</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/styles.css">
     <script type="text/javascript" src="<%= request.getContextPath() %>/se2/js/HuskyEZCreator.js" charset="utf-8"></script>
     <script>
         tailwind.config = {

@@ -42,12 +42,25 @@
     }
 
     int postId = 0;
+    String postIdStr = request.getParameter("postId");
+    if(postIdStr != null && !postIdStr.trim().isEmpty()) {
+        try {
+            postId = Integer.parseInt(postIdStr);
+        } catch (NumberFormatException e) {
+        	
+        }
+    }
+    String postIdString = String.valueOf(postId);
+    
     String nowPage = request.getParameter("nowPage");
-    if (nowPage == null || nowPage.isEmpty()) {
+    if (nowPage == null || nowPage.trim().isEmpty()) {
         nowPage = "1";
     }
 
-    String postIdStr = request.getParameter("postId");
+    String sort = request.getParameter("sort");
+    if (sort == null) {
+        sort = "latest";
+    }
     
     if(postIdStr == null || postIdStr.isEmpty()) {
         out.println("<script>alert('잘못된 접근입니다.'); location.href='AdminInfoBoard.jsp';</script>");
@@ -125,7 +138,6 @@
     // CommentMgr를 사용하여 계층적 댓글 구조 가져오기
     CommentMgr commentMgr = new CommentMgr();
     
-    String sort = request.getParameter("sort");
     if (sort == null || (!"upvotes".equalsIgnoreCase(sort) && !"latest".equalsIgnoreCase(sort))) {
         sort = "latest"; // 기본값 설정: 최신순
     }
@@ -976,12 +988,13 @@ for(CommentBean comment : commentList) {
         }
         
         function changeSort(sort) {
-            const postId = '<%= postId %>';
-            const nowPage = '<%= nowPage %>';
+            var redirectUrl = '<%= request.getContextPath() %>' +
+                              '/UI/JSP/Admin/AdminInfoWatch.jsp' +
+                              '?postId=<%= postId %>' +
+                              '&nowPage=<%= nowPage %>' +
+                              '&sort=' + sort;
             
-            const contextPath = '<%= request.getContextPath() %>';
-            
-            window.location.href = `${contextPath}/UI/JSP/Admin/AdminInfoWatch.jsp?postId=${postId}&nowPage=${nowPage}&sort=${sort}`;
+            window.location.href = redirectUrl;
         }
 
         // [추가] 초기화 및 이벤트 리스너 설정

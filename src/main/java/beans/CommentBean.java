@@ -24,6 +24,7 @@ public class CommentBean {
     private String role;
     private String originalPostTitle;
     private int originalPostId;
+    private String originalPostType;
     
     public int getComment_id() {
         return comment_id;
@@ -177,5 +178,13 @@ public class CommentBean {
 
     public void setAttache(String attache) {
         this.attache = attache;
+    }
+    
+    public String getOriginalPostType() {
+        return originalPostType;
+    }
+
+    public void setOriginalPostType(String originalPostType) {
+        this.originalPostType = originalPostType;
     }
 }

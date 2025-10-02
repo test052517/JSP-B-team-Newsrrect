@@ -114,12 +114,12 @@ public class MyPageMgr {
         List<CommentBean> list = new ArrayList<>();
         
         String sql = 
-                "SELECT C.comment_id, C.content, C.created_at, P.title AS post_title, P.post_id AS original_post_id " +
-                "FROM comment C " +
-                "JOIN post P ON C.post_id = P.post_id " +
-                "WHERE C.user_id = ? AND C.status = '공개' " + // 공개된 댓글만 조회
-                "ORDER BY C.created_at DESC " +
-                "LIMIT 5";
+        		"SELECT C.comment_id, C.content, C.created_at, P.title AS post_title, P.post_id AS original_post_id, P.type AS post_type " + 
+        		        "FROM comment C " +
+        		        "JOIN post P ON C.post_id = P.post_id " +
+        		        "WHERE C.user_id = ? AND C.status = '공개' " + 
+        		        "ORDER BY C.created_at DESC " +
+        		        "LIMIT 5";
 
         try {
             conn = pool.getConnection("user");
@@ -136,6 +136,7 @@ public class MyPageMgr {
                 // CommentBean에 추가한 마이페이지용 필드 설정
                 bean.setOriginalPostTitle(rs.getString("post_title"));
                 bean.setOriginalPostId(rs.getInt("original_post_id"));
+                bean.setOriginalPostType(rs.getString("post_type"));
                 
                 list.add(bean);
             }

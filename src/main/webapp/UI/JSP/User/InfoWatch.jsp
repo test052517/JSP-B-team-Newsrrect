@@ -138,8 +138,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><c:out value="${post.title}" /> - 정보 검증 게시판</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/fonts.css">
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/CSS/styles.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
     <script type="text/javascript" src="<%= request.getContextPath() %>/se2/js/HuskyEZCreator.js" charset="utf-8"></script>
     <script>
         tailwind.config = {

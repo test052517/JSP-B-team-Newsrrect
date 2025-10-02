@@ -3,6 +3,8 @@ package mgr;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Vector;
 import beans.PostBean;
@@ -895,5 +897,161 @@ public class PostMgr {
         }
         return count;
     }
+    // JSP 파일에 필요한 신규 메소드 1: 공지사항 목록 가져오기
+    public Vector<PostBean> getCommunityNotices() {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        Vector<PostBean> vlist = new Vector<>();
+        try {
+            conn = pool.getConnection("user");
+            String sql = "SELECT p.*, u.nickname FROM post p " +
+                         "JOIN user u ON p.user_id = u.user_id " +
+                         "WHERE p.priority = 1 ORDER BY p.post_id DESC";
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                PostBean bean = new PostBean();
+                bean.setPostId(rs.getInt("post_id"));
+                bean.setTitle(rs.getString("title"));
+                bean.setNickname(rs.getString("nickname"));
+                bean.setCreatedAt(rs.getString("created_at")); // getFormattedDate()는 PostBean에서 처리
+                bean.setPriority(rs.getInt("priority"));
+                vlist.add(bean);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        return vlist;
+    }
+
+    // JSP 파일에 필요한 신규 메소드 2: 일반 게시글 목록 가져오기 (페이징)
+    public Vector<PostBean> getRegularCommunityPosts(int start, int pageSize) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        Vector<PostBean> vlist = new Vector<>();
+        try {
+            conn = pool.getConnection("user");
+            String sql = "SELECT p.*, u.nickname FROM post p " +
+                         "JOIN user u ON p.user_id = u.user_id " +
+                         "WHERE p.priority != 1 ORDER BY p.post_id DESC LIMIT ?, ?";
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, start);
+            pstmt.setInt(2, pageSize);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                PostBean bean = new PostBean();
+                bean.setPostId(rs.getInt("post_id"));
+                bean.setTitle(rs.getString("title"));
+                bean.setNickname(rs.getString("nickname"));
+                bean.setCreatedAt(rs.getString("created_at"));
+                bean.setPriority(rs.getInt("priority"));
+                vlist.add(bean);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        return vlist;
+    }
+
+    // JSP 파일에 필요한 신규 메소드 3: 일반 게시글 총 개수 가져오기
+    public int getRegularCommunityPostCount() {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        int totalCount = 0;
+        try {
+            conn = pool.getConnection("user");
+            String sql = "SELECT count(*) FROM post WHERE priority != 1";
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                totalCount = rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        return totalCount;
+    }
+
+    // JSP 파일에 필요한 신규 메소드 4: 일반 게시글 검색하기 (페이징)
+    public Vector<PostBean> searchRegularCommunityPosts(String searchType, String searchKeyword, int start, int pageSize) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        Vector<PostBean> vlist = new Vector<>();
+        try {
+            conn = pool.getConnection("user");
+            String sql;
+            if ("title".equals(searchType)) {
+                sql = "SELECT p.*, u.nickname FROM post p " +
+                      "JOIN user u ON p.user_id = u.user_id " +
+                      "WHERE p.priority != 1 AND p.title LIKE ? ORDER BY p.post_id DESC LIMIT ?, ?";
+            } else { // "nickname"
+                sql = "SELECT p.*, u.nickname FROM post p " +
+                      "JOIN user u ON p.user_id = u.user_id " +
+                      "WHERE p.priority != 1 AND u.nickname LIKE ? ORDER BY p.post_id DESC LIMIT ?, ?";
+            }
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, "%" + searchKeyword + "%");
+            pstmt.setInt(2, start);
+            pstmt.setInt(3, pageSize);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                 PostBean bean = new PostBean();
+                bean.setPostId(rs.getInt("post_id"));
+                bean.setTitle(rs.getString("title"));
+                bean.setNickname(rs.getString("nickname"));
+                bean.setCreatedAt(rs.getString("created_at"));
+                bean.setPriority(rs.getInt("priority"));
+                vlist.add(bean);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        return vlist;
+    }
+
+    // JSP 파일에 필요한 신규 메소드 5: 일반 게시글 검색 결과 총 개수 가져오기
+    public int getSearchRegularCommunityPostCount(String searchType, String searchKeyword) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        int totalCount = 0;
+        try {
+            conn = pool.getConnection("user");
+            String sql;
+            if ("title".equals(searchType)) {
+                sql = "SELECT count(*) FROM post p " +
+                      "WHERE p.priority != 1 AND p.title LIKE ?";
+            } else { // "nickname"
+                sql = "SELECT count(*) FROM post p " +
+                      "JOIN user u ON p.user_id = u.user_id " +
+                      "WHERE p.priority != 1 AND u.nickname LIKE ?";
+            }
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, "%" + searchKeyword + "%");
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                totalCount = rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        return totalCount;
+    }
+    
+
 
 }

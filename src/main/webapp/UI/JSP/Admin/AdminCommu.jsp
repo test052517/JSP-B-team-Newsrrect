@@ -1,7 +1,11 @@
+<%@page import="beans.PostBean"%>
+<%@page import="mgr.PostMgr"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="java.util.*" %>
-<%@ page import="beans.PostBean" %>
-<%@ page import="mgr.PostMgr" %>
+<%@ page import="java.util.Vector" %>
+<%-- 정렬 로직이 변경되어 아래 import는 더 이상 필요하지 않습니다. --%>
+<%-- <%@ page import="java.util.Collections" %> --%>
+<%-- <%@ page import="java.util.Comparator" %> --%>
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -26,38 +30,60 @@
 </head>
 <body class="min-h-screen bg-gray-50">
 <%
-    // 페이징 처리
-    int pageSize = 10;
-    String pageNum = request.getParameter("page");
-    if(pageNum == null) pageNum = "1";
-    int currentPage = Integer.parseInt(pageNum);
-    int start = (currentPage - 1) * pageSize;
+    // =======================[ JSP 로직 부분 ]=======================
+    request.setCharacterEncoding("UTF-8");
     
-    // 검색 파라미터
-    String searchType = request.getParameter("searchType");
+    // 파라미터 가져오기
     String searchKeyword = request.getParameter("searchKeyword");
-    
-    // PostMgr 인스턴스 생성 및 데이터 조회
+    String searchType = request.getParameter("searchType");
+    String pageNum = request.getParameter("page");
+
+    // 페이지네이션 설정
+    int pageSize = 10;
+    int currentPage = 1;
+    if (pageNum != null && !pageNum.equals("")) {
+        currentPage = Integer.parseInt(pageNum);
+    }
+    int start = (currentPage - 1) * pageSize;
+
     PostMgr postMgr = new PostMgr();
+    Vector<PostBean> noticeList = null;
     Vector<PostBean> postList = null;
-    int totalCount = 0;
-    
+    int totalCount = 0; // 페이지네이션을 위한 '일반 게시글'의 총 개수
+
     try {
+        // 1. 공지사항 목록 가져오기 (항상 모든 공지사항을 가져옵니다)
+        // [수정필요] PostMgr.java에 공지사항(priority=1)만 모두 조회하는 메소드(예: getCommunityNotices)를 추가해야 합니다.
+        // 예: SELECT * FROM post WHERE priority = 1 ORDER BY postId DESC;
+        noticeList = postMgr.getCommunityNotices();
+
+        // 2. 일반 게시글 목록 가져오기 (페이징 적용)
         if(searchKeyword != null && !searchKeyword.trim().equals("")) {
-            postList = postMgr.searchCommunityPosts(searchType, searchKeyword, start, pageSize);
-            totalCount = postList.size();
+            // 검색어가 있을 경우
+            // [수정필요] PostMgr.java에 공지를 제외한 일반 게시글을 검색하는 메소드(예: searchRegularCommunityPosts)가 필요합니다.
+            postList = postMgr.searchRegularCommunityPosts(searchType, searchKeyword, start, pageSize);
+            // [수정필요] PostMgr.java에 공지를 제외한 검색 결과 개수를 세는 메소드(예: getSearchRegularCommunityPostCount)가 필요합니다.
+            totalCount = postMgr.getSearchRegularCommunityPostCount(searchType, searchKeyword);
         } else {
-            postList = postMgr.getCommunityPosts(start, pageSize);
-            totalCount = postMgr.getCommunityPostCount();
+            // 검색어가 없을 경우 (전체 목록)
+            // [수정필요] PostMgr.java에 공지를 제외한 일반 게시글만 페이징하여 가져오는 메소드(예: getRegularCommunityPosts)가 필요합니다.
+            postList = postMgr.getRegularCommunityPosts(start, pageSize);
+            // [수정필요] PostMgr.java에 공지를 제외한 일반 게시글의 총 개수를 세는 메소드(예: getRegularCommunityPostCount)가 필요합니다.
+            totalCount = postMgr.getRegularCommunityPostCount();
         }
     } catch(Exception e) {
         e.printStackTrace();
+        // 오류 발생 시 초기화
+        noticeList = new Vector<PostBean>();
         postList = new Vector<PostBean>();
         totalCount = 0;
     }
     
+    // 전체 페이지 수 계산 (일반 게시글 기준)
     int totalPages = (int)Math.ceil((double)totalCount / pageSize);
     if(totalPages == 0) totalPages = 1;
+    
+    // 기존의 Collections.sort 로직은 공지사항을 별도 조회하므로 더 이상 필요 없습니다.
 %>
     <!-- Header -->
     <jsp:include page="../Common/AdminHeader.jsp" />
@@ -78,9 +104,8 @@
                     <form action="AdminCommu.jsp" method="get" class="flex items-center space-x-4">
                         <div class="relative">
                             <select name="searchType" class="appearance-none bg-gray-100 border border-gray-200 rounded px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                                <option value="" <%= (searchType == null || searchType.equals("")) ? "selected" : "" %>>전체</option>
                                 <option value="title" <%= "title".equals(searchType) ? "selected" : "" %>>제목</option>
-                                <option value="author" <%= "author".equals(searchType) ? "selected" : "" %>>작성자</option>
+                                <option value="nickname" <%= "nickname".equals(searchType) ? "selected" : "" %>>작성자</option>
                             </select>
                             <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                 <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,14 +135,36 @@
 
                 <!-- Table Body -->
                 <div class="bg-white border border-gray-200 border-t-0 rounded-b-lg divide-y divide-gray-100">
+                    <%-- 1. 공지사항 목록 출력 --%>
                     <%
-                        if(postList != null && postList.size() > 0) {
-                            for(int i = 0; i < postList.size(); i++) {
-                                PostBean post = postList.get(i);
-                                int num = totalCount - (start + i);
+                    if(noticeList != null && !noticeList.isEmpty()) {
+                        for(PostBean notice : noticeList) {
+                    %>
+                    <div onclick="location.href='AdminCommuWatch.jsp?postId=<%= notice.getPostId() %>'" 
+                         class="grid grid-cols-5 gap-4 py-4 px-4 hover:bg-blue-50 transition-colors duration-200 cursor-pointer group items-center font-semibold bg-blue-50/50">
+                        <div class="text-sm text-center font-medium">
+                            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full">공지</span>
+                        </div>
+                        <div class="text-sm text-gray-900 font-medium col-span-2 group-hover:text-primary transition-colors">
+                            <%= notice.getTitle() %>
+                        </div>
+                        <div class="text-sm text-gray-600 text-center"><%= notice.getNickname() %></div>
+                        <div class="text-sm text-gray-600 text-center"><%= notice.getFormattedDate() %></div>
+                    </div>
+                    <%
+                            }
+                        }
+                    %>
+
+                    <%-- 2. 일반 게시글 목록 출력 --%>
+                    <%
+                    if(postList != null && !postList.isEmpty()) {
+                        for(int i = 0; i < postList.size(); i++) {
+                            PostBean post = postList.get(i);
+                            int num = totalCount - (start + i);
                     %>
                     <div onclick="location.href='AdminCommuWatch.jsp?postId=<%= post.getPostId() %>'" 
-                         class="grid grid-cols-5 gap-4 py-4 px-4 hover:bg-blue-50 transition-colors duration-200 cursor-pointer group">
+                         class="grid grid-cols-5 gap-4 py-4 px-4 hover:bg-blue-50 transition-colors duration-200 cursor-pointer group items-center">
                         <div class="text-sm text-gray-900 text-center font-medium"><%= num %></div>
                         <div class="text-sm text-gray-900 font-medium col-span-2 group-hover:text-primary transition-colors">
                             <%= post.getTitle() %>
@@ -127,7 +174,12 @@
                     </div>
                     <%
                             }
-                        } else {
+                        }
+                    %>
+                    
+                    <%-- 3. 게시글이 전혀 없을 경우 메시지 출력 --%>
+                    <%
+                    if((noticeList == null || noticeList.isEmpty()) && (postList == null || postList.isEmpty())) {
                     %>
                     <div class="py-12 text-center">
                         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,3 +263,4 @@
     <jsp:include page="../Common/Footer.jsp" />
 </body>
 </html>
+
