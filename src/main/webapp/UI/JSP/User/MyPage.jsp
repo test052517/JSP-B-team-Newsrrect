@@ -83,11 +83,11 @@
 						        <c:choose>
 						            <c:when test="${not empty user.profileImage}">
 						                <img id="profileImage" src="<%= request.getContextPath() %>/uploads/profiles/${user.profileImage}" 
-						                     alt="프로필 이미지" class="w-full h-full object-cover rounded-full">
+						                     alt="프로필 이미지" class="w-full h-full object-cover rounded-full hidden">
 						            </c:when>
 						            <c:otherwise>
 						                <img id="profileImage" src="" alt="프로필 이미지" class="w-full h-full object-cover rounded-full hidden">
-						                <span id="profileImagePlaceholder" class="text-white text-sm font-medium">이미지 선택</span>
+						                <span id="profileImagePlaceholder" class="text-white text-sm font-medium hidden">이미지 선택</span>
 						            </c:otherwise>
 						        </c:choose>
 						    </div>
@@ -105,7 +105,7 @@
                                     <label for="introduce" class="block text-sm font-medium text-gray-700 mb-1">자기소개</label>
                                     <textarea id="introduce" name="introduce" rows="3"
           								class="w-full max-w-lg px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-          								placeholder="자기소개를 입력하세요" maxlength="200"><c:out value="${not empty user.introduce ? user.introduce : '자기 소개'}" /></textarea>
+          								placeholder="자기소개를 입력하세요" maxlength="200" readonly><c:out value="${not empty user.introduce ? user.introduce : '자기 소개'}" /></textarea>
                                     <div class="text-sm text-gray-500 mt-1">
                                         <span id="introduceCount">${not empty user.introduce ? fn:length(user.introduce) : 0}</span>/200자
                                     </div>
@@ -354,21 +354,33 @@
             const saveBtn = document.getElementById('saveBtn');
             const cancelBtn = document.getElementById('cancelBtn');
             const profileImageInput = document.getElementById('profileImageInput');
-
+            const profileImageContainer = document.getElementById('profileImageContainer'); // UI 제어용
+            const profileImagePlaceholder = document.getElementById('profileImagePlaceholder'); // 이미지 선택 텍스트
+            
             if (!isEditing) {
-            	originalNickname = nicknameInput.value;
+                originalNickname = nicknameInput.value;
                 originalIntroduce = introduceTextarea.value;
                 
-                introduceTextarea.disabled = false;
+                introduceTextarea.readOnly = false;
+                
+                profileImageInput.readOnly = false;
                 profileImageInput.disabled = false;
                 
-                profileImageContainer.classList.add('hover:bg-gray-500', 'transition-colors');
-                profileImageContainer.onclick = function() {
-                    document.getElementById('profileImageInput').click();
-                };
                 
+                // UI (이미지 오버레이/텍스트) 활성화
+                if (profileImageContainer) {
+                    profileImageContainer.classList.add('hover:bg-gray-500', 'transition-colors');
+                    profileImageContainer.onclick = function() {
+                        document.getElementById('profileImageInput').click();
+                    };
+                }
+                if (profileImagePlaceholder) {
+                    profileImagePlaceholder.classList.remove('hidden'); 
+                }
+
                 nicknameInput.focus();
                 
+                // 버튼 전환
                 editBtn.classList.add('hidden');
                 saveBtn.classList.remove('hidden');
                 cancelBtn.classList.remove('hidden');
@@ -384,19 +396,29 @@
             const saveBtn = document.getElementById('saveBtn');
             const cancelBtn = document.getElementById('cancelBtn');
             const profileImageInput = document.getElementById('profileImageInput');
+            const introduceCount = document.getElementById('introduceCount');
+            const profileImageContainer = document.getElementById('profileImageContainer');
+            const profileImagePlaceholder = document.getElementById('profileImagePlaceholder');
 
             nicknameInput.value = originalNickname;
             introduceTextarea.value = originalIntroduce;
-            introduceCount.textContent = originalIntroduce.length;
+
+            if (introduceCount) {
+                introduceCount.textContent = originalIntroduce.length; 
+            }
             
             profileImageInput.value = '';
             profileImageInput.disabled = true;
+            profileImageInput.readOnly = true;
+            introduceTextarea.readOnly = true; 
 
-            introduceTextarea.readOnly = true;
-            
-            profileImageContainer.classList.remove('hover:bg-gray-500', 'transition-colors');
-            profileImageContainer.onclick = null; // 클릭 이벤트 제거 (비활성화)
-
+            if (profileImagePlaceholder) {
+                profileImagePlaceholder.classList.add('hidden'); 
+            }
+            if (profileImageContainer) {
+                profileImageContainer.classList.remove('hover:bg-gray-500', 'transition-colors');
+                profileImageContainer.onclick = null;
+            }
             
             editBtn.classList.remove('hidden');
             saveBtn.classList.add('hidden');

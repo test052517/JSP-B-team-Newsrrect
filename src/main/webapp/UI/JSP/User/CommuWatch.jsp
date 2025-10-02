@@ -57,11 +57,12 @@
         }
     }
     
-    // 베스트 댓글 선정 (추천 수가 가장 많은 댓글)
+ // 베스트 댓글 선정 (추천 수가 가장 많거나, 추천수가 같을 경우 최신 댓글을 선택)
     CommentBean bestComment = null;
-    int maxUpvotes = 0;
+    int maxUpvotes = -1; // 최소 추천수는 0일 수 있으므로 -1에서 시작
     for(CommentBean comment : commentList) {
-        if(comment.getUpvotes() > maxUpvotes) {
+        
+        if (comment.getUpvotes() > maxUpvotes) {
             maxUpvotes = comment.getUpvotes();
             bestComment = comment;
         }
@@ -244,7 +245,13 @@
                 </c:if>
 
                 <div class="flex justify-between items-center mb-4 border-t pt-6">
-                    <h3 class="text-lg font-semibold text-gray-900">전체 댓글 ${commentCount}개</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">전체 댓글 ${commentList.size()}개</h3>
+                    <div class="flex space-x-2">
+                        <select class="px-3 py-1 border border-gray-200 rounded text-sm">
+                            <option>추천순</option>
+                            <option>최신순</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- BEST 댓글 섹션 -->
@@ -676,64 +683,31 @@
     </main>
 
     <!-- 게시글 신고 모달 -->
-    <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 w-96">
-            <h3 class="text-xl font-bold mb-4">게시글 신고</h3>
-            <form action="${pageContext.request.contextPath}/submitReport" method="post">
-                <input type="hidden" name="postId" id="reportPostId">
-                <input type="hidden" name="reporterId" value="${loggedInUser != null ? loggedInUser.userId : ''}">
-                <input type="hidden" name="type" value="게시글">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">신고 사유</label>
-                    <select name="reason" class="w-full p-2 border border-gray-300 rounded-lg" required>
-                        <option value="">선택하세요</option>
-                        <option value="스팸">스팸</option>
-                        <option value="욕설/비방">욕설/비방</option>
-                        <option value="음란물">음란물</option>
-                        <option value="개인정보 노출">개인정보 노출</option>
-                        <option value="기타">기타</option>
-                    </select>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">상세 내용</label>
-                    <textarea name="description" rows="3" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="신고 사유를 자세히 작성해주세요"></textarea>
-                </div>
-                <div class="flex space-x-2">
-                    <button type="submit" class="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600">신고하기</button>
-                    <button type="button" onclick="closeReportModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">취소</button>
-                </div>
-            </form>
+    <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <h3 class="text-lg font-semibold">게시글 신고</h3>
+            <div class="border-b my-2"></div>
+            <p class="text-sm text-gray-600 mb-4">신고 사유를 작성해주세요.</p>
+            <textarea id="postReportReason" class="w-full border rounded p-2" rows="3" placeholder="신고 사유를 입력하세요"></textarea>
+            <div class="flex justify-end space-x-2 mt-4">
+                <button onclick="closeReportModal()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">취소</button>
+                <button onclick="submitReport()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">신고</button>
+            </div>
         </div>
     </div>
 
     <!-- 댓글 신고 모달 -->
-    <div id="commentReportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 w-96">
-            <h3 class="text-xl font-bold mb-4">댓글 신고</h3>
-            <form action="${pageContext.request.contextPath}/submitCommentReport" method="post">
-                <input type="hidden" name="commentId" id="reportCommentId">
-                <input type="hidden" name="reporterId" value="${loggedInUser != null ? loggedInUser.userId : ''}">
-                <input type="hidden" name="type" value="댓글">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">신고 사유</label>
-                    <select name="reason" class="w-full p-2 border border-gray-300 rounded-lg" required>
-                        <option value="">선택하세요</option>
-                        <option value="스팸">스팸</option>
-                        <option value="욕설/비방">욕설/비방</option>
-                        <option value="음란물">음란물</option>
-                        <option value="개인정보 노출">개인정보 노출</option>
-                        <option value="기타">기타</option>
-                    </select>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">상세 내용</label>
-                    <textarea name="description" rows="3" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="신고 사유를 자세히 작성해주세요"></textarea>
-                </div>
-                <div class="flex space-x-2">
-                    <button type="submit" class="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600">신고하기</button>
-                    <button type="button" onclick="closeCommentReportModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">취소</button>
-                </div>
-            </form>
+    <div id="commentReportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <h3 class="text-lg font-semibold">댓글 신고</h3>
+            <div class="border-b my-2"></div>
+            <p class="text-sm text-gray-600 mb-4">신고 사유를 작성해주세요.</p>
+            <input type="hidden" id="commentIdToReport">
+            <textarea id="commentReportReason" class="w-full border rounded p-2" rows="3" placeholder="신고 사유를 입력하세요"></textarea>
+            <div class="flex justify-end space-x-2 mt-4">
+                <button onclick="closeCommentReportModal()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">취소</button>
+                <button onclick="submitCommentReport()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">신고</button>
+            </div>
         </div>
     </div>
 
@@ -810,24 +784,80 @@
             </c:choose>
         }
         
-        // 게시글 신고 모달
-        function openReportModal(postId) {
-            document.getElementById('reportPostId').value = postId;
-            document.getElementById('reportModal').classList.remove('hidden');
+     // 게시글 신고 모달
+        function openReportModal() { 
+            document.getElementById('reportModal').classList.remove('hidden'); 
         }
         
-        function closeReportModal() {
-            document.getElementById('reportModal').classList.add('hidden');
+        function closeReportModal() { 
+            document.getElementById('reportModal').classList.add('hidden'); 
+            document.getElementById('postReportReason').value = ''; 
         }
         
-        // 댓글 신고 모달
+        function submitReport() {
+            var reason = document.getElementById('postReportReason').value;
+            if (!reason.trim()) { 
+                alert('신고 사유를 입력해주세요.'); 
+                return; 
+            }
+            
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '<%= request.getContextPath() %>/UI/JSP/User/ReportPostProc.jsp';
+            
+            var postIdInput = document.createElement('input');
+            postIdInput.type = 'hidden';
+            postIdInput.name = 'postId';
+            postIdInput.value = '<%= postId %>';
+            
+            var reasonInput = document.createElement('input');
+            reasonInput.type = 'hidden';
+            reasonInput.name = 'reportReason';
+            reasonInput.value = reason;
+            
+            form.appendChild(postIdInput);
+            form.appendChild(reasonInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+        
+     // 댓글 신고 모달
         function openCommentReportModal(commentId) {
-            document.getElementById('reportCommentId').value = commentId;
+            document.getElementById('commentIdToReport').value = commentId;
             document.getElementById('commentReportModal').classList.remove('hidden');
         }
         
-        function closeCommentReportModal() {
-            document.getElementById('commentReportModal').classList.add('hidden');
+        function closeCommentReportModal() { 
+            document.getElementById('commentReportModal').classList.add('hidden'); 
+            document.getElementById('commentReportReason').value = ''; 
+        }
+        
+        function submitCommentReport() {
+            var commentId = document.getElementById('commentIdToReport').value;
+            var reason = document.getElementById('commentReportReason').value;
+            if (!reason.trim()) { 
+                alert('신고 사유를 입력해주세요.'); 
+                return; 
+            }
+            
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '<%= request.getContextPath() %>/UI/JSP/User/ReportCommentProc.jsp';
+            
+            var commentIdInput = document.createElement('input');
+            commentIdInput.type = 'hidden';
+            commentIdInput.name = 'commentId';
+            commentIdInput.value = commentId;
+            
+            var reasonInput = document.createElement('input');
+            reasonInput.type = 'hidden';
+            reasonInput.name = 'reportReason';
+            reasonInput.value = reason;
+            
+            form.appendChild(commentIdInput);
+            form.appendChild(reasonInput);
+            document.body.appendChild(form);
+            form.submit();
         }
         
         // 모달 외부 클릭시 닫기

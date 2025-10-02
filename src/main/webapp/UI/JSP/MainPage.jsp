@@ -1,5 +1,6 @@
 <%@page import="beans.PostBean"%>
 <%@page import="java.util.Vector"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ page contentType="text/html; charset=UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -54,7 +55,7 @@
                     <div class="relative" id="carouselWrapper">
                         <div class="carousel-container relative overflow-hidden">
                         <%
-                            	Vector <PostBean> featuredPosts = pMgr.todayInfoCards("정보");
+                            	Vector<PostBean> featuredPosts = pMgr.todayInfoCards("정보");
                         %>
                         <c:set scope="request" var="featuredPosts" value="<%=featuredPosts%>" />
                             <div class="carousel-track flex transition-transform duration-500 ease-in-out" id="carouselTrack">
@@ -62,6 +63,10 @@
                                 <c:choose>
                                     <c:when test="${not empty featuredPosts}">
                                         <c:forEach var="featuredPost" items="${featuredPosts}" varStatus="status">
+                                           <c:url var="watchUrl" value="/info/watch.do">
+				                               <c:param name="id" value="${featuredPost.postId}" />
+				                            </c:url>
+                                        	<a href="${watchUrl}">
                                             <div class="review-card flex-shrink-0" style="width: 500px; margin: 0 15px;">
                                                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 h-full text-center">
                                                     <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-6">
@@ -71,10 +76,18 @@
                                                         <c:out value="${featuredPost.title}"/>
                                                     </h3>
                                                     <p class="text-gray-700 leading-relaxed">
-                                                        <c:out value="${featuredPost.content}"/>
+                                                        <c:choose>
+													        <c:when test="${fn:length(featuredPost.content) > 100}">
+													            <c:out value="${fn:substring(featuredPost.content, 0, 100)}..."/>
+													        </c:when>
+													        <c:otherwise>
+													            <c:out value="${featuredPost.content}"/>
+													        </c:otherwise>
+													    </c:choose>
                                                     </p>
                                                 </div>
                                             </div>
+                                            </a>
                                         </c:forEach>
                                     </c:when>
                                 </c:choose>
@@ -105,8 +118,12 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto"> 
                             <!-- Today's Upload Statistics -->
                             <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200 text-center">
-                                <h3 class="text-lg font-medium text-gray-900 mb-4" style="font-family: 'Paperozi', sans-serif; font-weight: 400;">금일 업로드 정보 검증글</h3>
+                                <h3 class="text-lg font-medium text-gray-900 mb-4 font-paperozi-medium">금일 업로드 정보 검증글</h3>
                                 <div class="text-4xl font-bold text-primary mb-2">
+                                <%
+                                int todayUploadCount = pMgr.getTodayInfoCount("정보");
+                            	%>
+                            	<c:set scope="request" var="todayUploadCount" value="<%=todayUploadCount%>" />
                                     <c:choose>
                                         <c:when test="${not empty todayUploadCount}">
                                             <fmt:formatNumber value="${todayUploadCount}" pattern="#,###"/>
@@ -116,23 +133,27 @@
                                         </c:otherwise>
                                     </c:choose>
                                 </div>
-                                <div class="text-gray-900" style="font-family: 'Paperozi', sans-serif; font-weight: 400;">건</div>
+                                <div class="text-gray-900 font-paperozi-medium">건</div>
                             </div>
                             
                             <!-- Total Upload Statistics -->
                             <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200 text-center">
-                                <h3 class="text-lg font-medium text-gray-900 mb-4" style="font-family: 'Paperozi', sans-serif; font-weight: 400;">전체 업로드 정보 검증글</h3>
+                                <h3 class="text-lg font-medium text-gray-900 mb-4 font-paperozi-medium">전체 업로드 정보 검증글</h3>
                                 <div class="text-4xl font-bold text-primary mb-2">
+                                <%
+                                int totalUploadCount = pMgr.getInfoCount("정보");
+                            	%>
+                            	<c:set scope="request" var="totalUploadCount" value="<%=totalUploadCount%>" />
                                     <c:choose>
                                         <c:when test="${not empty totalUploadCount}">
                                             <fmt:formatNumber value="${totalUploadCount}" pattern="#,###"/>
                                         </c:when>
                                         <c:otherwise>
-                                            1,234,567
+                                            0
                                         </c:otherwise>
                                     </c:choose>
                                 </div>
-                                <div class="text-gray-900" style="font-family: 'Paperozi', sans-serif; font-weight: 400;">건</div>
+                                <div class="text-gray-900 font-paperozi-medium">건</div>
                             </div>
                         </div>
                     </section>
@@ -150,7 +171,7 @@
                         <div class="text-center">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-xl font-semibold text-[#333437] font-paperozi-semibold">정보 검증 게시판</h3>
-                                <button onclick="location.href='../JSP/User/InfoBoard.jsp'" class="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 ease-in-out group">
+                                <button onclick="location.href='${pageContext.request.contextPath}/info/watch.do'" class="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 ease-in-out group">
                                     <svg class="w-5 h-5 text-primary group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                     </svg>
@@ -166,10 +187,13 @@
                                     <c:choose>
                                         <c:when test="${not empty recentInfoPosts}">
                                             <c:forEach var="infoPost" items="${recentInfoPosts}" varStatus="status">
+                                                <c:url var="watchUrl" value="/info/watch.do">
+				                                    <c:param name="id" value="${infoPost.postId}" />
+				                                </c:url>
                                                 <div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
                                                     <div class="flex-1 text-left">
                                                         <div class="text-sm text-gray-900 truncate">
-                                                            <c:out value="${infoPost.title}"/>
+                                                            <a href="${watchUrl}"><c:out value="${infoPost.title}"/></a>
                                                         </div>
                                                     </div>
                                                     <div class="text-xs text-gray-400">
@@ -206,10 +230,13 @@
                                     <c:choose>
                                         <c:when test="${not empty recentCommuPosts}">
                                             <c:forEach var="commuPost" items="${recentCommuPosts}" varStatus="status">
+                                            <c:url var="watchUrl" value="/commu/watch.do">
+				                                    <c:param name="id" value="${commuPost.postId}" />
+				                            </c:url>
                                                 <div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
                                                     <div class="flex-1 text-left">
                                                         <div class="text-sm text-gray-900 truncate">
-                                                            <c:out value="${commuPost.title}"/>
+                                                            <a href="${watchUrl}"><c:out value="${commuPost.title}"/></a>
                                                         </div>
                                                     </div>
                                                     <div class="text-xs text-gray-400">

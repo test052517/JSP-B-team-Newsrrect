@@ -18,7 +18,6 @@
         .hero-section { text-align: center; margin-bottom: 3rem; color: white; }
         .hero-section h1 { font-size: 2.5rem; margin-bottom: 1rem; font-weight: 700; }
         .hero-section p { font-size: 1.1rem; opacity: 0.9; margin-bottom: 0.5rem; }
-        .hero-section .sub-text { font-size: 0.95rem; opacity: 0.8; font-style: italic; }
         .analysis-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); margin-bottom: 2rem; }
         .tab-nav { display: flex; border-bottom: 1px solid #e0e0e0; margin-bottom: 1.5rem; }
         .tab-btn { flex: 1; padding: 1rem; cursor: pointer; background: none; border: none; font-size: 1rem; font-weight: 600; color: #666; position: relative; transition: all 0.3s; }
@@ -38,31 +37,12 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .error-message { background: #ffebee; color: #c62828; padding: 1rem; border-radius: 8px; margin: 1rem 0; border-left: 4px solid #f44336; display: none; }
         .results-section { margin-top: 2rem; display: none; }
-        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-        .results-section h3 { color: #333; margin-bottom: 1rem; font-size: 1.3rem; }
-        .fact-check-indicator { padding: 0.5rem 1rem; border-radius: 20px; font-weight: 600; font-size: 0.9rem; }
-        .fact-check-available { background: #e8f5e8; color: #2e7d2e; }
-        .fact-check-unavailable { background: #fff3cd; color: #856404; }
         .summary-section { background: #fff; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; border-left: 4px solid #667eea; }
         .reliability-score { text-align: center; margin-bottom: 2rem; }
         .score-circle { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 1.5rem; font-weight: bold; color: white; }
         .score-high { background: linear-gradient(135deg, #4CAF50, #45a049); }
         .score-medium { background: linear-gradient(135deg, #FF9800, #F57C00); }
         .score-low { background: linear-gradient(135deg, #F44336, #D32F2F); }
-        .fact-check-section { background: #fff; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; border-left: 4px solid #28a745; }
-        .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
-        .result-card { background: #f8f9fa; border-radius: 12px; padding: 1.5rem; }
-        .result-card h3 { margin-bottom: 1rem; font-size: 1.2rem; }
-        .keywords-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-        .keyword-tag { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem; font-weight: 500; }
-        .article-list-section { background: #fff; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; border-left: 4px solid #ffc107; }
-        .article-list { max-height: 400px; overflow-y: auto; padding-right: 1rem; }
-        .article-item { display: block; padding: 1rem; margin-bottom: 0.5rem; background: #f8f9fa; border-radius: 8px; text-decoration: none; color: inherit; transition: all 0.3s; }
-        .article-item:hover { transform: translateX(5px); box-shadow: 0 3px 15px rgba(0,0,0,0.05); }
-        .article-title { font-weight: 600; margin-bottom: 0.5rem; }
-        .article-meta { font-size: 0.85rem; color: #666; display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
-        .relevance-score-badge { background-color: #e9ecef; color: #495057; padding: 0.2rem 0.5rem; border-radius: 5px; font-size: 0.8rem; font-weight: 600; margin-left: 0.5rem; }
-        @media (max-width: 768px) { .results-grid { grid-template-columns: 1fr; } .results-header { flex-direction: column; gap: 1rem; } }
     </style>
 </head>
 <body>
@@ -81,7 +61,6 @@
         <section class="hero-section">
             <h1>뉴스 신뢰성 분석 시스템</h1>
             <p>AI 기술을 활용하여 뉴스의 신뢰성을 교차검증하고 객관적인 분석 결과를 제공합니다</p>
-            <div class="sub-text">원본 글 요약 + 관련 뉴스 팩트체킹</div>
         </section>
 
         <section class="analysis-card">
@@ -113,42 +92,14 @@
             <div id="errorMessage" class="error-message"></div>
 
             <div id="resultsSection" class="results-section">
-                <div class="results-header">
-                    <h2>분석 결과</h2>
-                    <div id="factCheckIndicator" class="fact-check-indicator"><i class="fas fa-shield-alt"></i><span>팩트체킹 완료</span></div>
-                </div>
-
+                <h2>분석 결과</h2>
                 <div class="summary-section">
                     <h3><i class="fas fa-file-alt"></i> 원본 글 요약</h3>
                     <div id="originalSummary"></div>
                 </div>
-
                 <div class="reliability-score">
                     <div id="scoreCircle" class="score-circle"><span id="scoreValue">0%</span></div>
                     <h3>신뢰성 점수</h3>
-                </div>
-
-                <div class="fact-check-section">
-                    <h3><i class="fas fa-check-circle"></i> 팩트체킹 결과</h3>
-                    <div id="verificationDetails"></div>
-                </div>
-                
-                <div id="analyzedArticles" class="article-list-section">
-                    <h3><i class="fas fa-list-ul"></i> 관련 분석 기사 목록</h3>
-                    <div id="analyzedArticlesList" class="article-list"></div>
-                </div>
-
-                <div class="results-grid">
-                    <div class="result-card">
-                        <h3><i class="fas fa-tags"></i> 추출된 키워드</h3>
-                        <div id="keywordsList" class="keywords-list"></div>
-                    </div>
-                    <div class="result-card">
-                        <h3><i class="fas fa-newspaper"></i> 분석 정보</h3>
-                        <p><strong>분석 기사 수:</strong> <span id="articlesCount">0</span>건</p>
-                        <p><strong>분석 일시:</strong> <span id="analysisDate">-</span></p>
-                        <p><strong>처리 시간:</strong> <span id="processingTime">-</span>초</p>
-                    </div>
                 </div>
             </div>
         </section>
@@ -156,6 +107,7 @@
 
     <script>
         var activeTab = 'url';
+        var postId = null;
 
         function switchTab(tab, element) {
             activeTab = tab;
@@ -171,10 +123,20 @@
             var url = document.getElementById('newsUrl').value.trim();
             var text = document.getElementById('newsText').value.trim();
             
-            if (activeTab === 'url' && url === '') { showError('분석할 URL을 입력해주세요.'); return; }
-            if (activeTab === 'text' && text === '') { showError('분석할 텍스트를 입력해주세요.'); return; }
+            if (activeTab === 'url' && url === '') { 
+                showError('분석할 URL을 입력해주세요.'); 
+                return; 
+            }
+            if (activeTab === 'text' && text === '') { 
+                showError('분석할 텍스트를 입력해주세요.'); 
+                return; 
+            }
 
-            var dataToSend = { url: activeTab === 'url' ? url : '', text: activeTab === 'text' ? text : '' };
+            var dataToSend = { 
+                url: activeTab === 'url' ? url : '', 
+                text: activeTab === 'text' ? text : '' 
+            };
+            
             setLoadingState(true);
             hideError();
             hideResults();
@@ -183,14 +145,20 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dataToSend)
-            }).then(function(response) { return response.json(); })
-            .then(function(result) {
-                if (result.success) { displayResults(result); }
-                else { showError(result.error || '분석 중 오류가 발생했습니다.'); }
+            }).then(function(response) { 
+                return response.json(); 
+            }).then(function(result) {
+                if (result.success) { 
+                    displayResults(result); 
+                } else { 
+                    showError(result.error || '분석 중 오류가 발생했습니다.'); 
+                }
             }).catch(function(error) {
                 console.error('분석 요청 오류:', error);
-                showError('백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.');
-            }).finally(function() { setLoadingState(false); });
+                showError('백엔드 서버에 연결할 수 없습니다.');
+            }).finally(function() { 
+                setLoadingState(false); 
+            });
         }
         
         function setLoadingState(isLoading) {
@@ -205,15 +173,6 @@
         }
 
         function displayResults(result) {
-            var factCheckIndicator = document.getElementById('factCheckIndicator');
-            if (result.fact_check_available) {
-                factCheckIndicator.className = 'fact-check-indicator fact-check-available';
-                factCheckIndicator.innerHTML = '<i class="fas fa-shield-alt"></i><span>팩트체킹 완료</span>';
-            } else {
-                factCheckIndicator.className = 'fact-check-indicator fact-check-unavailable';
-                factCheckIndicator.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>팩트체킹 제한적</span>';
-            }
-
             document.getElementById('originalSummary').textContent = result.original_summary || result.summary || '요약을 생성할 수 없습니다.';
 
             var scoreValue = document.getElementById('scoreValue');
@@ -221,70 +180,28 @@
             scoreValue.textContent = (result.reliability_score || 0).toFixed(1) + '%';
             
             scoreCircle.className = 'score-circle';
-            if (result.reliability_score >= 80) { scoreCircle.classList.add('score-high'); }
-            else if (result.reliability_score >= 60) { scoreCircle.classList.add('score-medium'); }
-            else { scoreCircle.classList.add('score-low'); }
-
-            document.getElementById('verificationDetails').textContent = result.verification_details || '팩트체킹 정보가 없습니다.';
-
-            var keywordsList = document.getElementById('keywordsList');
-            keywordsList.innerHTML = '';
-            if (result.keywords && result.keywords.length > 0) {
-                result.keywords.forEach(function(keyword) {
-                    var span = document.createElement('span');
-                    span.className = 'keyword-tag';
-                    span.textContent = keyword;
-                    keywordsList.appendChild(span);
-                });
+            if (result.reliability_score >= 80) { 
+                scoreCircle.classList.add('score-high'); 
+            } else if (result.reliability_score >= 60) { 
+                scoreCircle.classList.add('score-medium'); 
+            } else { 
+                scoreCircle.classList.add('score-low'); 
             }
-
-            document.getElementById('articlesCount').textContent = result.articles_analyzed || 0;
-            document.getElementById('analysisDate').textContent = new Date(result.analysis_date).toLocaleString('ko-KR');
-            document.getElementById('processingTime').textContent = result.processing_time || '-';
-
-            var articlesContainer = document.getElementById('analyzedArticles');
-            var articlesList = document.getElementById('analyzedArticlesList');
-            if (result.articles_info && result.articles_info.length > 0) {
-                articlesContainer.style.display = 'block';
-                var articlesHtml = '';
-                result.articles_info.forEach(function(article) {
-                    var relevanceScore = article.relevance_score || 0;
-                    var scoreBadge = '<span class="relevance-score-badge">관련성 ' + relevanceScore + '점</span>';
-                    articlesHtml += '<a href="' + escapeHtml(article.url) + '" target="_blank" class="article-item">' +
-                        '<div class="article-title">' + escapeHtml(article.title) + '</div>' +
-                        '<div class="article-meta"><span>' + escapeHtml(article.source) + '</span>' +
-                        '<span> | ' + new Date(article.pub_date).toLocaleDateString('ko-KR') + '</span>' + scoreBadge + '</div></a>';
-                });
-                articlesList.innerHTML = articlesHtml;
-            } else { articlesContainer.style.display = 'none'; }
 
             document.getElementById('resultsSection').style.display = 'block';
             
-            // ★★★ DB에 분석 결과 저장 ★★★
-            saveAnalysisToDatabase(result);
+            if (postId) {
+                saveAnalysisToDatabase(result);
+            }
         }
 
-        // ★★★ DB 저장 함수 ★★★
         function saveAnalysisToDatabase(result) {
-            var params = new URLSearchParams(window.location.search);
-            var postId = params.get('postId');
-            
-            // postId가 없으면 저장하지 않음 (직접 접속한 경우)
-            if (!postId) {
-                console.log('postId가 없어 DB 저장 생략');
-                return;
-            }
-            
-            // original_url 생성
             var originalUrl;
             if (activeTab === 'url') {
                 originalUrl = document.getElementById('newsUrl').value.trim();
             } else {
-                // 텍스트 분석인 경우 postId 기반 키 생성
                 originalUrl = 'text:postId:' + postId;
             }
-            
-            console.log('DB 저장 시작:', {postId: postId, originalUrl: originalUrl});
             
             fetch('<%=request.getContextPath()%>/UI/JSP/saveAnalysisResult.jsp', {
                 method: 'POST',
@@ -303,12 +220,10 @@
                 return response.json(); 
             }).then(function(data) {
                 if (data.success) {
-                    console.log('✓ DB 저장 성공! analysis_id:', data.analysisId);
-                } else {
-                    console.error('✗ DB 저장 실패:', data.error);
+                    console.log('DB 저장 성공:', data.analysisId);
                 }
             }).catch(function(error) {
-                console.error('✗ DB 저장 요청 실패:', error);
+                console.error('DB 저장 실패:', error);
             });
         }
 
@@ -318,51 +233,59 @@
             errorDiv.style.display = 'block';
         }
 
-        function hideError() { document.getElementById('errorMessage').style.display = 'none'; }
-        function hideResults() { document.getElementById('resultsSection').style.display = 'none'; }
-        function escapeHtml(text) { var div = document.createElement('div'); div.textContent = text || ''; return div.innerHTML; }
+        function hideError() { 
+            document.getElementById('errorMessage').style.display = 'none'; 
+        }
+        
+        function hideResults() { 
+            document.getElementById('resultsSection').style.display = 'none'; 
+        }
+        
+        function escapeHtml(text) { 
+            var div = document.createElement('div'); 
+            div.textContent = text || ''; 
+            return div.innerHTML; 
+        }
 
-        document.getElementById('newsUrl').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') { e.preventDefault(); analyzeNews(); }
-        });
-
+        // ★★★ SessionStorage 사용 (URL 파라미터 대신) ★★★
         window.addEventListener('load', function() {
-            console.log('페이지 로드됨');
             try {
-                var params = new URLSearchParams(window.location.search);
-                var type = params.get('type');
-                var data = params.get('data');
-                console.log('받은 파라미터:', {type: type, data: data ? '있음' : '없음'});
-                
-                if (type && data) {
-                    var decodedData = decodeURIComponent(data);
-                    console.log('디코딩된 데이터 길이:', decodedData.length);
+                // SessionStorage에서 데이터 읽기
+                var transferData = sessionStorage.getItem('newsAnalysisData');
+                if (transferData) {
+                    var data = JSON.parse(transferData);
+                    console.log('전달받은 데이터:', data);
                     
-                    if (type === 'url') {
-                        console.log('URL 모드로 전환');
+                    // postId 저장
+                    postId = data.postId;
+                    
+                    // 데이터 설정
+                    if (data.type === 'url') {
                         activeTab = 'url';
                         document.getElementById('urlTab').classList.remove('hidden');
                         document.getElementById('textTab').classList.add('hidden');
                         document.querySelectorAll('.tab-btn')[0].classList.add('active');
                         document.querySelectorAll('.tab-btn')[1].classList.remove('active');
-                        document.getElementById('newsUrl').value = decodedData;
-                    } else if (type === 'text') {
-                        console.log('텍스트 모드로 전환');
+                        document.getElementById('newsUrl').value = data.content;
+                    } else if (data.type === 'text') {
                         activeTab = 'text';
                         document.getElementById('urlTab').classList.add('hidden');
                         document.getElementById('textTab').classList.remove('hidden');
                         document.querySelectorAll('.tab-btn')[0].classList.remove('active');
                         document.querySelectorAll('.tab-btn')[1].classList.add('active');
-                        document.getElementById('newsText').value = decodedData;
+                        document.getElementById('newsText').value = data.content;
                     }
                     
+                    // SessionStorage 데이터 삭제 (일회성)
+                    sessionStorage.removeItem('newsAnalysisData');
+                    
+                    // 자동 분석 시작
                     setTimeout(function() {
-                        console.log('자동 분석 시작');
                         analyzeNews();
-                    }, 1500);
+                    }, 500);
                 }
             } catch (error) { 
-                console.error('파라미터 처리 오류:', error); 
+                console.error('데이터 로드 오류:', error); 
             }
         });
     </script>

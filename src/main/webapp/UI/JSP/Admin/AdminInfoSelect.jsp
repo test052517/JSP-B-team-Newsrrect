@@ -27,7 +27,7 @@
 <%
     Integer userIdObj = (Integer) session.getAttribute("userId");
     if(userIdObj == null) {
-        response.sendRedirect(request.getContextPath() + "/UI/JSP/Login/Login.jsp");
+        response.sendRedirect(request.getContextPath() + "/UI/JSP/Login.jsp");
         return;
     }
 
@@ -246,15 +246,23 @@
                 var inputType = isUrl(content) ? 'url' : 'text';
                 console.log('결정된 타입:', inputType);
                 
-                var encodedContent = encodeURIComponent(content);
-                
-                // ★★★ postId 추가 ★★★
                 var postId = <%= post.getPostId() %>;
-                var popupUrl = '../news_analysis.jsp?type=' + inputType + '&data=' + encodedContent + '&postId=' + postId;
                 
-                console.log('생성된 URL:', popupUrl);
-                console.log('전달되는 타입:', inputType);
-                console.log('전달되는 postId:', postId);
+                // ★★★ SessionStorage 사용 (URL 파라미터 대신) ★★★
+                sessionStorage.setItem('newsAnalysisData', JSON.stringify({
+                    type: inputType,
+                    content: content,
+                    postId: postId
+                }));
+                
+                console.log('SessionStorage에 저장 완료:', {
+                    type: inputType,
+                    contentLength: content.length,
+                    postId: postId
+                });
+                
+                // ★★★ contextPath 포함하여 팝업 열기 ★★★
+                var popupUrl = '<%=request.getContextPath()%>/UI/JSP/news_analysis.jsp';
                 
                 var popup = window.open(
                     popupUrl,

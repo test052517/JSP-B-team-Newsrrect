@@ -133,11 +133,12 @@
         }
     }
     
-    // BEST 댓글 찾기 (추천수가 가장 많은 댓글)
+ // 베스트 댓글 선정 (추천 수가 가장 많거나, 추천수가 같을 경우 최신 댓글을 선택)
     CommentBean bestComment = null;
-    int maxUpvotes = 0;
+    int maxUpvotes = -1; // 최소 추천수는 0일 수 있으므로 -1에서 시작
     for(CommentBean comment : commentList) {
-        if(comment.getUpvotes() > maxUpvotes) {
+        
+        if (comment.getUpvotes() > maxUpvotes) {
             maxUpvotes = comment.getUpvotes();
             bestComment = comment;
         }
@@ -385,7 +386,6 @@
                         <select class="px-3 py-1 border border-gray-200 rounded text-sm">
                             <option>추천순</option>
                             <option>최신순</option>
-                            <option>등록순</option>
                         </select>
                     </div>
                 </div>

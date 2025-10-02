@@ -271,4 +271,36 @@ public class UserMgr {
         
         return false;
     }
+    /**
+     * 사용자 계정 삭제 (영구 삭제)
+     * @param userId 사용자 ID
+     * @return 처리 성공시 true
+     */
+    public boolean deleteUser(int userId) {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        
+        try {
+            con = pool.getConnection("user");
+            String sql = "DELETE FROM user WHERE user_id = ?";
+            pstmt = con.prepareStatement(sql);
+            pstmt.setInt(1, userId);
+            
+            int result = pstmt.executeUpdate();
+            
+            if (result > 0) {
+                System.out.println("사용자 삭제 성공: ID " + userId);
+            }
+            
+            return result > 0;
+            
+        } catch (Exception e) {
+            System.err.println("UserMgr.deleteUser() 오류: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(con, pstmt);
+        }
+        
+        return false;
+    }
 }

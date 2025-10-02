@@ -784,6 +784,7 @@ public class PostMgr {
             
             while(rs.next()) {
                 PostBean post = new PostBean();
+                post.setPostId(rs.getInt("post_id"));
                 post.setType(rs.getString("type"));
                 post.setTitle(rs.getString("title"));
                 post.setContent(rs.getString("content"));
@@ -838,4 +839,61 @@ public class PostMgr {
         }
         return generatedId;
     }
+    
+    /**
+     * 오늘 업로드 정보 검증글 개수
+     */
+    public int getTodayInfoCount(String type) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        int count = 0;
+
+        try {
+            conn = pool.getConnection("user");
+
+            String sql = "SELECT COUNT(*) AS cnt FROM post WHERE type = ? AND status = '공개' and DATE(created_at) = CURDATE()";
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, type);
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                count = rs.getInt("cnt");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        return count;
+    }
+    
+    /**
+     * 전체 업로드 정보 검증글 개수
+     */
+    public int getInfoCount(String type) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        int count = 0;
+
+        try {
+            conn = pool.getConnection("user");
+
+            String sql = "SELECT COUNT(*) AS cnt FROM post WHERE type = ? AND status = '공개'";
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, type);
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                count = rs.getInt("cnt");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        return count;
+    }
+
 }

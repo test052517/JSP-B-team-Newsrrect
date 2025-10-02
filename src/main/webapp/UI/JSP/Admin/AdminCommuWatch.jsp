@@ -5,6 +5,7 @@
 <%@ page import="mgr.CommentMgr" %>
 <%@ page import="mgr.CommentLikeMgr" %>
 <%@ page import="mgr.DBConnectionMgr" %>
+<%@ page import="mgr.UserMgr, beans.UserBean" %> <%-- [추가] UserMgr, UserBean import --%>
 <%@ page import="java.sql.*" %>
 <%@ page import="java.util.*" %>
 <jsp:useBean id="commentLikeMgr" class="mgr.CommentLikeMgr" scope="page" />
@@ -33,6 +34,9 @@
 </head>
 <body class="min-h-screen">
 <%
+    // [추가] 포인트 이미지 처리를 위한 UserMgr 인스턴스화
+    UserMgr userMgr = new UserMgr();
+
     Integer userIdObj = (Integer) session.getAttribute("userId");
     if(userIdObj == null) {
         response.sendRedirect(request.getContextPath() + "/UI/JSP/Login/Login.jsp");
@@ -54,10 +58,15 @@
         out.println("<script>alert('게시글을 찾을 수 없습니다.'); history.back();</script>");
         return;
     }
+
+    // [추가] Post 작성자 UserBean 조회
+    UserBean postAuthorUser = null;
+    if (post != null) {
+        postAuthorUser = userMgr.getUserById(post.getUserId());
+    }
     
     CommentMgr commentMgr = new CommentMgr();
     Vector<CommentBean> commentList = commentMgr.getCommentList(postId);
-    
     Map<Integer, Boolean> likeMap = new HashMap<Integer, Boolean>();
     
     for(CommentBean comment : commentList) {
@@ -66,17 +75,18 @@
         
         boolean isLiked = commentLikeMgr.isLiked(comment.getComment_id(), userIdObj);
         likeMap.put(comment.getComment_id(), isLiked);
-        
         for(CommentBean reply : replyList) {
             boolean isReplyLiked = commentLikeMgr.isLiked(reply.getComment_id(), userIdObj);
             likeMap.put(reply.getComment_id(), isReplyLiked);
         }
     }
     
+    // 베스트 댓글 선정 (추천 수가 가장 많거나, 추천수가 같을 경우 최신 댓글을 선택)
     CommentBean bestComment = null;
-    int maxUpvotes = 0;
+    int maxUpvotes = -1; // 최소 추천수는 0일 수 있으므로 -1에서 시작
     for(CommentBean comment : commentList) {
-        if(comment.getUpvotes() > maxUpvotes) {
+        
+        if (comment.getUpvotes() > maxUpvotes) {
             maxUpvotes = comment.getUpvotes();
             bestComment = comment;
         }
@@ -104,7 +114,15 @@
                         <div class="flex items-center justify-between text-sm text-gray-600">
                             <div class="flex items-center space-x-4">
                                 <div class="flex items-center space-x-1">
-                                    <div class="w-3 h-3 bg-gray-600 rounded"></div>
+                                    <%-- [추가] 게시글 작성자 Point 이미지 삽입 시작 --%>
+                                    <% if (postAuthorUser != null) {
+                                        request.setAttribute("userBean", postAuthorUser);
+                                    } %>
+                                    <jsp:include page="/UI/JSP/PointProc.jsp" /> 
+                                    <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
+                                    <% request.removeAttribute("userBean"); %>
+                                    <%-- [추가] 게시글 작성자 Point 이미지 삽입 끝 --%>
+                                    
                                     <span><%= post.getNickname() %></span>
                                 </div>
                                 <div class="flex items-center space-x-1">
@@ -121,6 +139,7 @@
                                     <span><%= post.getViewCount() %></span>
                                 </div>
                             </div>
+                            
                             <div class="flex items-center space-x-2">
                                 <span><%= post.getCreatedAt() %></span>
                                 <button onclick="openReportModal()" class="text-gray-500 hover:text-red-500 transition-colors">🚨</button>
@@ -139,7 +158,6 @@
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="p-6">
-                <%-- [수정]: enctype="multipart/form-data" 추가 --%>
                 <form id="commentForm" action="<%= request.getContextPath() %>/submitCommuComment" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="postId" value="<%= postId %>">
                     <input type="hidden" name="userId" value="<%= userIdObj %>">
@@ -187,7 +205,13 @@
                 </form>
                 
                 <div class="flex justify-between items-center mb-4 border-t pt-6">
-                    <h3 class="text-lg font-semibold text-gray-900">전체 댓글 <%= commentCount %>개</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">전체 댓글 ${commentList.size()}개</h3>
+                    <div class="flex space-x-2">
+                        <select class="px-3 py-1 border border-gray-200 rounded text-sm">
+                            <option>추천순</option>
+                            <option>최신순</option>
+                        </select>
+                    </div>
                 </div>
 
                 <% if(bestComment != null && bestComment.getUpvotes() > 0) { %>
@@ -198,6 +222,14 @@
                     <div class="border border-gray-200 rounded-lg p-4 bg-white shadow-md">
                         <div class="flex justify-between items-start mb-2">
                             <div class="flex items-center space-x-2">
+                                <%-- [추가] BEST 댓글 작성자 Point 이미지 삽입 시작 --%>
+                                <%
+                                    request.setAttribute("userBean", bestComment); // CommentBean을 userBean으로 임시 사용
+                                %>
+                                <jsp:include page="/UI/JSP/PointProc.jsp" /> 
+                                <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
+                                <% request.removeAttribute("userBean"); %>
+                                <%-- [추가] BEST 댓글 작성자 Point 이미지 삽입 끝 --%>
                                 <span class="font-bold text-primary"><%= bestComment.getNickname() %></span>
                                 <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">BEST</span>
                             </div>
@@ -206,7 +238,7 @@
                                 <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= bestComment.getComment_id() %>)">🚨</span>
                             </div>
                         </div>
-                        
+                       
                         <div class="mb-3">
                             <p class="text-gray-900 font-medium"><%= bestComment.getContent() %></p>
                             <%-- [추가]: BEST 댓글 첨부파일 표시 --%>
@@ -221,7 +253,7 @@
                             </div>
                             <% } %>
                         </div>
-                        
+                
                         <div class="flex items-center space-x-4 text-sm">
                             <% if(likeMap.get(bestComment.getComment_id()) != null && likeMap.get(bestComment.getComment_id())) { %>
                                 <button onclick="upvoteComment(<%= bestComment.getComment_id() %>, <%= postId %>)" 
@@ -260,15 +292,23 @@
 
                         <div class="mt-4 ml-8 space-y-3">
                             <%
-                            @SuppressWarnings("unchecked")
-                            Vector<CommentBean> bestReplyList = (Vector<CommentBean>) request.getAttribute("reply_" + bestComment.getComment_id());
-                            if(bestReplyList != null) {
-                                for(CommentBean reply : bestReplyList) {
-                            %>
+                                @SuppressWarnings("unchecked")
+                                Vector<CommentBean> bestReplyList = (Vector<CommentBean>) request.getAttribute("reply_" + bestComment.getComment_id());
+                                if(bestReplyList != null) {
+                                    for(CommentBean reply : bestReplyList) {
+                                %>
                                 <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: <%= reply.getLayer() * 20 %>px;">
                                     <div class="flex justify-between items-start mb-2">
                                         <span class="font-semibold text-sm text-gray-700">
                                             <% for(int i = 0; i < reply.getLayer(); i++) { %>↳ <% } %>
+                                            <%-- [추가] BEST 댓글의 답글 작성자 Point 이미지 삽입 시작 --%>
+                                            <%
+                                                request.setAttribute("userBean", reply); // CommentBean을 userBean으로 임시 사용
+                                            %>
+                                            <jsp:include page="/UI/JSP/PointProc.jsp" /> 
+                                            <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
+                                            <% request.removeAttribute("userBean"); %>
+                                            <%-- [추가] BEST 댓글의 답글 작성자 Point 이미지 삽입 끝 --%>
                                             <%= reply.getNickname() %>
                                         </span>
                                         <div class="flex items-center space-x-2">
@@ -327,10 +367,11 @@
                                     </div>
                                 </div>
                             <%
+                                    }
                                 }
-                            }
                             %>
                         </div>
+                
                     </div>
                 </div>
                 <% } %>
@@ -342,14 +383,26 @@
                         }
                     %>
                         <div class="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="font-semibold"><%= comment.getNickname() %></span>
-                                <div class="flex items-center space-x-2">
-                                    <span class="text-sm text-gray-500"><%= comment.getCreated_at() %></span>
-                                    <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= comment.getComment_id() %>)">🚨</span>
-                                </div>
+            <div class="flex justify-between items-start mb-2">
+                
+                <div class="flex items-center space-x-2"> <%-- <--- 이 div가 이미지와 닉네임을 묶어줍니다. --%>
+                    <%-- [추가] 일반 댓글 작성자 Point 이미지 삽입 시작 --%>
+                    <%
+                        request.setAttribute("userBean", comment);
+                    %>
+                    <jsp:include page="/UI/JSP/PointProc.jsp" /> 
+                    <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
+                    <% request.removeAttribute("userBean"); %>
+                    <%-- [추가] 일반 댓글 작성자 Point 이미지 삽입 끝 --%>
+                    <span class="font-semibold"><%= comment.getNickname() %></span>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-500"><%= comment.getCreated_at() %></span>
+                    <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= comment.getComment_id() %>)">🚨</span>
+                </div>
                             </div>
-                            
+                      
                             <div class="mb-3">
                                 <p class="text-gray-900"><%= comment.getContent() %></p>
                                 <%-- [추가]: 일반 댓글 첨부파일 표시 --%>
@@ -365,7 +418,7 @@
                                 <% } %>
                             </div>
                             
-                            <div class="flex items-center space-x-4 text-sm">
+                           <div class="flex items-center space-x-4 text-sm">
                                 <% if(likeMap.get(comment.getComment_id()) != null && likeMap.get(comment.getComment_id())) { %>
                                     <button onclick="upvoteComment(<%= comment.getComment_id() %>, <%= postId %>)" 
                                             class="flex items-center space-x-1 transition-colors text-red-500">
@@ -374,7 +427,7 @@
                                         </svg>
                                         <span>추천 <%= comment.getUpvotes() %></span>
                                     </button>
-                                <% } else { %>
+                            <% } else { %>
                                     <button onclick="upvoteComment(<%= comment.getComment_id() %>, <%= postId %>)" 
                                             class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 20 20">
@@ -383,6 +436,7 @@
                                         <span>추천 <%= comment.getUpvotes() %></span>
                                     </button>
                                 <% } %>
+                                
                                 <button onclick="toggleReplyForm(<%= comment.getComment_id() %>)" class="text-gray-600 hover:text-primary">답글쓰기</button>
                             </div>
 
@@ -412,6 +466,14 @@
                                         <div class="flex justify-between items-start mb-2">
                                             <span class="font-semibold text-sm text-gray-700">
                                                 <% for(int i = 0; i < reply.getLayer(); i++) { %>↳ <% } %>
+                                                <%-- [추가] 일반 댓글의 답글 작성자 Point 이미지 삽입 시작 --%>
+                                                <%
+                                                    request.setAttribute("userBean", reply); // CommentBean을 userBean으로 임시 사용
+                                                %>
+                                                <jsp:include page="/UI/JSP/PointProc.jsp" /> 
+                                                <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
+                                                <% request.removeAttribute("userBean"); %>
+                                                <%-- [추가] 일반 댓글의 답글 작성자 Point 이미지 삽입 끝 --%>
                                                 <%= reply.getNickname() %>
                                             </span>
                                             <div class="flex items-center space-x-2">
@@ -497,6 +559,7 @@
                             <label class="block text-sm font-medium text-gray-900 mb-2">신고사유</label>
                             <textarea name="reportReason" class="w-full bg-gray-100 border border-gray-200 rounded-md p-3 text-gray-900" rows="3" placeholder="신고 사유를 입력해주세요" required></textarea>
                         </div>
+                
                         
                         <div class="flex justify-end space-x-3">
                             <button type="button" onclick="closeReportModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
@@ -517,6 +580,7 @@
             <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
                 <form action="<%= request.getContextPath() %>/UI/JSP/Admin/AdminReportCommentProc.jsp" method="post">
                     <input type="hidden" name="commentId" id="reportCommentId"/>
+    
                     <div class="p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-2">신고하기</h3>
                         <div class="border-b border-gray-200 mb-4"></div>
@@ -550,7 +614,6 @@
             },
             fCreator: "createSEditor2"
         });
-
         function submitContents() {
             oEditors.getById["ir1"].exec("UPDATE_CONTENTS_FIELD", []);
             var form = document.getElementById("commentForm");
@@ -617,11 +680,11 @@
                     e.preventDefault();
                     alert("답글 내용을 입력해주세요.");
                     textarea.focus();
+                    
                     return false;
                 }
             }
         });
-
         function openReportModal() {
             document.getElementById('reportModal').classList.remove('hidden');
         }
@@ -644,13 +707,11 @@
                 closeReportModal();
             }
         });
-        
         document.getElementById('commentReportModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeCommentReportModal();
             }
         });
-        
         function clearFiles() {
             document.getElementById('comment-file').value = '';
             document.getElementById('selected-files-display').classList.add('hidden');
@@ -664,16 +725,13 @@
             const selectedFilesDisplay = document.getElementById('selected-files-display');
             const fileCountDisplay = document.getElementById('file-count-display');
             const fileListDetail = document.getElementById('file-list-detail');
-
             if (files.length === 1) {
                 selectedFilesDisplay.classList.remove('hidden');
                 fileCountDisplay.textContent = `1개 파일 선택됨`;
                 
                 fileListDetail.innerHTML = '';
                 const file = files[0];
-                const fileSizeKB = (file.size / 1024).toFixed(1); 
-                
-
+                const fileSizeKB = (file.size / 1024).toFixed(1);
                 fileListDetail.innerHTML = `
                     <div class="flex items-center space-x-2 w-full">
                         <svg class="w-4 h-4 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -683,7 +741,6 @@
                         <span class="text-xs text-gray-500 whitespace-nowrap">${fileSizeKB}</span>
                     </div>
                 `;
-                
             } else {
                 clearFiles();
             }

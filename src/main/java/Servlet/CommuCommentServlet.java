@@ -25,7 +25,6 @@ import mgr.CommentMgr;
 import mgr.DBConnectionMgr;
 
 @WebServlet("/submitCommuComment")
-// 파일 업로드를 위한 설정 (maxFileSize, maxRequestSize는 적절히 설정 필요)
 @MultipartConfig(
     fileSizeThreshold = 1024 * 1024, // 1MB
     maxFileSize = 1024 * 1024 * 5,   // 5MB
@@ -89,6 +88,8 @@ public class CommuCommentServlet extends HttpServlet {
 
         UserBean user = (UserBean) session.getAttribute("loggedInUser");
         int userId = user.getUserId();
+        // [추가] userRole 확인
+        String userRole = user.getRole() != null ? user.getRole() : "사용자"; 
         
         // --- 1. 파일 업로드 처리 및 파일명 확보 ---
         String uploadedFileName = null;
@@ -135,7 +136,6 @@ public class CommuCommentServlet extends HttpServlet {
             }
         }
         
-        // --- 2. 폼 데이터 파라미터 받기 (Part 처리 여부와 관계없이 이후의 getParameter는 작동) ---
         String postIdStr = request.getParameter("postId");
         String content = request.getParameter("content");
         String nowPage = request.getParameter("nowPage");
@@ -187,9 +187,19 @@ public class CommuCommentServlet extends HttpServlet {
             boolean isSuccess = commentMgr.insertComment(comment);
             
             if (isSuccess) {
-                String redirectUrl = request.getContextPath() + "/UI/JSP/User/CommuWatch.jsp?id=" + postId;
+                String redirectUrl;
+                if ("관리자".equals(userRole)) {
+                    redirectUrl = request.getContextPath() + "/UI/JSP/Admin/AdminCommuWatch.jsp?postId=" + postId;
+                } else {
+                    redirectUrl = request.getContextPath() + "/UI/JSP/User/CommuWatch.jsp?id=" + postId;
+                }
+                
                 if (nowPage != null && !nowPage.trim().isEmpty()) {
-                    redirectUrl += "&nowPage=" + nowPage;
+                    if ("관리자".equals(userRole)) {
+                         redirectUrl += "&nowPage=" + nowPage;
+                    } else {
+                         redirectUrl += "&nowPage=" + nowPage;
+                    }
                 }
                 response.sendRedirect(redirectUrl);
             } else {
