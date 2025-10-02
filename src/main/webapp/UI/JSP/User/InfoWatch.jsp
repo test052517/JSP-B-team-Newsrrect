@@ -34,7 +34,13 @@
     pageContext.setAttribute("post", post);
 
     CommentMgr commentMgr = new CommentMgr();
-    Vector<CommentBean> commentList = commentMgr.getCommentList(postId);
+    String sort = request.getParameter("sort");
+    if (sort == null || (!"upvotes".equalsIgnoreCase(sort) && !"latest".equalsIgnoreCase(sort))) {
+        sort = "latest"; // 기본값
+    }
+    
+    Vector<CommentBean> commentList = commentMgr.getCommentList(postId, sort);
+    pageContext.setAttribute("sort", sort);
     
     // 추천 여부를 저장할 Map 생성
     Map<Integer, Boolean> likeMap = new HashMap<Integer, Boolean>();
@@ -59,14 +65,13 @@
     
  // 베스트 댓글 선정 (추천 수가 가장 많거나, 추천수가 같을 경우 최신 댓글을 선택)
     CommentBean bestComment = null;
-    int maxUpvotes = -1; // 최소 추천수는 0일 수 있으므로 -1에서 시작
-    for(CommentBean comment : commentList) {
-        
-        if (comment.getUpvotes() > maxUpvotes) {
-            maxUpvotes = comment.getUpvotes();
-            bestComment = comment;
-        }
-    }
+	int maxUpvotes = 0;
+	for(CommentBean comment : commentList) {
+	    if (comment.getUpvotes() > 0 && comment.getUpvotes() > maxUpvotes) {
+	        maxUpvotes = comment.getUpvotes();
+	        bestComment = comment;
+	    }
+	}
     
     request.setAttribute("likeMap", likeMap);
     request.setAttribute("bestComment", bestComment);
@@ -263,6 +268,7 @@
                         <%-- [수정]: enctype 추가 --%>
                         <form action="${pageContext.request.contextPath}/submitComment" method="post" id="commentForm" enctype="multipart/form-data">
                             <input type="hidden" name="postId" value="${post.postId}" />
+                            <input type="hidden" name="sort" value="${sort}" />
                             <div class="mb-4">
                                 <select name="judgment" class="w-32 px-3 py-2 border border-gray-200 rounded-md">
                                     <option value="">판정 선택</option><option value="참">참</option><option value="거짓">거짓</option><option value="모호">모호</option>
@@ -304,10 +310,12 @@
                 <div class="flex justify-between items-center mb-4 border-t pt-6">
                     <h3 class="text-lg font-semibold text-gray-900">전체 댓글 ${commentList.size()}개</h3>
                     <div class="flex space-x-2">
-                        <select class="px-3 py-1 border border-gray-200 rounded text-sm">
-                            <option>추천순</option>
-                            <option>최신순</option>
-                        </select>
+ 
+                       <select class="px-3 py-1 border border-gray-200 rounded text-sm" onchange="changeSort(this.value)">
+                            <option value="upvotes" ${sort == 'upvotes' ? 'selected' : ''}>추천순</option>
+                            <option value="latest" ${sort == 'latest' ? 'selected' : ''}>최신순</option>
+               
+         </select>
                     </div>
                 </div>
                 
@@ -985,6 +993,11 @@
             } else {
                 clearFiles();
             }
+        }
+        
+        function changeSort(sort) {
+            const postId = '<c:out value="${post.postId}" />';
+            window.location.href = '${pageContext.request.contextPath}/info/watch.do?id=' + postId + '&sort=' + sort;
         }
 
         // [추가] 초기화 및 이벤트 리스너 설정

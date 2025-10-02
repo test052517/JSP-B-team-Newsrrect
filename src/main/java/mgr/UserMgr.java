@@ -60,6 +60,12 @@ public class UserMgr {
      * @param password 사용자 비밀번호
      * @return 로그인 성공시 UserBean 객체, 실패시 null
      */
+    /**
+     * 로그인 처리 (차단된 사용자도 조회 가능하도록 수정)
+     * @param email 사용자 이메일
+     * @param password 사용자 비밀번호
+     * @return 로그인 성공시 UserBean 객체, 실패시 null
+     */
     public UserBean Login(String email, String password) {
         Connection con = null;
         PreparedStatement pstmt = null;
@@ -67,13 +73,12 @@ public class UserMgr {
         UserBean user = null;
         
         try {
-            // "user" 데이터베이스 연결 (newsrrect 데이터베이스)
             con = pool.getConnection("user");
             
-            // 로그인 쿼리 - is_active가 1인 활성 사용자만 로그인 가능
+            // is_active 조건 제거 - 차단된 사용자도 조회 가능하도록
             String sql = "SELECT user_id, email, role, nickname, created_at, is_active, "
                     + "ban_count, report_count, point, attend, introduce "
-                    + "FROM user WHERE email = ? AND password = ? AND is_active = 1";
+                    + "FROM user WHERE email = ? AND password = ?";
             pstmt = con.prepareStatement(sql);
             pstmt.setString(1, email);
             pstmt.setString(2, password);
@@ -95,9 +100,14 @@ public class UserMgr {
                 user.setIntroduce(rs.getString("introduce"));
                 user.setProfileImage("");
                 
-                System.out.println("로그인 성공: " + email + " (" + rs.getString("role") + ")");
+                // 차단 여부 로그
+                if (rs.getInt("is_active") == 0) {
+                    System.out.println("로그인 시도 (차단된 계정): " + email);
+                } else {
+                    System.out.println("로그인 성공: " + email + " (" + rs.getString("role") + ")");
+                }
             } else {
-                System.out.println("로그인 실패: " + email + " - 이메일/비밀번호 불일치 또는 비활성 계정");
+                System.out.println("로그인 실패: " + email + " - 이메일/비밀번호 불일치");
             }
             
         } catch (Exception e) {

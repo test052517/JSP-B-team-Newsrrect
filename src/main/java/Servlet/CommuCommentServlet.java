@@ -140,6 +140,7 @@ public class CommuCommentServlet extends HttpServlet {
         String content = request.getParameter("content");
         String nowPage = request.getParameter("nowPage");
         String parentIdParam = request.getParameter("parentCommentId");
+        String sort = request.getParameter("sort");
         
         String judgment = null; 
         
@@ -201,6 +202,11 @@ public class CommuCommentServlet extends HttpServlet {
                          redirectUrl += "&nowPage=" + nowPage;
                     }
                 }
+                
+                if (sort != null && !sort.trim().isEmpty()) {
+                    redirectUrl += "&sort=" + sort;
+                }
+                
                 response.sendRedirect(redirectUrl);
             } else {
                 showAlertAndBack(response, "댓글 등록에 실패했습니다.");

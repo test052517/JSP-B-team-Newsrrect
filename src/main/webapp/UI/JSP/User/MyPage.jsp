@@ -58,7 +58,7 @@
                 <!-- Profile Section -->
                 <div class="bg-gray-100 rounded-lg p-6 mb-8 relative">
                     <div class="absolute top-4 right-4 text-sm text-gray-500">
-                        가입일: 
+                        <strong>가입 일자:</strong> 
                         <c:choose>
                             <c:when test="${not empty user.createdAt}">
                                 <fmt:parseDate var="joinDateObj" 
@@ -70,6 +70,17 @@
                             <c:otherwise>
                             </c:otherwise>
                         </c:choose>
+                        <br>
+				        <strong>누적 신고:</strong>
+				        <c:out value="${user.reportCount}" default="0" />회
+				
+				        <br>
+				        <strong>누적 차단:</strong> 
+				        <c:out value="${user.banCount}" default="0" />회
+				        
+				        <br>
+				        <strong>누적 포인트:</strong> 
+				        <c:out value="${user.point}" default="0" />
                     </div>
                     
                     <form id="profileForm" action="<%= request.getContextPath() %>/updateProfile.do" method="post" enctype="multipart/form-data">
@@ -78,16 +89,22 @@
 						    <input type="file" id="profileImageInput" name="profileImage" accept="image/*" class="hidden" onchange="handleImageUpload(event)" disabled>
 						    
 						    <div id="profileImageContainer" 
-						         class="w-32 h-32 bg-gray-400 rounded-full mr-6 flex-shrink-0 cursor-pointer flex items-center justify-center"> 
-						        
+						         class="w-32 h-32 bg-white rounded-full mr-6 flex-shrink-0 cursor-pointer flex items-center justify-center"> 
 						        <c:choose>
 						            <c:when test="${not empty user.profileImage}">
-						                <img id="profileImage" src="<%= request.getContextPath() %>/uploads/profiles/${user.profileImage}" 
-						                     alt="프로필 이미지" class="w-full h-full object-cover rounded-full hidden">
+						                <img id="profileImage" 
+										    src="<%= request.getContextPath() %>/uploads/profiles/<c:out value="${user.profileImage}" />"
+										    alt="프로필 이미지" 
+										    class="w-full h-full object-cover rounded-full"
+										    onerror="this.onerror=null; this.src='<%= request.getContextPath() %>/UI/JSP/IMAGES/default_profile.png';"
+										/>
 						            </c:when>
 						            <c:otherwise>
-						                <img id="profileImage" src="" alt="프로필 이미지" class="w-full h-full object-cover rounded-full hidden">
-						                <span id="profileImagePlaceholder" class="text-white text-sm font-medium hidden">이미지 선택</span>
+						                <img id="profileImage" 
+							                 src="<%= request.getContextPath() %>/UI/JSP/IMAGES/default_profile.png"
+							                 alt="기본 이미지" 
+							                 class="w-full h-full object-cover rounded-full"
+							            />
 						            </c:otherwise>
 						        </c:choose>
 						    </div>

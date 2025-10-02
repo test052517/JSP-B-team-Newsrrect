@@ -51,8 +51,13 @@
     
     int postId = Integer.parseInt(postIdStr);
     
+    String nowPage = request.getParameter("nowPage");
+    if (nowPage == null || nowPage.isEmpty()) {
+        nowPage = "1";
+    }
+    
     PostMgr postMgr = new PostMgr();
-    PostBean post = postMgr.getPost(postId);
+PostBean post = postMgr.getPost(postId);
     
     if(post == null) {
         out.println("<script>alert('게시글을 찾을 수 없습니다.'); history.back();</script>");
@@ -82,15 +87,15 @@
     }
     
     // 베스트 댓글 선정 (추천 수가 가장 많거나, 추천수가 같을 경우 최신 댓글을 선택)
-    CommentBean bestComment = null;
-    int maxUpvotes = -1; // 최소 추천수는 0일 수 있으므로 -1에서 시작
-    for(CommentBean comment : commentList) {
-        
-        if (comment.getUpvotes() > maxUpvotes) {
-            maxUpvotes = comment.getUpvotes();
-            bestComment = comment;
-        }
+    
+CommentBean bestComment = null;
+int maxUpvotes = 0;
+for(CommentBean comment : commentList) {
+    if (comment.getUpvotes() > 0 && comment.getUpvotes() > maxUpvotes) {
+        maxUpvotes = comment.getUpvotes();
+        bestComment = comment;
     }
+}
     
     int commentCount = commentList.size();
 %>
@@ -164,6 +169,8 @@
                     <input type="hidden" name="type" value="소통">
                     <input type="hidden" name="status" value="공개">
                     <input type="hidden" name="judgment" value="">
+                    <input type="hidden" name="sort" value="${sort}"> 
+    				<input type="hidden" name="nowPage" value="<%= nowPage %>">
                     
                     <div class="mb-6">
                         <div class="mb-4">
@@ -206,10 +213,11 @@
                 
                 <div class="flex justify-between items-center mb-4 border-t pt-6">
                     <h3 class="text-lg font-semibold text-gray-900">전체 댓글 ${commentList.size()}개</h3>
-                    <div class="flex space-x-2">
-                        <select class="px-3 py-1 border border-gray-200 rounded text-sm">
-                            <option>추천순</option>
-                            <option>최신순</option>
+           
+         			<div class="flex space-x-2">
+                        <select class="px-3 py-1 border border-gray-200 rounded text-sm" onchange="changeSort(this.value)">
+                            <option value="upvotes" ${sort == 'upvotes' ? 'selected' : ''}>추천순</option>
+                            <option value="latest" ${sort == 'latest' ? 'selected' : ''}>최신순</option>
                         </select>
                     </div>
                 </div>
@@ -283,6 +291,8 @@
                                 <input type="hidden" name="type" value="소통">
                                 <input type="hidden" name="status" value="공개">
                                 <input type="hidden" name="judgment" value="">
+                                <input type="hidden" name="sort" value="${sort}">
+                                <input type="hidden" name="nowPage" value="<%= nowPage %>">
                                 <div class="flex space-x-2">
                                     <textarea name="content" rows="2" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" placeholder="답글을 입력하세요..." required></textarea>
                                     <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark text-sm whitespace-nowrap">등록</button>
@@ -448,6 +458,8 @@
                                     <input type="hidden" name="type" value="소통">
                                     <input type="hidden" name="status" value="공개">
                                     <input type="hidden" name="judgment" value="">
+                                    <input type="hidden" name="sort" value="${sort}">
+                                    <input type="hidden" name="nowPage" value="<%= nowPage %>">
                                     <div class="flex space-x-2">
                                         <textarea name="content" rows="2" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" placeholder="답글을 입력하세요..." required></textarea>
                                         <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark text-sm whitespace-nowrap">등록</button>
@@ -744,6 +756,13 @@
             } else {
                 clearFiles();
             }
+        }
+        
+        function changeSort(sort) {
+            const postId = '<%= postId %>';
+            const nowPage = '<%= nowPage %>';
+            
+            window.location.href = `AdminCommuWatch.jsp?postId=${postId}&nowPage=${nowPage}&sort=${sort}`;
         }
 
         document.addEventListener('DOMContentLoaded', function() {

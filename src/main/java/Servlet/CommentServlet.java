@@ -236,11 +236,16 @@ public class CommentServlet extends HttpServlet {
             boolean isSuccess = commentMgr.insertComment(comment);
             
             if (isSuccess) {
+            	String sort = request.getParameter("sort");
                 String redirectUrl;
                 if ("관리자".equals(userRole)) {
                     redirectUrl = request.getContextPath() + "/UI/JSP/Admin/AdminInfoWatch.jsp?postId=" + postId;
                 } else {
                     redirectUrl = request.getContextPath() + "/UI/JSP/User/InfoWatch.jsp?id=" + postId;
+                    
+                    if (sort != null && !sort.isEmpty()) {
+                        redirectUrl += "&sort=" + sort;
+                    }
                 }
                 response.sendRedirect(redirectUrl);
             } else {

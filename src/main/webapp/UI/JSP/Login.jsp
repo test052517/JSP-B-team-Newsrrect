@@ -1,6 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ page import="java.sql.*" %>
 <%@ page import="mgr.UserMgr" %>
+<%@ page import="mgr.DBConnectionMgr" %>
 <%@ page import="beans.UserBean" %>
 <%
 request.setCharacterEncoding("UTF-8");
@@ -19,35 +20,75 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
             UserBean user = userMgr.Login(email.trim(), password.trim());
             
             if (user != null) {
-            	// UserBean 객체 전체를 세션에 저장
-            	session.setAttribute("loggedInUser", user);
-            	
-                // 세션에 사용자 정보 저장
-                session.setAttribute("userId", user.getUserId());
-                session.setAttribute("email", user.getEmail());
-                session.setAttribute("role", user.getRole());
-                session.setAttribute("nickname", user.getNickname());
-                
-                // 로그인 성공 로그
-                System.out.println("로그인 성공! 사용자: " + user.getNickname() + ", 역할: " + user.getRole());
-                
-                // 역할에 따른 리다이렉트
-                String redirectUrl;
-                if ("관리자".equals(user.getRole())) {
-                    redirectUrl = "../JSP/Admin/AdminMainPage.jsp";
+                // 차단 여부 확인
+                if (user.getIsActive() == 0) {
+                    // 차단된 사용자 - 차단 종료일 조회
+                    Connection con = null;
+                    PreparedStatement pstmt = null;
+                    ResultSet rs = null;
+                    String banEndDate = "무기한";
+                    
+                    try {
+                        DBConnectionMgr pool = DBConnectionMgr.getInstance();
+                        con = pool.getConnection("user");
+                        
+                        String sql = "SELECT ban_end_date FROM ban WHERE banned_user_id = ? ORDER BY ban_id DESC LIMIT 1";
+                        pstmt = con.prepareStatement(sql);
+                        pstmt.setInt(1, user.getUserId());
+                        rs = pstmt.executeQuery();
+                        
+                        if (rs.next()) {
+                            String endDate = rs.getString("ban_end_date");
+                            if (endDate != null && !endDate.isEmpty()) {
+                                banEndDate = endDate;
+                            }
+                        }
+                        
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        if (rs != null) try { rs.close(); } catch(Exception e) {}
+                        if (pstmt != null) try { pstmt.close(); } catch(Exception e) {}
+                        if (con != null) {
+                            try { 
+                                DBConnectionMgr.getInstance().freeConnection(con, pstmt, rs);
+                            } catch(Exception e) {}
+                        }
+                    }
+                    
+                    // 차단 메시지 설정 및 alert 출력
+                    out.println("<script>");
+                    out.println("alert('차단당하셨습니다.\\n차단 종료일: " + banEndDate + "');");
+                    out.println("</script>");
+                    errorMessage = "BANNED:" + banEndDate;
+                    
                 } else {
-                    redirectUrl = "../JSP/MainPage.jsp";
+                    // 정상 로그인 처리
+                    session.setAttribute("loggedInUser", user);
+                    session.setAttribute("userId", user.getUserId());
+                    session.setAttribute("email", user.getEmail());
+                    session.setAttribute("role", user.getRole());
+                    session.setAttribute("nickname", user.getNickname());
+                    
+                    System.out.println("로그인 성공! 사용자: " + user.getNickname() + ", 역할: " + user.getRole());
+                    
+                    String redirectUrl;
+                    if ("관리자".equals(user.getRole())) {
+                        redirectUrl = "../JSP/Admin/AdminMainPage.jsp";
+                    } else {
+                        redirectUrl = "../JSP/MainPage.jsp";
+                    }
+                    
+                    System.out.println("리다이렉트 URL: " + redirectUrl);
+                    response.sendRedirect(redirectUrl);
+                    return;
                 }
-                
-                System.out.println("리다이렉트 URL: " + redirectUrl);
-                response.sendRedirect(redirectUrl);
-                return;
             } else {
                 errorMessage = "이메일 또는 비밀번호가 올바르지 않습니다.";
             }
         } catch (Exception e) {
             errorMessage = "로그인 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
-            e.printStackTrace(); // 서버 로그에 오류 기록
+            e.printStackTrace();
         }
     } else {
         errorMessage = "이메일과 비밀번호를 모두 입력해주세요.";
@@ -89,11 +130,24 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
 
                 <form method="POST" action="Login.jsp" class="space-y-6" onsubmit="return validateForm()">
                     <!-- 오류 메시지 -->
-                    <% if (errorMessage != null) { %>
+                    <% if (errorMessage != null) { 
+                        if (errorMessage.startsWith("BANNED:")) {
+                            String banEndDate = errorMessage.substring(7);
+                    %>
+                    <div class="bg-red-50 border border-red-200 rounded-md p-3">
+                        <div class="text-red-800 text-sm font-semibold">계정이 차단되었습니다</div>
+                        <div class="text-red-700 text-sm mt-1">차단 종료일: <%= banEndDate %></div>
+                    </div>
+                    <% 
+                        } else { 
+                    %>
                     <div class="bg-red-50 border border-red-200 rounded-md p-3">
                         <div class="text-red-800 text-sm"><%= errorMessage %></div>
                     </div>
-                    <% } %>
+                    <% 
+                        }
+                    } 
+                    %>
 
                     <!-- 성공 메시지 -->
                     <% if (successMessage != null) { %>
@@ -159,7 +213,6 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
     <div id="footer"></div>
     
     <script>
-        // 폼 유효성 검사
         function validateForm() {
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
@@ -174,7 +227,6 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
                 return false;
             }
 
-            // 이메일 형식 검사
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 alert('올바른 이메일 형식을 입력해주세요.');
@@ -184,11 +236,9 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
 
-     // 헤더와 푸터 로드
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM 로딩 완료');
             
-            // 헤더 로드
             const headerElement = document.getElementById('header');
             const footerElement = document.getElementById('footer');
             
@@ -201,33 +251,20 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
                         if (response.ok) {
                             return response.text();
                         }
-                        throw new Error(`Header load failed with status: ${response.status}`);
+                        throw new Error('Header load failed with status: ' + response.status);
                     })
                     .then(html => {
                         console.log('헤더 HTML 로딩 성공');
                         headerElement.innerHTML = html;
-                        
                     })
                     .catch(error => {
                         console.error('헤더 로드 실패:', error);
-                        headerElement.innerHTML = `
-                            <div class="bg-white border-b border-gray-200">
-                                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                                    <div class="flex justify-between items-center py-4">
-                                        <h1 class="text-xl font-bold text-primary">Newsrrect</h1>
-                                        <nav>
-                                            <a href="../JSP/MainPage.jsp" class="text-gray-700 hover:text-primary">메인</a>
-                                        </nav>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
+                        headerElement.innerHTML = '<div class="bg-white border-b border-gray-200"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div class="flex justify-between items-center py-4"><h1 class="text-xl font-bold text-primary">Newsrrect</h1><nav><a href="../JSP/MainPage.jsp" class="text-gray-700 hover:text-primary">메인</a></nav></div></div></div>';
                     });
             } else {
-                console.warn('헤더 엘리먼트를 찾을 수 없습니다. id="header"가 있는지 확인하세요.');
+                console.warn('헤더 엘리먼트를 찾을 수 없습니다.');
             }
             
-            // 푸터 로드
             if (footerElement) {
                 console.log('푸터 엘리먼트 찾음, 로딩 시작...');
                 
@@ -237,7 +274,7 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
                         if (response.ok) {
                             return response.text();
                         }
-                        throw new Error(`Footer load failed with status: ${response.status}`);
+                        throw new Error('Footer load failed with status: ' + response.status);
                     })
                     .then(html => {
                         console.log('푸터 HTML 로딩 성공');
@@ -245,20 +282,12 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
                     })
                     .catch(error => {
                         console.error('푸터 로드 실패:', error);
-                        // 푸터 로딩 실패시 기본 푸터 표시
-                        footerElement.innerHTML = `
-                            <footer class="bg-gray-50 border-t border-gray-200">
-                                <div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-600">
-                                    <p>&copy; 2024 Newsrrect. All rights reserved.</p>
-                                </div>
-                            </footer>
-                        `;
+                        footerElement.innerHTML = '<footer class="bg-gray-50 border-t border-gray-200"><div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-600"><p>&copy; 2024 Newsrrect. All rights reserved.</p></div></footer>';
                     });
             } else {
-                console.warn('푸터 엘리먼트를 찾을 수 없습니다. id="footer"가 있는지 확인하세요.');
+                console.warn('푸터 엘리먼트를 찾을 수 없습니다.');
             }
 
-            // 개발 모드에서만 테스트 계정 자동 입력 (선택사항)
             if (window.location.hostname === 'localhost') {
                 const emailInput = document.getElementById('email');
                 const passwordInput = document.getElementById('password');
@@ -286,5 +315,3 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
     </script>
 </body>
 </html>
-
-

@@ -189,4 +189,46 @@ public class MyPageMgr {
         }
         return result;
     }
+    
+ // ==============================================================
+ // 5. 사용자 정보 전체 조회 (세션 갱신용)
+ // ==============================================================
+ public beans.UserBean getUserById(int userId) {
+     Connection conn = null;
+     PreparedStatement pstmt = null;
+     ResultSet rs = null;
+     beans.UserBean user = null; // beans.UserBean으로 수정 (패키지명에 따라 변경 가능)
+     
+     // DB의 user 테이블에서 모든 컬럼을 조회하는 SQL
+     String sql = "SELECT * FROM user WHERE user_id = ?"; 
+
+     try {
+         conn = pool.getConnection("user"); 
+         pstmt = conn.prepareStatement(sql);
+         pstmt.setInt(1, userId);
+         rs = pstmt.executeQuery();
+
+         if (rs.next()) {
+             user = new beans.UserBean();
+             user.setUserId(rs.getInt("user_id"));
+             user.setEmail(rs.getString("email"));
+             user.setPassword(rs.getString("password"));
+             user.setRole(rs.getString("role"));
+             user.setNickname(rs.getString("nickname"));
+             user.setCreatedAt(rs.getString("created_at")); 
+             user.setIsActive(rs.getInt("is_active"));
+             user.setBanCount(rs.getInt("ban_count"));
+             user.setReportCount(rs.getInt("report_count"));
+             user.setPoint(rs.getInt("point"));
+             user.setAttend(rs.getString("attend"));
+             user.setIntroduce(rs.getString("introduce"));
+             user.setProfileImage(rs.getString("profileimage")); 
+         }
+     } catch (Exception e) {
+         System.out.println("사용자 정보 조회 오류: " + e.getMessage());
+     } finally {
+         pool.freeConnection(conn, pstmt, rs);
+     }
+     return user;
+ }
 }

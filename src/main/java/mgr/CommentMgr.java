@@ -64,17 +64,28 @@ public class CommentMgr {
         return flag;
     }
 
-    // 부모 댓글 (layer = 0)
     public Vector<CommentBean> getCommentList(int postId) {
+        // 최신순을 기본값으로 사용
+        return getCommentList(postId, "latest"); 
+    }
+    
+    public Vector<CommentBean> getCommentList(int postId, String sort) {
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         Vector<CommentBean> vlist = new Vector<>();
-        // SQL: u.role 추가
-        String sql = "SELECT c.*, u.nickname, u.point, u.role " +
-                     "FROM comment c JOIN user u ON c.user_id = u.user_id " +
-                     "WHERE c.post_id = ? AND c.status = '공개' AND c.layer = 0 " +
-                     "ORDER BY c.upvotes DESC, c.comment_id ASC";
+        
+        String orderByClause;
+        if ("upvotes".equalsIgnoreCase(sort)) {
+            orderByClause = "ORDER BY c.upvotes DESC, c.comment_id DESC"; 
+        } else { 
+            orderByClause = "ORDER BY c.comment_id DESC";
+        }
+        
+        String sql = "SELECT c.*, c.upvotes, u.nickname, u.point, u.role " + // c.upvotes를 명시적으로 추가
+                "FROM comment c JOIN user u ON c.user_id = u.user_id " +
+                "WHERE c.post_id = ? AND c.status = '공개' AND c.layer = 0 " +
+                orderByClause;
 
         try {
             conn = pool.getConnection("user");
@@ -93,7 +104,7 @@ public class CommentMgr {
                 bean.setJudgment(rs.getString("judgment"));
                 bean.setUpvotes(rs.getInt("upvotes"));
                 bean.setPoint(rs.getInt("point")); 
-                bean.setRole(rs.getString("role")); // <<<<<<<<<<<<<<<< ROLE 설정 추가
+                bean.setRole(rs.getString("role"));
                 bean.setAttache(rs.getString("attache")); 
                 
                 vlist.add(bean);
@@ -113,7 +124,6 @@ public class CommentMgr {
         ResultSet rs = null;
         Vector<CommentBean> vlist = new Vector<>();
         
-        // SQL: u.role 추가
         String sql = "SELECT c.*, u.nickname, u.point, u.role " +
                      "FROM comment c JOIN user u ON c.user_id = u.user_id " +
                      "WHERE c.parent_comment_id = ? AND c.status = '공개' " +
@@ -137,7 +147,7 @@ public class CommentMgr {
                 bean.setNickname(rs.getString("nickname"));
                 bean.setUpvotes(rs.getInt("upvotes"));
                 bean.setPoint(rs.getInt("point"));
-                bean.setRole(rs.getString("role")); // <<<<<<<<<<<<<<<< ROLE 설정 추가
+                bean.setRole(rs.getString("role"));
                 bean.setAttache(rs.getString("attache")); 
                 
                 vlist.add(bean);

@@ -33,6 +33,7 @@ public class MyPageServlet extends HttpServlet {
         HttpSession session = request.getSession();
         UserBean user = (UserBean) session.getAttribute("loggedInUser"); // UserBean 객체를 사용한다고 가정
         int userId = (user != null) ? user.getUserId() : 0;
+        
         System.out.println("[MyPageServlet] DEBUG: 추출된 userId 값: " + userId); 
         
      // **디버깅 코드 시작**
@@ -57,6 +58,12 @@ public class MyPageServlet extends HttpServlet {
           
         // 2. MyPageMgr 객체 생성
         MyPageMgr mgr = new MyPageMgr();
+        UserBean updatedUser = mgr.getUserById(userId);
+        
+        if (updatedUser != null) {
+            session.setAttribute("loggedInUser", updatedUser); // 세션 갱신
+            user = updatedUser; // 현재 로직에서 사용할 user 객체도 갱신
+        }
         
         // 3. 데이터 조회 및 request 속성에 저장
         try {
