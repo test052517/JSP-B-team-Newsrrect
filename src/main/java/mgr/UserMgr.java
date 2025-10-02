@@ -313,4 +313,39 @@ public class UserMgr {
         
         return false;
     }
+    
+    public boolean updatePassword(int userId, String currentPassword, String newPassword) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        boolean result = false;
+
+        String checkSql = "SELECT password FROM user WHERE user_id = ?";
+        
+        String updateSql = "UPDATE user SET password = ? WHERE user_id = ?";
+
+        try {
+            conn = pool.getConnection("user");
+            
+            pstmt = conn.prepareStatement(checkSql);
+            pstmt.setInt(1, userId);
+            rs = pstmt.executeQuery();
+            
+            if (rs.next() && rs.getString("password").equals(currentPassword)) {
+                pstmt = conn.prepareStatement(updateSql);
+                pstmt.setString(1, newPassword); 
+                pstmt.setInt(2, userId);
+                
+                if (pstmt.executeUpdate() == 1) {
+                    result = true;
+                }
+            }
+            
+        } catch (Exception e) {
+            System.out.println("비밀번호 업데이트 오류: " + e.getMessage());
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        return result;
+    }
 }

@@ -1,8 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%
-		// 세션에서 User 정보 가져옴
-		beans.UserBean user = (beans.UserBean)session.getAttribute("loggedInUser");
+	beans.UserBean user = (beans.UserBean)session.getAttribute("loggedInUser");
 %>
 <!DOCTYPE html>
 <html lang="ko">
@@ -11,13 +10,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>글 작성 - 소통 게시판 - Newsrrect</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
     <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/styles.css">
-    
-    <%-- 스마트에디터 필수 Javascript 라이브러리 로드 --%>
     <script type="text/javascript" src="<%= request.getContextPath() %>/se2/js/HuskyEZCreator.js" charset="utf-8"></script>
-    
     <script>
         tailwind.config = {
             theme: {
@@ -33,11 +28,7 @@
     </script>
 </head>
 <body class="bg-white min-h-screen">
-        <%if(user.getRole().equals("관리자")){%>
-        <jsp:include page="../Common/AdminHeader.jsp" />
-    	<%}else{ %>
-    	<jsp:include page ="../Common/Header.jsp"/>
-    	<%} %>
+    <jsp:include page="../Common/Header.jsp"/>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="mb-6">
@@ -47,8 +38,7 @@
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="p-6">
-                <form id="writeForm" action="<%= request.getContextPath() %>/writeCommuPost.do" method="post" enctype="multipart/form-data" class="space-y-6">
-                    <!-- 제목 입력 -->
+                <form id="writeForm" class="space-y-6">
                     <div>
                         <label for="title" class="block text-sm font-medium text-gray-900 mb-2">
                             제목 <span class="text-red-500">*</span>
@@ -63,7 +53,6 @@
                         </div>
                     </div>
                     
-                    <!-- 스마트에디터 내용 입력 -->
                     <div>
                         <label for="ir1" class="block text-sm font-medium text-gray-900 mb-2">
                             내용 <span class="text-red-500">*</span>
@@ -71,33 +60,18 @@
                         <textarea name="ir1" id="ir1" rows="10" style="width:100%; height:400px;"></textarea>
                     </div>
                     
-                    <!-- 파일 첨부 -->
                     <div>
-                        <label for="file" class="block text-sm font-medium text-gray-900 mb-2">파일첨부</label>
+                        <label class="block text-sm font-medium text-gray-900 mb-2">파일첨부</label>
                         <div class="flex items-center space-x-2 mb-2">
-                            <input type="file" id="file" name="file" class="hidden" multiple accept="image/*,application/pdf,.doc,.docx,.txt">
-                            <button type="button" onclick="document.getElementById('file').click()" 
+                            <input type="file" id="fileInput" name="file" class="hidden" accept="image/*,application/pdf,.doc,.docx,.txt">
+                            <button type="button" onclick="document.getElementById('fileInput').click()" 
                                     class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
                                 파일 선택
                             </button>
-                            <span class="text-sm text-gray-500">이미지, PDF, 문서 파일 (최대 5개, 각 10MB 이하)</span>
-                        </div>
-                        
-                        <!-- 선택된 파일 표시 -->
-                        <div id="selectedFiles" class="hidden">
-                            <div class="bg-gray-50 border border-gray-200 rounded-md p-3">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-medium text-gray-700">선택된 파일</span>
-                                    <button type="button" onclick="clearAllFiles()" class="text-red-500 hover:text-red-700 text-sm">
-                                        모두 삭제
-                                    </button>
-                                </div>
-                                <div id="fileList" class="space-y-2"></div>
-                            </div>
+                            <span id="fileInfo" class="text-sm text-gray-600">선택된 파일 없음</span>
                         </div>
                     </div>
 
-                    <!-- 작성 가이드 -->
                     <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
                         <h4 class="text-sm font-medium text-blue-900 mb-2">📝 작성 가이드라인</h4>
                         <ul class="text-sm text-blue-800 space-y-1">
@@ -108,7 +82,6 @@
                         </ul>
                     </div>
                     
-                    <!-- 버튼 -->
                     <div class="flex justify-end space-x-3">
                         <button type="button" onclick="goBack()" 
                                 class="px-6 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors font-medium">
@@ -129,161 +102,109 @@
     <script>
         let oEditors = [];
         const contextPath = '<%= request.getContextPath() %>';
-        let selectedFiles = [];
 
-        // 제목 글자 수 카운트
-        const titleInput = document.getElementById('title');
-        const titleCount = document.getElementById('titleCount');
+        // [수정] 전역 변수로 선언만 해둡니다.
+        let fileInput;
+        let fileInfo;
+        let titleInput;
 
-        titleInput.addEventListener('input', function() {
-            titleCount.textContent = this.value.length;
-        });
-
-        // 파일 선택 처리
-        const fileInput = document.getElementById('file');
-        const selectedFilesDiv = document.getElementById('selectedFiles');
-        const fileListDiv = document.getElementById('fileList');
-
-        fileInput.addEventListener('change', function(e) {
-            const files = Array.from(e.target.files);
-            
-            if (selectedFiles.length + files.length > 5) {
-                alert('최대 5개의 파일만 업로드할 수 있습니다.');
-                return;
-            }
-
-            files.forEach(file => {
-                if (file.size > 10 * 1024 * 1024) {
-                    alert(file.name + '은(는) 10MB를 초과합니다.');
-                    return;
-                }
-                selectedFiles.push(file);
-            });
-
-            updateFileList();
-            e.target.value = '';
-        });
-
-        function updateFileList() {
-            if (selectedFiles.length === 0) {
-                selectedFilesDiv.classList.add('hidden');
-                return;
-            }
-
-            selectedFilesDiv.classList.remove('hidden');
-            fileListDiv.innerHTML = '';
-
-            selectedFiles.forEach((file, index) => {
-                const fileItem = document.createElement('div');
-                fileItem.className = 'flex items-center justify-between p-2 bg-white rounded border';
-                
-                const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
-                fileItem.innerHTML = 
-                    '<div class="flex items-center space-x-2">' +
-                        '<svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>' +
-                        '</svg>' +
-                        '<span class="text-sm text-gray-700">' + file.name + '</span>' +
-                        '<span class="text-xs text-gray-500">(' + fileSizeMB + 'MB)</span>' +
-                    '</div>' +
-                    '<button type="button" onclick="removeFile(' + index + ')" class="text-red-500 hover:text-red-700">' +
-                        '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>' +
-                        '</svg>' +
-                    '</button>';
-                
-                fileListDiv.appendChild(fileItem);
-            });
+        // 파일 선택을 취소하는 함수
+        function clearFile() {
+            if (fileInput) fileInput.value = '';
+            if (fileInfo) fileInfo.textContent = '선택된 파일 없음';
         }
 
-        function removeFile(index) {
-            selectedFiles.splice(index, 1);
-            updateFileList();
-        }
-
-        function clearAllFiles() {
-            selectedFiles = [];
-            updateFileList();
-        }
-
-        // DOM 로딩 완료 후 스마트에디터 초기화
+        // DOM 로딩이 완료된 후 스크립트를 실행합니다.
         document.addEventListener('DOMContentLoaded', function() {
+            // 1. 스마트에디터 초기화
             nhn.husky.EZCreator.createInIFrame({
                 oAppRef: oEditors,
                 elPlaceHolder: "ir1",
                 sSkinURI: contextPath + "/se2/SmartEditor2Skin.html",
-                htParams: {
-                    bUseToolbar: true,
-                    bUseVerticalResizer: true,
-                    bUseModeChanger: true,
-                    fOnBeforeUnload: function(){}
-                },
-                fOnAppLoad: function() {
-                    console.log('SmartEditor loaded successfully');
-                },
                 fCreator: "createSEditor2"
+            });
+
+            // 2. HTML 요소들을 변수에 할당합니다.
+            fileInput = document.getElementById('fileInput');
+            fileInfo = document.getElementById('fileInfo');
+            titleInput = document.getElementById('title');
+
+            // 3. 파일 선택(change) 이벤트 리스너를 등록합니다.
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    const fileSizeKB = (file.size / 1024).toFixed(1);
+
+                    if (file.size > 10 * 1024 * 1024) {
+                        alert('최대 10MB의 파일만 업로드할 수 있습니다.');
+                        clearFile();
+                        return;
+                    }
+                    
+                    fileInfo.innerHTML = `
+                        <span class="font-medium text-gray-800">${file.name}</span>
+                        <span class="text-gray-500">(${fileSizeKB} KB)</span>
+                        <button type="button" onclick="clearFile()" class="ml-2 text-red-500 hover:text-red-700 text-sm font-semibold">[삭제]</button>
+                    `;
+                } else {
+                    clearFile();
+                }
+            });
+
+            // 4. 제목 글자 수 카운트 이벤트 리스너를 등록합니다.
+            titleInput.addEventListener('input', function() {
+                document.getElementById('titleCount').textContent = this.value.length;
             });
         });
 
-        // 폼 전송
+        // 폼 전송 함수
         function submitContents() {
-            // 스마트에디터 내용을 textarea에 반영
             oEditors.getById["ir1"].exec("UPDATE_CONTENTS_FIELD", []);
-            console.log("textarea(ir1)의 값:", document.getElementById("ir1").value);
-            const title = document.getElementById("title").value.trim();
-            if (!title) {
+            
+            if (!titleInput.value.trim()) {
                 alert("제목을 입력해주세요.");
-                document.getElementById("title").focus();
                 return;
             }
 
             const content = document.getElementById("ir1").value.trim();
             if (!content || content === "<p>&nbsp;</p>" || content === "<p><br></p>") {
                 alert("내용을 입력해주세요.");
-                oEditors.getById["ir1"].exec("FOCUS");
                 return;
             }
 
-            // 로딩 상태
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.textContent = '작성 중...';
-
-            // FormData 생성
+            
             const formData = new FormData(document.getElementById('writeForm'));
             
-            // 선택된 파일 추가
-            selectedFiles.forEach(file => {
-                formData.append('files', file);
-            });
-
-            // 서버로 전송
             fetch(contextPath + '/writeCommuPost.do', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error('서버 응답 오류');
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     alert('게시글이 성공적으로 작성되었습니다.');
-                    location.href = contextPath + '/UI/JSP/User/CommuWatch.jsp?id=' + data.postId;
+                    location.href = contextPath + '/commu/watch.do?id=' + data.postId;
                 } else {
-                    alert(data.message || '게시글 작성에 실패했습니다.');
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = '작성';
+                    throw new Error(data.message || '게시글 작성 실패');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('게시글 작성 중 오류가 발생했습니다.');
+                alert('게시글 작성 중 오류가 발생했습니다: ' + error.message);
                 submitBtn.disabled = false;
                 submitBtn.textContent = '작성';
             });
         }
 
-        // 취소
+        // 취소 함수
         function goBack() {
-            if (titleInput.value.trim() || selectedFiles.length > 0) {
+            if (titleInput.value.trim() || fileInput.files.length > 0) {
                 if (confirm('작성 중인 내용이 있습니다. 정말 취소하시겠습니까?')) {
                     window.location.href = contextPath + '/UI/JSP/User/CommuBoard.jsp';
                 }
@@ -291,20 +212,6 @@
                 window.location.href = contextPath + '/UI/JSP/User/CommuBoard.jsp';
             }
         }
-	
-        // 페이지 떠날 때 경고
-        window.addEventListener('beforeunload', function(e) {
-            if (titleInput.value.trim() || selectedFiles.length > 0) {
-                e.preventDefault();
-                e.returnValue = '';
-            }
-        });
-
-        
-        <c:if test="${empty sessionScope.user}">
-            alert('로그인이 필요합니다.');
-            location.href = contextPath + '/UI/JSP/Login.jsp';
-        </c:if>
     </script>
 </body>
 </html>

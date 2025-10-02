@@ -56,7 +56,7 @@
             <div class="p-8">
                 <h2 class="text-3xl font-bold text-primary mb-8">비밀번호 변경</h2>
                 
-                <form class="space-y-6">
+                <form class="space-y-6" action="<%= request.getContextPath() %>/ChangePassword.do" method="post">
                     <div>
                         <label for="userId" class="block text-sm font-medium text-gray-700 mb-2">아이디</label>
                         <input type="text" id="userId" value="user1" readonly class="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg text-gray-500 cursor-not-allowed">
@@ -90,44 +90,74 @@
     </main>
 
     <footer class="bg-white border-t border-gray-200 mt-16">
-        <%-- Footer.html 내용을 Common/Footer.jsp로 include 합니다. --%>
         <jsp:include page="../Common/Footer.jsp" />
     </footer>
 
     <script>
-        document.querySelector('form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            if (!currentPassword) {
-                alert('현재 비밀번호를 입력해주세요.');
-                return;
+    document.querySelector('form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+       
+        if (!currentPassword) {
+            alert('현재 비밀번호를 입력해주세요.');
+            return;
+        }
+        if (!newPassword) {
+            alert('새 비밀번호를 입력해주세요.');
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            alert('새 비밀번호와 비밀번호 확인이 일치하지 않습니다.');
+            return;
+        }
+          
+        const formData = new URLSearchParams();
+        formData.append('currentPassword', currentPassword);
+        formData.append('newPassword', newPassword);
+
+        const submitBtn = document.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '변경 중...';
+
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded' 
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('서버 응답 오류가 발생했습니다.');
             }
-            
-            if (!newPassword) {
-                alert('새 비밀번호를 입력해주세요.');
-                return;
+            return response.json(); 
+        })
+        .then(data => {
+            if (data.success) {
+                alert('비밀번호가 성공적으로 변경되었습니다. 다시 로그인해 주세요.');
+                // 성공 시 로그인 페이지로 이동
+                window.location.href = '<%= request.getContextPath() %>/UI/JSP/Login.jsp'; 
+            } else {
+                // 서버에서 보낸 실패 메시지 처리
+                alert('비밀번호 변경 실패: ' + (data.message || '현재 비밀번호 불일치 등 오류'));
             }
-            
-            if (newPassword !== confirmPassword) {
-                alert('새 비밀번호와 비밀번호 확인이 일치하지 않습니다.');
-                return;
-            }
-            
-            if (newPassword.length < 6) {
-                alert('새 비밀번호는 6자 이상이어야 합니다.');
-                return;
-            }
-            
-            alert('비밀번호가 성공적으로 변경되었습니다.');
-            
+        })
+        .catch(error => {
+            console.error('Fetch Error:', error);
+            alert('서버와 통신하는 중 치명적인 오류가 발생했습니다.');
+        })
+        .finally(() => {
+            // 버튼 상태 및 필드 초기화
+            submitBtn.disabled = false;
+            submitBtn.textContent = '변경';
             document.getElementById('currentPassword').value = '';
             document.getElementById('newPassword').value = '';
             document.getElementById('confirmPassword').value = '';
         });
+    });
     </script>
 </body>
 </html>

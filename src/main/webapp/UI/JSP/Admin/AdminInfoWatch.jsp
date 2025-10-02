@@ -6,6 +6,7 @@
 <%@ page import="beans.CommentBean" %>
 <%@ page import="mgr.CommentMgr" %>
 <%@ page import="mgr.CommentLikeMgr" %>
+<%@ page import="mgr.UserMgr, beans.UserBean" %>
 <%@ page import="java.sql.*" %>
 <%@ page import="mgr.DBConnectionMgr" %>
 <%@ page import="java.util.*" %>
@@ -35,6 +36,7 @@
 </head>
 <body class="min-h-screen">
 <%
+    UserMgr userMgr = new UserMgr();
     Integer userIdObj = (Integer) session.getAttribute("userId");
     if(userIdObj == null) {
         response.sendRedirect(request.getContextPath() + "/UI/JSP/Login/Login.jsp");
@@ -135,45 +137,38 @@
         analysisResult = null;
     }
     
-    // CommentMgr를 사용하여 계층적 댓글 구조 가져오기
     CommentMgr commentMgr = new CommentMgr();
     
     if (sort == null || (!"upvotes".equalsIgnoreCase(sort) && !"latest".equalsIgnoreCase(sort))) {
-        sort = "latest"; // 기본값 설정: 최신순
+        sort = "latest";
     }
     
     Vector<CommentBean> commentList = commentMgr.getCommentList(postId, sort);
     pageContext.setAttribute("sort", sort);
     
-    // 추천 상태 맵 생성
     Map<Integer, Boolean> likeMap = new HashMap<Integer, Boolean>();
     
-    // 각 댓글의 답글 목록을 가져와서 request에 설정 및 추천 상태 확인
     for(CommentBean comment : commentList) {
         Vector<CommentBean> replyList = commentMgr.getAllRepliesRecursive(comment.getComment_id());
         request.setAttribute("reply_" + comment.getComment_id(), replyList);
         
-        // 댓글의 추천 상태 확인
         boolean isLiked = commentLikeMgr.isLiked(comment.getComment_id(), userIdObj);
         likeMap.put(comment.getComment_id(), isLiked);
         
-        // 답글의 추천 상태도 확인
         for(CommentBean reply : replyList) {
             boolean isReplyLiked = commentLikeMgr.isLiked(reply.getComment_id(), userIdObj);
             likeMap.put(reply.getComment_id(), isReplyLiked);
         }
     }
     
- // 베스트 댓글 선정 (추천 수가 가장 많거나, 추천수가 같을 경우 최신 댓글을 선택)
-    
-CommentBean bestComment = null;
-int maxUpvotes = 0;
-for(CommentBean comment : commentList) {
-    if (comment.getUpvotes() > 0 && comment.getUpvotes() > maxUpvotes) {
-        maxUpvotes = comment.getUpvotes();
-        bestComment = comment;
+    CommentBean bestComment = null;
+    int maxUpvotes = 0;
+    for(CommentBean comment : commentList) {
+        if (comment.getUpvotes() > 0 && comment.getUpvotes() > maxUpvotes) {
+            maxUpvotes = comment.getUpvotes();
+            bestComment = comment;
+        }
     }
-}
     
     DBConnectionMgr pool = DBConnectionMgr.getInstance();
     Connection conn = null;
@@ -248,10 +243,24 @@ for(CommentBean comment : commentList) {
                     <div class="bg-blue-100 border border-gray-200 rounded-md p-3">
                         <div class="flex items-center justify-between text-sm text-gray-600">
                             <div class="flex items-center space-x-4">
-                                <div class="flex items-center space-x-1">
-                                    <div class="w-3 h-3 bg-gray-600 rounded"></div>
-                                    <span><%= post.getNickname() %></span>
-                                </div>
+							<div class="flex items-center space-x-1">
+							    <%-- [추가] 게시글 작성자 Point 이미지 삽입 시작 --%>
+							    <% 
+							        UserBean postAuthorUser = null;
+							        if (post != null) {
+							            postAuthorUser = userMgr.getUserById(post.getUserId());
+							            if (postAuthorUser != null) {
+							                request.setAttribute("userBean", postAuthorUser);
+							            }
+							        }
+							    %>
+							    <jsp:include page="/UI/JSP/PointProc.jsp" /> 
+							    <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
+							    <% request.removeAttribute("userBean"); %>
+							    <%-- [추가] 게시글 작성자 Point 이미지 삽입 끝 --%>
+							    
+							    <span><%= post.getNickname() %></span>
+							</div>
                                 <div class="flex items-center space-x-1">
                                     <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path>
@@ -358,7 +367,6 @@ for(CommentBean comment : commentList) {
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="p-6">
-                <%-- [수정]: enctype="multipart/form-data" 추가 --%>
                 <form id="commentForm" action="<%= request.getContextPath() %>/submitComment" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="postId" value="<%= postId %>">
                     <input type="hidden" name="type" value="정보">
@@ -379,7 +387,6 @@ for(CommentBean comment : commentList) {
                              <textarea name="content" id="ir1" rows="10" cols="100" style="width:100%; height:300px; display:none;"></textarea>
                         </div>
                         
-                        <%-- [추가]: START: 첨부 파일 섹션 --%>
                         <div class="mb-4">
                             <div class="flex items-center space-x-2 mb-2">
                                 <input type="file" name="commentFile" id="comment-file" class="hidden">
@@ -389,12 +396,10 @@ for(CommentBean comment : commentList) {
                                 <span class="text-sm text-gray-500" id="file-count-display">파일을 선택하세요</span>
                             </div>
                             
-                            <!-- [UI]: 선택된 파일 표시 -->
                             <div id="selected-files-display" class="hidden">
                                 <div class="bg-gray-50 border border-gray-200 rounded-md p-3">
                                     <div class="flex items-center justify-between">
                                         <div id="file-list-detail" class="flex items-center space-x-2">
-                                            <!-- 파일 정보가 여기에 삽입됩니다 -->
                                         </div>
                                         <button type="button" onclick="clearFiles()" class="text-red-500 hover:text-red-700 text-sm font-medium">
                                             삭제
@@ -403,7 +408,6 @@ for(CommentBean comment : commentList) {
                                 </div>
                             </div>
                         </div>
-                        <%-- [추가]: END: 첨부 파일 섹션 --%>
 
                         <div class="flex justify-end">
                             <button type="button" onclick="submitContents();" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors">
@@ -440,6 +444,14 @@ for(CommentBean comment : commentList) {
                     <div class="border border-gray-200 rounded-lg p-4 bg-white shadow-md">
                         <div class="flex justify-between items-start mb-2">
                             <div class="flex items-center space-x-2">
+                                <%-- [추가] BEST 댓글 작성자 Point 이미지 삽입 시작 --%>
+                                <%
+                                    request.setAttribute("userBean", bestComment);
+                                %>
+                                <jsp:include page="/UI/JSP/PointProc.jsp" /> 
+                                <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
+                                <% request.removeAttribute("userBean"); %>
+                                <%-- [추가] BEST 댓글 작성자 Point 이미지 삽입 끝 --%>
                                 <span class="font-bold text-primary"><%= bestComment.getNickname() %></span>
                                 <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">BEST</span>
                             </div>
@@ -447,14 +459,13 @@ for(CommentBean comment : commentList) {
                                 <span class="text-sm text-gray-500"><%= bestComment.getCreated_at() %></span>
                                 <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= bestComment.getComment_id() %>)">🚨</span>
                                 <% if(!"".equals(bestType)) { %>
-                                <span class="px-2 py-1 <%= bestBadgeColor %> rounded text-sm"><%= bestType %></span>
+                                <span class="px-3 py-1.5 <%= bestBadgeColor %> rounded text-base font-medium"><%= bestType %></span>
                                 <% } %>
                             </div>
                         </div>
                         
                         <div class="mb-3">
                             <p class="text-gray-900 font-medium"><%= bestComment.getContent() %></p>
-                            <%-- [추가]: BEST 댓글 첨부파일 표시 --%>
                             <% if(bestComment.getAttache() != null && !bestComment.getAttache().isEmpty()) { %>
                             <div class="mt-2 p-2 bg-gray-100 border border-gray-300 rounded-md inline-flex items-center space-x-2 text-sm text-gray-700">
                                 <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -488,7 +499,6 @@ for(CommentBean comment : commentList) {
                             <button type="button" onclick="toggleReplyForm(<%= bestComment.getComment_id() %>)" class="text-gray-600 hover:text-primary font-medium">답글쓰기</button>
                         </div>
 
-                        <!-- BEST 댓글 답글 작성 폼 -->
                         <div id="replyForm_<%= bestComment.getComment_id() %>" class="mt-4 hidden">
                             <form action="<%= request.getContextPath() %>/submitComment" method="post" class="reply-form">
                                 <input type="hidden" name="postId" value="<%= postId %>">
@@ -504,7 +514,6 @@ for(CommentBean comment : commentList) {
                             </form>
                         </div>
 
-                        <!-- BEST 댓글의 답글 목록 -->
                         <div class="mt-4 ml-8 space-y-3">
                             <%
                             @SuppressWarnings("unchecked")
@@ -521,23 +530,28 @@ for(CommentBean comment : commentList) {
                             %>
                                 <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: <%= reply.getLayer() * 20 %>px;">
                                     <div class="flex justify-between items-start mb-2">
-                                        <div class="flex items-center space-x-2">
-                                            <span class="font-semibold text-sm text-gray-700">
-                                                <% for(int i = 0; i < reply.getLayer(); i++) { %>↳ <% } %>
-                                                <%= reply.getNickname() %>
-                                            </span>
-                                            <% if(!"".equals(replyType)) { %>
-                                            <span class="px-2 py-1 <%= replyBadgeColor %> rounded text-xs"><%= replyType %></span>
-                                            <% } %>
-                                        </div>
+                                        <span class="font-semibold text-sm text-gray-700">
+                                            <% for(int i = 0; i < reply.getLayer(); i++) { %>↳ <% } %>
+                                            <%-- [추가] BEST 댓글의 답글 작성자 Point 이미지 삽입 시작 --%>
+                                            <%
+                                                request.setAttribute("userBean", reply);
+                                            %>
+                                            <jsp:include page="/UI/JSP/PointProc.jsp" /> 
+                                            <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
+                                            <% request.removeAttribute("userBean"); %>
+                                            <%-- [추가] BEST 댓글의 답글 작성자 Point 이미지 삽입 끝 --%>
+                                            <%= reply.getNickname() %>
+                                        </span>
                                         <div class="flex items-center space-x-2">
                                             <span class="text-xs text-gray-500"><%= reply.getCreated_at() %></span>
                                             <span class="text-gray-500 cursor-pointer text-xs" onclick="openCommentReportModal(<%= reply.getComment_id() %>)">🚨</span>
+                                            <% if(!"".equals(replyType)) { %>
+                                            <span class="px-2.5 py-1 <%= replyBadgeColor %> rounded text-sm font-medium"><%= replyType %></span>
+                                            <% } %>
                                         </div>
                                     </div>
                                     <p class="text-sm text-gray-900"><%= reply.getContent() %></p>
                                     
-                                    <%-- [추가]: BEST 답글 첨부파일 표시 --%>
                                     <% if(reply.getAttache() != null && !reply.getAttache().isEmpty()) { %>
                                     <div class="mt-1 text-xs text-gray-500 flex items-center space-x-1">
                                         <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -570,7 +584,6 @@ for(CommentBean comment : commentList) {
                                         <button onclick="toggleReplyForm(<%= reply.getComment_id() %>)" class="text-gray-600 hover:text-primary">답글쓰기</button>
                                     </div>
 
-                                    <!-- 답글에 대한 답글 작성 폼 -->
                                     <div id="replyForm_<%= reply.getComment_id() %>" class="mt-3 hidden">
                                         <form action="<%= request.getContextPath() %>/submitComment" method="post" class="reply-form">
                                             <input type="hidden" name="postId" value="<%= postId %>">
@@ -596,7 +609,6 @@ for(CommentBean comment : commentList) {
                 <!-- 일반 댓글 섹션 -->
                 <div class="space-y-4">
                     <% for(CommentBean comment : commentList) { 
-                        // BEST 댓글은 이미 위에서 표시했으므로 제외
                         if(bestComment != null && comment.getComment_id() == bestComment.getComment_id()) {
                             continue;
                         }
@@ -612,20 +624,27 @@ for(CommentBean comment : commentList) {
                     <div class="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
                         <div class="flex justify-between items-start mb-2">
                             <div class="flex items-center space-x-2">
+                                <%-- [추가] 일반 댓글 작성자 Point 이미지 삽입 시작 --%>
+                                <%
+                                    request.setAttribute("userBean", comment);
+                                %>
+                                <jsp:include page="/UI/JSP/PointProc.jsp" /> 
+                                <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
+                                <% request.removeAttribute("userBean"); %>
+                                <%-- [추가] 일반 댓글 작성자 Point 이미지 삽입 끝 --%>
                                 <span class="font-semibold text-gray-900"><%= comment.getNickname() %></span>
                             </div>
                             <div class="flex items-center space-x-2">
                                 <span class="text-sm text-gray-500"><%= comment.getCreated_at() %></span>
                                 <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= comment.getComment_id() %>)">🚨</span>
                                 <% if(!"".equals(type)) { %>
-                                <span class="px-2 py-1 <%= badgeColor %> rounded text-sm"><%= type %></span>
+                                <span class="px-3 py-1.5 <%= badgeColor %> rounded text-base font-medium"><%= type %></span>
                                 <% } %>
                             </div>
                         </div>
                         
                         <div class="mb-3">
                             <p class="text-gray-900"><%= comment.getContent() %></p>
-                            <%-- [추가]: 일반 댓글 첨부파일 표시 --%>
                             <% if(comment.getAttache() != null && !comment.getAttache().isEmpty()) { %>
                             <div class="mt-2 p-2 bg-gray-100 border border-gray-300 rounded-md inline-flex items-center space-x-2 text-sm text-gray-700">
                                 <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -659,7 +678,6 @@ for(CommentBean comment : commentList) {
                             <button type="button" onclick="toggleReplyForm(<%= comment.getComment_id() %>)" class="text-gray-600 hover:text-primary">답글쓰기</button>
                         </div>
 
-                        <!-- 일반 댓글 답글 작성 폼 -->
                         <div id="replyForm_<%= comment.getComment_id() %>" class="mt-4 hidden">
                             <form action="<%= request.getContextPath() %>/submitComment" method="post" class="reply-form">
                                 <input type="hidden" name="postId" value="<%= postId %>">
@@ -675,7 +693,6 @@ for(CommentBean comment : commentList) {
                             </form>
                         </div>
 
-                        <!-- 일반 댓글의 답글 목록 -->
                         <div class="mt-4 ml-8 space-y-3">
                             <%
                             @SuppressWarnings("unchecked")
@@ -692,23 +709,28 @@ for(CommentBean comment : commentList) {
                             %>
                                 <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: <%= reply.getLayer() * 20 %>px;">
                                     <div class="flex justify-between items-start mb-2">
-                                        <div class="flex items-center space-x-2">
-                                            <span class="font-semibold text-sm text-gray-700">
-                                                <% for(int i = 0; i < reply.getLayer(); i++) { %>↳ <% } %>
-                                                <%= reply.getNickname() %>
-                                            </span>
-                                            <% if(!"".equals(replyType)) { %>
-                                            <span class="px-2 py-1 <%= replyBadgeColor %> rounded text-xs"><%= replyType %></span>
-                                            <% } %>
-                                        </div>
+                                        <span class="font-semibold text-sm text-gray-700">
+                                            <% for(int i = 0; i < reply.getLayer(); i++) { %>↳ <% } %>
+                                            <%-- [추가] 일반 댓글의 답글 작성자 Point 이미지 삽입 시작 --%>
+                                            <%
+                                                request.setAttribute("userBean", reply);
+                                            %>
+                                            <jsp:include page="/UI/JSP/PointProc.jsp" /> 
+                                            <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
+                                            <% request.removeAttribute("userBean"); %>
+                                            <%-- [추가] 일반 댓글의 답글 작성자 Point 이미지 삽입 끝 --%>
+                                            <%= reply.getNickname() %>
+                                        </span>
                                         <div class="flex items-center space-x-2">
                                             <span class="text-xs text-gray-500"><%= reply.getCreated_at() %></span>
                                             <span class="text-gray-500 cursor-pointer text-xs" onclick="openCommentReportModal(<%= reply.getComment_id() %>)">🚨</span>
+                                            <% if(!"".equals(replyType)) { %>
+                                            <span class="px-2.5 py-1 <%= replyBadgeColor %> rounded text-sm font-medium"><%= replyType %></span>
+                                            <% } %>
                                         </div>
                                     </div>
                                     <p class="text-sm text-gray-900"><%= reply.getContent() %></p>
                                     
-                                    <%-- [추가]: 일반 답글 첨부파일 표시 --%>
                                     <% if(reply.getAttache() != null && !reply.getAttache().isEmpty()) { %>
                                     <div class="mt-1 text-xs text-gray-500 flex items-center space-x-1">
                                         <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -741,7 +763,6 @@ for(CommentBean comment : commentList) {
                                         <button onclick="toggleReplyForm(<%= reply.getComment_id() %>)" class="text-gray-600 hover:text-primary">답글쓰기</button>
                                     </div>
 
-                                    <!-- 대댓글에 대한 답글 작성 폼 -->
                                     <div id="replyForm_<%= reply.getComment_id() %>" class="mt-3 hidden">
                                         <form action="<%= request.getContextPath() %>/submitComment" method="post" class="reply-form">
                                             <input type="hidden" name="postId" value="<%= postId %>">
@@ -769,7 +790,6 @@ for(CommentBean comment : commentList) {
 
     <jsp:include page="../Common/Footer.jsp" />
 
-    <!-- 신고 모달 -->
     <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
@@ -799,7 +819,6 @@ for(CommentBean comment : commentList) {
         </div>
     </div>
 
-    <!-- 댓글 신고 모달 -->
     <div id="commentReportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
@@ -853,14 +872,12 @@ for(CommentBean comment : commentList) {
             }
             
             try {
-                // [수정]: 파일 첨부가 있을 경우에도 폼 전송이 되도록 수정
                 form.submit();
             } catch(e) {
                 console.error(e);
             }
         }
 
-        // 추천 기능
         function upvoteComment(commentId, postId) {
             fetch('<%= request.getContextPath() %>/upvoteComment', {
                 method: 'POST',
@@ -883,17 +900,14 @@ for(CommentBean comment : commentList) {
             });
         }
 
-        // 답글 폼 토글 함수
         function toggleReplyForm(commentId) {
             var replyForm = document.getElementById('replyForm_' + commentId);
             if (replyForm) {
-                // 다른 열린 답글 폼들 닫기
                 document.querySelectorAll('[id^="replyForm_"]').forEach(function(form) {
                     if (form.id !== 'replyForm_' + commentId) {
                         form.classList.add('hidden');
                     }
                 });
-                // 현재 답글 폼 토글
                 replyForm.classList.toggle('hidden');
                 if (!replyForm.classList.contains('hidden')) {
                     replyForm.querySelector('textarea').focus();
@@ -901,7 +915,6 @@ for(CommentBean comment : commentList) {
             }
         }
 
-        // 답글 폼 제출 처리
         document.addEventListener('submit', function(e) {
             if (e.target.classList.contains('reply-form')) {
                 var textarea = e.target.querySelector('textarea[name="content"]');
@@ -933,7 +946,6 @@ for(CommentBean comment : commentList) {
             document.getElementById('commentReportModal').classList.add('hidden');
         }
 
-        // 모달 배경 클릭시 닫기
         document.getElementById('reportModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeReportModal();
@@ -946,7 +958,6 @@ for(CommentBean comment : commentList) {
             }
         });
         
-        // [추가] 파일 선택 초기화
         function clearFiles() {
             document.getElementById('comment-file').value = '';
             document.getElementById('selected-files-display').classList.add('hidden');
@@ -954,7 +965,6 @@ for(CommentBean comment : commentList) {
             document.getElementById('file-list-detail').innerHTML = '';
         }
         
-        // [추가] 파일 첨부 핸들러: 단일 파일 정보 상세 표시
         function handleFileSelect(event) {
             const fileInput = event.target;
             const files = fileInput.files;
@@ -968,17 +978,15 @@ for(CommentBean comment : commentList) {
                 
                 fileListDetail.innerHTML = '';
                 const file = files[0];
-                // 파일 크기를 KB 단위로 표시 (소수점 첫째 자리까지)
                 const fileSizeKB = (file.size / 1024).toFixed(1); 
                 
-                // UI 구조에 맞게 상세 정보를 표시
                 fileListDetail.innerHTML = `
                     <div class="flex items-center space-x-2 w-full">
                         <svg class="w-4 h-4 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
                         <span class="text-sm text-gray-700 font-medium truncate flex-1">${file.name}</span>
-                        <span class="text-xs text-gray-500 whitespace-nowrap">${fileSizeKB}</span>
+                        <span class="text-xs text-gray-500 whitespace-nowrap">${fileSizeKB} KB</span>
                     </div>
                 `;
                 
@@ -997,7 +1005,6 @@ for(CommentBean comment : commentList) {
             window.location.href = redirectUrl;
         }
 
-        // [추가] 초기화 및 이벤트 리스너 설정
         document.addEventListener('DOMContentLoaded', function() {
             const fileInput = document.getElementById('comment-file');
             if (fileInput) {

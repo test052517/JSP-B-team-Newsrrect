@@ -1,38 +1,38 @@
-	<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-	<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-	<%
-		// 세션에서 User 정보 가져옴
-		beans.UserBean user = (beans.UserBean)session.getAttribute("loggedInUser");
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%
+	// 세션에서 User 정보 가져옴
+	beans.UserBean user = (beans.UserBean)session.getAttribute("loggedInUser");
 %>
-	<!DOCTYPE html>
-	<html lang="ko">
-	<head>
-	    <meta charset="UTF-8">
-	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	    <title>글 작성 - 정보 검증 게시판 - Newsrrect</title>
-	    <script src="https://cdn.tailwindcss.com"></script>
-	
-	    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
-	    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/styles.css">
-	
-	    <script>
-	        tailwind.config = {
-	            theme: {
-	                extend: {
-	                    colors: {
-	                        'primary': '#5d74f8',
-	                        'primary-dark': '#4c63e7',
-	                        'primary-light': '#7d8ff9'
-	                    }
-	                }
-	            }
-	        }
-	    </script>
-	</head>
-	<body class="bg-white min-h-screen">
-	        <!-- Header -->
-	        <%//System.out.println("현재 로그인 한 유저: "+user.getRole()); %>
-    	<%if(user.getRole().equals("관리자")){%>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>글 작성 - 정보 검증 게시판 - Newsrrect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/styles.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#5d74f8',
+                        'primary-dark': '#4c63e7',
+                        'primary-light': '#7d8ff9'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white min-h-screen">
+        <!-- Header -->
+        <%//System.out.println("현재 로그인 한 유저: "+user.getRole()); %>
+    	<%if(user != null && "관리자".equals(user.getRole())){%>
         <jsp:include page="../Common/AdminHeader.jsp" />
     	<%}else{ %>
     	<jsp:include page ="../Common/Header.jsp"/>
@@ -46,7 +46,7 @@
 	
 	        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
 	            <div class="p-6">
-	                <form id="writeForm" action="${pageContext.request.contextPath}/writeInfoPost.do" method="post" enctype="multipart/form-data" class="space-y-6">
+	                <form id="writeForm" action="${pageContext.request.contextPath}/writeInfoPriorityPost.do" method="post" enctype="multipart/form-data" class="space-y-6">
 	                    <!-- 제목 입력 -->
 	                    <div>
 	                        <label for="title" class="block text-sm font-medium text-gray-900 mb-2">
@@ -101,8 +101,6 @@
 	                            </div>
 	                        </div>
 	                    </div>
-	
-	
 	
 	                    <!-- 작성 가이드라인 -->
 	                    <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
@@ -237,29 +235,39 @@
 	                return;
 	            }
 	
-	            // 로딩 상태
 	            const submitBtn = document.getElementById('submitBtn');
 	            submitBtn.disabled = true;
 	            submitBtn.textContent = '작성 중...';
 	
-	            // FormData 생성
 	            const formData = new FormData(this);
 	            
-	            // 선택된 파일들 추가
 	            selectedFiles.forEach(file => {
 	                formData.append('files', file);
 	            });
 	
-	            // 서버로 전송
+	            // [수정] fetch API 호출 시 에러 처리 강화
 	            fetch(this.action, {
 	                method: 'POST',
 	                body: formData
 	            })
-	            .then(response => response.json())
+	            .then(response => {
+	                if (!response.ok) {
+	                    // 404, 500 등 서버 에러 응답 처리
+	                    throw new Error(`서버 응답 오류: ${response.status} ${response.statusText}`);
+	                }
+	                const contentType = response.headers.get("content-type");
+	                if (contentType && contentType.indexOf("application/json") !== -1) {
+	                    return response.json();
+	                } else {
+	                    // 서버가 JSON이 아닌 다른 형식(예: HTML 에러 페이지)을 반환한 경우
+	                    throw new TypeError("서버로부터 JSON 형식이 아닌 응답을 받았습니다.");
+	                }
+	            })
 	            .then(data => {
 	                if (data.success) {
 	                    alert('게시글이 성공적으로 작성되었습니다.');
-	                    location.href = contextPath + '/UI/JSP/Admin/AdminInfoWatch.jsp?id=' + data.postId;
+	                    // [수정] 작성 완료 후 목록 페이지로 이동
+	                    location.href = contextPath + '/UI/JSP/Admin/AdminInfo.jsp';
 	                } else {
 	                    alert(data.message || '게시글 작성에 실패했습니다.');
 	                    submitBtn.disabled = false;
@@ -268,7 +276,12 @@
 	            })
 	            .catch(error => {
 	                console.error('Error:', error);
-	                alert('게시글 작성 중 오류가 발생했습니다.');
+	                // [수정] 404 에러에 대한 구체적인 안내 메시지 추가
+	                if (error.message.includes("404")) {
+	                    alert('게시글 작성을 처리할 서버 경로를 찾을 수 없습니다 (404 Not Found).\n관리자에게 문의하거나 서블릿 URL 매핑을 확인해주세요.');
+	                } else {
+	                    alert('게시글 작성 중 오류가 발생했습니다: ' + error.message);
+	                }
 	                submitBtn.disabled = false;
 	                submitBtn.textContent = '작성 완료';
 	            });
@@ -277,10 +290,11 @@
 	        function goBack() {
 	            if (titleInput.value.trim() || contentTextarea.value.trim() || selectedFiles.length > 0) {
 	                if (confirm('작성 중인 내용이 있습니다. 정말 취소하시겠습니까?')) {
-	                    window.location.href = contextPath + '/UI/JSP/Admin/AdminInfo.jsp';
+	                    // [수정] 취소 시 이동할 목록 페이지 경로 수정
+	                    window.location.href = contextPath + '/UI/JSP/Admin/AdminInfoBoard.jsp';
 	                }
 	            } else {
-	                window.location.href = contextPath + '/UI/JSP/Admin/AdminInfo.jsp';
+	                window.location.href = contextPath + '/UI/JSP/Admin/AdminInfoBoard.jsp';
 	            }
 	        }
 	

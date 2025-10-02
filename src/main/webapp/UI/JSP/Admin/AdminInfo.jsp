@@ -26,51 +26,46 @@
 </head>
 <body class="min-h-screen bg-gray-50">
 <%
-    // 세션 체크 - 로그인 여부 확인
+    // 세션 체크
     Integer userIdObj = (Integer) session.getAttribute("userId");
-    String userRole = (String) session.getAttribute("userRole");
-    
-    // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
     if(userIdObj == null) {
         response.sendRedirect(request.getContextPath() + "/UI/JSP/Login/Login.jsp");
         return;
     }
     
-    int userId = userIdObj.intValue(); // int로 변환
-    
-    // 관리자 권한 체크 (필요한 경우)
-    // if(!"ADMIN".equals(userRole)) {
-    //     response.sendRedirect(request.getContextPath() + "/UI/JSP/Main.jsp");
-    //     return;
-    // }
-    
-    // 페이징 처리
+    // 페이징 및 검색 파라미터
     int pageSize = 10;
     String pageNum = request.getParameter("page");
     if(pageNum == null) pageNum = "1";
     int currentPage = Integer.parseInt(pageNum);
     int start = (currentPage - 1) * pageSize;
-    
-    // 검색 파라미터
     String searchType = request.getParameter("searchType");
     String searchKeyword = request.getParameter("searchKeyword");
-    
-    // PostMgr 인스턴스 생성 및 데이터 조회
+
+    // 데이터 조회 로직
     PostMgr postMgr = new PostMgr();
-    Vector<PostBean> postList = null;
-    int totalCount = 0;
+    Vector<PostBean> noticeList = null;       // 공지사항 목록
+    Vector<PostBean> regularPostList = null;  // 일반 게시글 목록
+    int totalCount = 0;                       // 일반 게시글의 총 개수 (페이징 기준)
     
     try {
+        // 1. 공지사항 목록 가져오기 (항상 모든 공지사항을 가져옵니다)
+        noticeList = postMgr.getVerificationNotices();
+
+        // 2. 일반 게시글 목록 가져오기 (페이징 및 검색 적용)
         if(searchKeyword != null && !searchKeyword.trim().equals("")) {
-            postList = postMgr.searchPublicPosts(searchType, searchKeyword, start, pageSize);
-            totalCount = postList.size();
+            // 검색어가 있을 경우
+            regularPostList = postMgr.searchRegularVerificationPosts(searchType, searchKeyword, start, pageSize);
+            totalCount = postMgr.getSearchRegularVerificationPostCount(searchType, searchKeyword);
         } else {
-            postList = postMgr.getPublicPosts(start, pageSize);
-            totalCount = postMgr.getPublicPostCount();
+            // 검색어가 없을 경우
+            regularPostList = postMgr.getRegularVerificationPosts(start, pageSize);
+            totalCount = postMgr.getRegularVerificationPostCount();
         }
     } catch(Exception e) {
         e.printStackTrace();
-        postList = new Vector<PostBean>();
+        noticeList = new Vector<PostBean>();
+        regularPostList = new Vector<PostBean>();
         totalCount = 0;
     }
     
@@ -98,7 +93,8 @@
                             <select name="searchType" class="appearance-none bg-gray-100 border border-gray-200 rounded px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
                                 <option value="" <%= (searchType == null || searchType.equals("")) ? "selected" : "" %>>전체</option>
                                 <option value="title" <%= "title".equals(searchType) ? "selected" : "" %>>제목</option>
-                                <option value="author" <%= "author".equals(searchType) ? "selected" : "" %>>작성자</option>
+                                <%-- [수정] 검색 value를 nickname으로 변경 --%>
+                                <option value="nickname" <%= "nickname".equals(searchType) ? "selected" : "" %>>작성자</option>
                             </select>
                             <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                 <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -129,24 +125,10 @@
                 <!-- Table Body -->
                 <div class="bg-white border border-gray-200 border-t-0 rounded-b-lg divide-y divide-gray-100">
                     <%
-                        if(postList != null && postList.size() > 0) {
-                            for(int i = 0; i < postList.size(); i++) {
-                                PostBean post = postList.get(i);
-                                int num = totalCount - (start + i);
+                        boolean noPosts = (noticeList == null || noticeList.isEmpty()) && (regularPostList == null || regularPostList.isEmpty());
+                        if(noPosts) {
                     %>
-                    <div onclick="location.href='AdminInfoWatch.jsp?postId=<%= post.getPostId() %>'" 
-                         class="grid grid-cols-5 gap-4 py-4 px-4 hover:bg-blue-50 transition-colors duration-200 cursor-pointer group">
-                        <div class="text-sm text-gray-900 text-center font-medium"><%= num %></div>
-                        <div class="text-sm text-gray-900 font-medium col-span-2 group-hover:text-primary transition-colors">
-                            <%= post.getTitle() %>
-                        </div>
-                        <div class="text-sm text-gray-600 text-center"><%= post.getNickname() %></div>
-                        <div class="text-sm text-gray-600 text-center"><%= post.getFormattedDate() %></div>
-                    </div>
-                    <%
-                            }
-                        } else {
-                    %>
+                    <!-- 게시글이 하나도 없을 때 -->
                     <div class="py-12 text-center">
                         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -154,6 +136,40 @@
                         <p class="mt-4 text-gray-500 font-medium">등록된 게시글이 없습니다.</p>
                     </div>
                     <%
+                        } else {
+                            // 1. 공지사항 목록 출력
+                            if(noticeList != null && !noticeList.isEmpty()) {
+                                for(PostBean notice : noticeList) {
+                    %>
+                    <div onclick="location.href='AdminInfoWatch.jsp?postId=<%= notice.getPostId() %>'" 
+                         class="grid grid-cols-5 gap-4 py-4 px-4 bg-blue-50 hover:bg-blue-100 transition-colors duration-200 cursor-pointer group">
+                        <div class="text-sm text-center font-medium">
+                            <span class="bg-primary text-white text-xs font-semibold px-2.5 py-1 rounded-full">공지</span>
+                        </div>
+                        <div class="text-sm text-gray-900 font-medium col-span-2 group-hover:text-primary transition-colors truncate"><%= notice.getTitle() %></div>
+                        <div class="text-sm text-gray-600 text-center"><%= notice.getNickname() %></div>
+                        <div class="text-sm text-gray-600 text-center"><%= notice.getFormattedDate() %></div>
+                    </div>
+                    <%
+                                }
+                            }
+                            
+                            // 2. 일반 게시글 목록 출력
+                            if(regularPostList != null && !regularPostList.isEmpty()) {
+                                for(int i = 0; i < regularPostList.size(); i++) {
+                                    PostBean bean = regularPostList.get(i);
+                                    int num = totalCount - (start + i);
+                    %>
+                    <div onclick="location.href='AdminInfoWatch.jsp?postId=<%= bean.getPostId() %>'" 
+                         class="grid grid-cols-5 gap-4 py-4 px-4 hover:bg-blue-50 transition-colors duration-200 cursor-pointer group">
+                        <div class="text-sm text-gray-900 text-center font-medium"><%= num %></div>
+                        <div class="text-sm text-gray-900 font-medium col-span-2 group-hover:text-primary transition-colors truncate"><%= bean.getTitle() %></div>
+                        <div class="text-sm text-gray-600 text-center"><%= bean.getNickname() %></div>
+                        <div class="text-sm text-gray-600 text-center"><%= bean.getFormattedDate() %></div>
+                    </div>
+                    <%
+                                }
+                            }
                         }
                     %>
                 </div>

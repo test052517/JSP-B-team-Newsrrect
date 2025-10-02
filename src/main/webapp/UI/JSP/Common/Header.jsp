@@ -51,10 +51,10 @@
                class="nav-link text-primary hover:text-white hover:bg-[#7d8ff9] px-3 py-2 text-sm font-medium font-paperozi-medium rounded transition-all duration-200 ease-in-out">
                소통 게시판
             </a>
-            <a href="<%= request.getContextPath() %>/Servlet/MyPageServlet" 
-               class="nav-link text-primary hover:text-white hover:bg-[#7d8ff9] px-3 py-2 text-sm font-medium font-paperozi-medium rounded transition-all duration-200 ease-in-out">
-               마이 페이지
-            </a>
+			<a href="<%= request.getContextPath() %>/Servlet/MyPageServlet" 
+			   id="myPageLink" class="nav-link text-primary hover:text-white hover:bg-[#7d8ff9] px-3 py-2 text-sm font-medium font-paperozi-medium rounded transition-all duration-200 ease-in-out">
+			   마이 페이지
+			</a>
         </div>
     </div>
 </nav>
@@ -100,7 +100,22 @@
     document.addEventListener('DOMContentLoaded', function() {
         const navLinks = document.querySelectorAll('nav a.nav-link');
         const currentPath = window.location.pathname;
-
+        const myPageLink = document.getElementById('myPageLink');
+        const isLoggedIn = <%= user != null %>;
+        
+        if (myPageLink) {
+            myPageLink.addEventListener('click', function(e) {
+                if (!isLoggedIn) {
+                    e.preventDefault(); // 기본 이동 동작 차단
+                    
+                    const loginUrl = '<%= request.getContextPath() %>/UI/JSP/Login.jsp';
+                    
+                    alert('로그인이 필요한 서비스입니다.');
+                    window.location.href = loginUrl; // 로그인 페이지로 이동
+                }
+            });
+        }
+        
         navLinks.forEach(link => {
             // 링크의 href 속성 값이 현재 URL에 포함되어 있는지 확인
             if (currentPath.includes(link.getAttribute('href'))) {

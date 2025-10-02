@@ -27,7 +27,7 @@ public class PostMgr {
         try {
             con = pool.getConnection("user");
             // priority 컬럼을 포함하여 INSERT SQL 문을 수정
-            sql = "INSERT INTO post(user_id, type, title, content, status, view_count, created_at, report_count, recommand_count, priority) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            sql = "INSERT INTO post(user_id, type, title, content, status, view_count, created_at, report_count, recommand_count, priority,attache) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
             
             pstmt = con.prepareStatement(sql);
             
@@ -41,6 +41,8 @@ public class PostMgr {
             pstmt.setInt(8, bean.getReportCount());
             pstmt.setInt(9, bean.getRecommandCount());
             pstmt.setInt(10, bean.getPriority()); // priority 값 설정
+            
+            pstmt.setString(11,bean.getAttache() );
             
             pstmt.executeUpdate();
         } catch (Exception e) {
@@ -84,6 +86,7 @@ public class PostMgr {
                 bean.setCreatedAt(rs.getString("created_at"));
                 bean.setReportCount(rs.getInt("report_count"));
                 bean.setRecommandCount(rs.getInt("recommand_count"));
+                if(hasColumn(rs, "attache"))bean.setAttache(rs.getString("attache"));
                 // priority 컬럼이 DB에 존재한다고 가정
                 if (hasColumn(rs, "priority")) {
                     bean.setPriority(rs.getInt("priority"));
@@ -802,42 +805,42 @@ public class PostMgr {
         return vlist;
     }
     
-    public int createPostAndGetId(PostBean bean) {
-        Connection con = null;
+    public int createPostAndGetId(PostBean postBean) {
+        Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-        String sql = null;
         int generatedId = 0;
+        
         try {
-            con = pool.getConnection("user");
-            sql = "INSERT INTO post(user_id, type, title, content, status, view_count, created_at, report_count, recommand_count, priority) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            conn = pool.getConnection("user");
+            String sql = "INSERT INTO post (user_id, type, title, content, status, view_count, created_at, report_count, recommand_count, priority, attache) "
+                       + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             
-            // Statement.RETURN_GENERATED_KEYS 옵션을 사용하여 INSERT 후 생성된 ID를 가져옵니다.
-            pstmt = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             
-            pstmt.setInt(1, bean.getUserId());
-            pstmt.setString(2, bean.getType());
-            pstmt.setString(3, bean.getTitle());
-            pstmt.setString(4, bean.getContent());
-            pstmt.setString(5, bean.getStatus());
-            pstmt.setInt(6, bean.getViewCount());
-            pstmt.setString(7, bean.getCreatedAt());
-            pstmt.setInt(8, bean.getReportCount());
-            pstmt.setInt(9, bean.getRecommandCount());
-            pstmt.setInt(10, bean.getPriority());
+            pstmt.setInt(1, postBean.getUserId());
+            pstmt.setString(2, postBean.getType());
+            pstmt.setString(3, postBean.getTitle());
+            pstmt.setString(4, postBean.getContent());
+            pstmt.setString(5, postBean.getStatus());
+            pstmt.setInt(6, postBean.getViewCount());
+            pstmt.setString(7, postBean.getCreatedAt());
+            pstmt.setInt(8, postBean.getReportCount());
+            pstmt.setInt(9, postBean.getRecommandCount());
+            pstmt.setInt(10, postBean.getPriority());
+            pstmt.setString(11, postBean.getAttache());
             
             pstmt.executeUpdate();
-
-            // 생성된 키(post_id) 가져오기
+            
             rs = pstmt.getGeneratedKeys();
             if (rs.next()) {
                 generatedId = rs.getInt(1);
             }
 
-        } catch (Exception e) {
+        } catch(Exception e) {
             e.printStackTrace();
         } finally {
-            pool.freeConnection(con, pstmt, rs);
+            pool.freeConnection(conn, pstmt, rs);
         }
         return generatedId;
     }
@@ -1050,6 +1053,154 @@ public class PostMgr {
             pool.freeConnection(conn, pstmt, rs);
         }
         return totalCount;
+    }
+    // ============== [ 정보 검증 게시판 (Verification) ] ==============
+
+    // 정보 검증 게시판의 공지사항(priority=1) 목록 가져오기
+    public Vector<PostBean> getVerificationNotices() {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        Vector<PostBean> vlist = new Vector<>();
+        String sql = "SELECT p.*, u.nickname FROM post p JOIN user u ON p.user_id = u.user_id " +
+                     "WHERE p.type = '정보' AND p.priority = 1 ORDER BY p.post_id DESC";
+        try {
+            con = pool.getConnection("user");
+            pstmt = con.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                PostBean bean = new PostBean();
+                bean.setPostId(rs.getInt("post_id"));
+                bean.setTitle(rs.getString("title"));
+                bean.setNickname(rs.getString("nickname"));
+                bean.setCreatedAt(rs.getString("created_at"));
+                bean.setPriority(rs.getInt("priority"));
+                vlist.add(bean);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(con, pstmt, rs);
+        }
+        return vlist;
+    }
+
+    // 정보 검증 게시판의 일반 게시글(priority!=1) 목록 가져오기 (페이징)
+    public Vector<PostBean> getRegularVerificationPosts(int start, int limit) {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        Vector<PostBean> vlist = new Vector<>();
+        String sql = "SELECT p.*, u.nickname FROM post p JOIN user u ON p.user_id = u.user_id " +
+                     "WHERE p.type = '정보' AND p.priority != 1 ORDER BY p.post_id DESC LIMIT ?, ?";
+        try {
+            con = pool.getConnection("user");
+            pstmt = con.prepareStatement(sql);
+            pstmt.setInt(1, start);
+            pstmt.setInt(2, limit);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                PostBean bean = new PostBean();
+                bean.setPostId(rs.getInt("post_id"));
+                bean.setTitle(rs.getString("title"));
+                bean.setNickname(rs.getString("nickname"));
+                bean.setCreatedAt(rs.getString("created_at"));
+                bean.setPriority(rs.getInt("priority"));
+                vlist.add(bean);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(con, pstmt, rs);
+        }
+        return vlist;
+    }
+    
+    // 정보 검증 게시판의 일반 게시글 총 개수
+    public int getRegularVerificationPostCount() {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        int total = 0;
+        String sql = "SELECT count(*) FROM post WHERE type = '정보' AND priority != 1";
+        try {
+            con = pool.getConnection("user");
+            pstmt = con.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                total = rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(con, pstmt, rs);
+        }
+        return total;
+    }
+
+    // 정보 검증 게시판의 일반 게시글 검색 (페이징)
+    public Vector<PostBean> searchRegularVerificationPosts(String searchType, String keyword, int start, int limit) {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        Vector<PostBean> vlist = new Vector<>();
+        String sql = "SELECT p.*, u.nickname FROM post p JOIN user u ON p.user_id = u.user_id " +
+                     "WHERE p.type = '정보' AND p.priority != 1 AND %s LIKE ? " +
+                     "ORDER BY p.post_id DESC LIMIT ?, ?";
+
+        String searchField = "title".equals(searchType) ? "p.title" : "u.nickname";
+        sql = String.format(sql, searchField);
+        
+        try {
+            con = pool.getConnection("user");
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, "%" + keyword + "%");
+            pstmt.setInt(2, start);
+            pstmt.setInt(3, limit);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                PostBean bean = new PostBean();
+                bean.setPostId(rs.getInt("post_id"));
+                bean.setTitle(rs.getString("title"));
+                bean.setNickname(rs.getString("nickname"));
+                bean.setCreatedAt(rs.getString("created_at"));
+                bean.setPriority(rs.getInt("priority"));
+                vlist.add(bean);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(con, pstmt, rs);
+        }
+        return vlist;
+    }
+    
+    // 정보 검증 게시판의 일반 게시글 검색 결과 총 개수
+    public int getSearchRegularVerificationPostCount(String searchType, String keyword) {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        int total = 0;
+        String sql = "SELECT count(*) FROM post p JOIN user u ON p.user_id = u.user_id " +
+                     "WHERE p.type = '정보' AND p.priority != 1 AND %s LIKE ?";
+
+        String searchField = "title".equals(searchType) ? "p.title" : "u.nickname";
+        sql = String.format(sql, searchField);
+        
+        try {
+            con = pool.getConnection("user");
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, "%" + keyword + "%");
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                total = rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(con, pstmt, rs);
+        }
+        return total;
     }
     
 

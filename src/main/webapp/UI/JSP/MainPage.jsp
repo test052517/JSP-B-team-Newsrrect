@@ -129,7 +129,6 @@
                                             <fmt:formatNumber value="${todayUploadCount}" pattern="#,###"/>
                                         </c:when>
                                         <c:otherwise>
-                                            34,567
                                         </c:otherwise>
                                     </c:choose>
                                 </div>
@@ -149,7 +148,6 @@
                                             <fmt:formatNumber value="${totalUploadCount}" pattern="#,###"/>
                                         </c:when>
                                         <c:otherwise>
-                                            0
                                         </c:otherwise>
                                     </c:choose>
                                 </div>
@@ -177,7 +175,7 @@
                                     </svg>
                                 </button>
                             </div>
-                            <div class="bg-white rounded-lg h-64 overflow-hidden">
+                            <div class="bg-white rounded-lg min-h-56 overflow-hidden">
                             <%
                             	Vector <PostBean> recentInfoPosts = pMgr.newListPosts("정보");
                             %>
@@ -220,7 +218,7 @@
                                     </svg>
                                 </button>
                             </div>
-                            <div class="bg-white rounded-lg h-64 overflow-hidden">
+                            <div class="bg-white rounded-lg min-h-56 overflow-hidden">
                             <%
                             	Vector <PostBean> recentCommuPosts = pMgr.newListPosts("소통");
                             %>

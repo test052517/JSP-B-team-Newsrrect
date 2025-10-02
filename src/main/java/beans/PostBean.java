@@ -17,6 +17,9 @@ public class PostBean {
     private int recommandCount;
     private int priority;
     
+    // [추가] 파일 첨부를 위한 필드
+    private String attache;
+    
     // JOIN을 위한 추가 필드
     private String nickname;
     
@@ -97,6 +100,14 @@ public class PostBean {
 		this.nickname = nickname;
 	}
 
+    public String getAttache() {
+        return attache;
+    }
+
+    public void setAttache(String attache) {
+        this.attache = attache;
+    }
+    
     /**
      * 날짜 포맷 변환 (yyyy-MM-dd HH:mm:ss -> MM.dd)
      */

@@ -8,7 +8,6 @@
 <jsp:useBean id="commentLikeMgr" class="mgr.CommentLikeMgr" scope="page" />
 
 <%
-    // [추가] 포인트 이미지 처리를 위한 UserMgr 인스턴스화
     UserMgr userMgr = new UserMgr();
 
     beans.UserBean loggedInUser = (beans.UserBean)session.getAttribute("loggedInUser");
@@ -27,6 +26,7 @@
         return;
     }
     
+    // [수정] PostBean에 attache 필드가 추가되어야 합니다.
     PostBean post = postMgr.getPostByPostID(postId);
     
     if(post == null || !"소통".equals(post.getType())) {
@@ -36,26 +36,22 @@
     
     String sort = request.getParameter("sort");
     if (sort == null || (!"upvotes".equalsIgnoreCase(sort) && !"latest".equalsIgnoreCase(sort))) {
-        sort = "latest"; // 기본값 설정: 최신순
+        sort = "latest"; 
     }
     
     Vector<CommentBean> commentList = commentMgr.getCommentList(postId, sort);
     pageContext.setAttribute("sort", sort);
     
-    // 추천 여부를 저장할 Map 생성
     Map<Integer, Boolean> likeMap = new HashMap<Integer, Boolean>();
     
-    // 각 댓글의 답글 목록을 가져와서 request에 설정 (재귀적으로)
     for(CommentBean comment : commentList) {
         Vector<CommentBean> replyList = commentMgr.getAllRepliesRecursive(comment.getComment_id());
         request.setAttribute("reply_" + comment.getComment_id(), replyList);
         
-        // 로그인한 사용자가 추천했는지 확인
         if(loggedInUser != null) {
             boolean isLiked = commentLikeMgr.isLiked(comment.getComment_id(), loggedInUser.getUserId());
             likeMap.put(comment.getComment_id(), isLiked);
             
-            // 답글들도 추천 여부 확인
             for(CommentBean reply : replyList) {
                 boolean isReplyLiked = commentLikeMgr.isLiked(reply.getComment_id(), loggedInUser.getUserId());
                 likeMap.put(reply.getComment_id(), isReplyLiked);
@@ -63,7 +59,6 @@
         }
     }
     
- // 베스트 댓글 선정 (추천 수가 가장 많거나, 추천수가 같을 경우 최신 댓글을 선택)
     CommentBean bestComment = null;
 	int maxUpvotes = 0;
 	for(CommentBean comment : commentList) {
@@ -90,6 +85,7 @@
     <title><c:out value="${post.title}" /> - 소통 게시판 - Newsrrect</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/styles.css">
     <script type="text/javascript" src="<%= request.getContextPath() %>/se2/js/HuskyEZCreator.js" charset="utf-8"></script>
     <script>
         tailwind.config = {
@@ -118,18 +114,27 @@
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
             <div class="p-6">
-                <div class="mb-4">
+                <!-- [수정] 제목과 다운로드 버튼을 flex로 묶음 -->
+                <div class="mb-4 flex justify-between items-center">
                     <h1 class="text-2xl font-bold text-gray-900"><c:out value="${post.title}" /></h1>
+                    
+                    <!-- [추가] 첨부파일 다운로드 버튼 -->
+                    <c:if test="${not empty post.attache}">
+                        <a href="${pageContext.request.contextPath}/download.do?file=${post.attache}" 
+                           class="inline-flex items-center space-x-2 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            <span>첨부파일 다운로드</span>
+                        </a>
+                    </c:if>
                 </div>
 
                 <div class="mb-6">
                     <div class="bg-blue-100 border border-gray-200 rounded-md p-3">
                         <div class="flex items-center justify-between text-sm text-gray-600">
                             <div class="flex items-center space-x-4">
-                                
-                                <%-- [수정 1] 게시글 작성자 닉네임 앞에 Point 이미지 삽입 --%>
                                 <%
-                                    // Post 작성자(UserBean) 조회 및 설정 (PostBean에는 point 정보가 없어 UserMgr 재조회 필요)
                                     if (post != null) {
                                         UserBean postAuthorUser = userMgr.getUserById(post.getUserId()); 
                                         if (postAuthorUser != null) {

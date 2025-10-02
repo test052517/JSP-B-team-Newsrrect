@@ -1,13 +1,10 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="mgr.PostMgr, beans.PostBean, mgr.CommentMgr, beans.CommentBean, mgr.CommentLikeMgr, java.util.Vector, java.util.HashMap, java.util.Map" %>
 <%@ page import="beans.AnalysisResultBean, mgr.NewsAnalysisMgr" %>
-<%@ page import="mgr.UserMgr, beans.UserBean" %> <%-- [수정 0] UserMgr 및 UserBean import 추가 --%>
+<%@ page import="mgr.UserMgr, beans.UserBean" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <jsp:useBean id="commentLikeMgr" class="mgr.CommentLikeMgr" scope="page" />
 <%
-    // =========================================================================
-    // [추가] 포인트 이미지 처리를 위한 UserMgr 인스턴스화
-    // =========================================================================
     UserMgr userMgr = new UserMgr();
 
     beans.UserBean loggedInUser = (beans.UserBean)session.getAttribute("loggedInUser");
@@ -36,26 +33,22 @@
     CommentMgr commentMgr = new CommentMgr();
     String sort = request.getParameter("sort");
     if (sort == null || (!"upvotes".equalsIgnoreCase(sort) && !"latest".equalsIgnoreCase(sort))) {
-        sort = "latest"; // 기본값
+        sort = "latest";
     }
     
     Vector<CommentBean> commentList = commentMgr.getCommentList(postId, sort);
     pageContext.setAttribute("sort", sort);
     
-    // 추천 여부를 저장할 Map 생성
     Map<Integer, Boolean> likeMap = new HashMap<Integer, Boolean>();
     
-    // 각 댓글의 답글 목록을 가져와서 request에 설정 (재귀적으로)
     for(CommentBean comment : commentList) {
         Vector<CommentBean> replyList = commentMgr.getAllRepliesRecursive(comment.getComment_id());
         request.setAttribute("reply_" + comment.getComment_id(), replyList);
         
-        // 로그인한 사용자가 추천했는지 확인
         if(loggedInUser != null) {
             boolean isLiked = commentLikeMgr.isLiked(comment.getComment_id(), loggedInUser.getUserId());
             likeMap.put(comment.getComment_id(), isLiked);
             
-            // 답글들도 추천 여부 확인
             for(CommentBean reply : replyList) {
                 boolean isReplyLiked = commentLikeMgr.isLiked(reply.getComment_id(), loggedInUser.getUserId());
                 likeMap.put(reply.getComment_id(), isReplyLiked);
@@ -63,21 +56,19 @@
         }
     }
     
- // 베스트 댓글 선정 (추천 수가 가장 많거나, 추천수가 같을 경우 최신 댓글을 선택)
     CommentBean bestComment = null;
-	int maxUpvotes = 0;
-	for(CommentBean comment : commentList) {
-	    if (comment.getUpvotes() > 0 && comment.getUpvotes() > maxUpvotes) {
-	        maxUpvotes = comment.getUpvotes();
-	        bestComment = comment;
-	    }
-	}
+    int maxUpvotes = 0;
+    for(CommentBean comment : commentList) {
+        if (comment.getUpvotes() > 0 && comment.getUpvotes() > maxUpvotes) {
+            maxUpvotes = comment.getUpvotes();
+            bestComment = comment;
+        }
+    }
     
     request.setAttribute("likeMap", likeMap);
     request.setAttribute("bestComment", bestComment);
     pageContext.setAttribute("commentList", commentList);
     
-    // AI 분석 결과 조회 추가
     AnalysisResultBean analysisResult = null;
     
     try {
@@ -109,7 +100,6 @@
     
     pageContext.setAttribute("analysisResult", analysisResult);
     
-    // 신뢰도 계산
     int trueCount = 0;
     int falseCount = 0;
     int ambiguousCount = 0;
@@ -169,22 +159,20 @@
                     <div class="bg-blue-50 border border-gray-200 rounded-md p-3">
                         <div class="flex items-center justify-between text-sm text-gray-600">
                             <div class="flex items-center space-x-4">
-                                <%-- [수정 1] 게시글 작성자 닉네임 앞에 Point 이미지 삽입 --%>
-                                <%
-                                    // Post 작성자(UserBean) 조회 및 설정 (PostBean에는 point 정보가 없어 UserMgr 재조회 필요)
-                                    if (post != null) {
-                                        UserBean postAuthorUser = userMgr.getUserById(post.getUserId()); 
-                                        if (postAuthorUser != null) {
-                                            request.setAttribute("userBean", postAuthorUser);
+                                <div class="flex items-center space-x-1">
+                                    <%
+                                        if (post != null) {
+                                            UserBean postAuthorUser = userMgr.getUserById(post.getUserId()); 
+                                            if (postAuthorUser != null) {
+                                                request.setAttribute("userBean", postAuthorUser);
+                                            }
                                         }
-                                    }
-                                %>
-                                <jsp:include page="/UI/JSP/PointProc.jsp" /> 
-                                <span>
+                                    %>
+                                    <jsp:include page="/UI/JSP/PointProc.jsp" /> 
                                     <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
-                                    작성자: <c:out value="${post.nickname}" />
-                                </span>
-                                <% request.removeAttribute("userBean"); %>
+                                    <% request.removeAttribute("userBean"); %>
+                                    <span><c:out value="${post.nickname}" /></span>
+                                </div>
 
                                 <div class="flex items-center space-x-1">
                                     <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path></svg>
@@ -264,7 +252,6 @@
             <div class="p-6">
                 <c:if test="${not empty loggedInUser}">
                     <div class="mb-6">
-                        <%-- [수정]: enctype 추가 --%>
                         <form action="${pageContext.request.contextPath}/submitComment" method="post" id="commentForm" enctype="multipart/form-data">
                             <input type="hidden" name="postId" value="${post.postId}" />
                             <input type="hidden" name="sort" value="${sort}" />
@@ -275,7 +262,6 @@
                             </div>
                             <div class="mb-4"><textarea name="content" id="ir1" rows="5" style="width:100%; display:none;"></textarea></div>
                             
-                            <%-- [추가]: 파일 첨부 UI 시작 --%>
                             <div class="mb-4">
                                 <div class="flex items-center space-x-2 mb-2">
                                     <input type="file" name="commentFile" id="comment-file" class="hidden">
@@ -285,12 +271,10 @@
                                     <span class="text-sm text-gray-500" id="file-count-display">파일을 선택하세요</span>
                                 </div>
                                 
-                                <!-- [UI]: 선택된 파일 표시 -->
                                 <div id="selected-files-display" class="hidden">
                                     <div class="bg-gray-50 border border-gray-200 rounded-md p-3">
                                         <div class="flex items-center justify-between">
                                             <div id="file-list-detail" class="flex items-center space-x-2">
-                                                <!-- 파일 정보가 여기에 삽입됩니다 -->
                                             </div>
                                             <button type="button" onclick="clearFiles()" class="text-red-500 hover:text-red-700 text-sm font-medium">
                                                 삭제
@@ -299,7 +283,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <%-- [추가]: 파일 첨부 UI 끝 --%>
                             
                             <div class="flex justify-end"><button type="button" onclick="submitContents();" class="px-6 py-2 bg-primary text-white rounded-md">댓글등록</button></div>
                         </form>
@@ -309,12 +292,10 @@
                 <div class="flex justify-between items-center mb-4 border-t pt-6">
                     <h3 class="text-lg font-semibold text-gray-900">전체 댓글 ${commentList.size()}개</h3>
                     <div class="flex space-x-2">
- 
                        <select class="px-3 py-1 border border-gray-200 rounded text-sm" onchange="changeSort(this.value)">
                             <option value="upvotes" ${sort == 'upvotes' ? 'selected' : ''}>추천순</option>
                             <option value="latest" ${sort == 'latest' ? 'selected' : ''}>최신순</option>
-               
-         </select>
+                       </select>
                     </div>
                 </div>
                 
@@ -327,80 +308,85 @@
                         <div class="border border-gray-200 rounded-lg p-4 bg-white shadow-md">
                             <div class="flex justify-between items-start mb-2">
                                 <div class="flex items-center space-x-2">
-                                    <%-- [수정 2-1] BEST 댓글 작성자 CommentBean 설정 --%>
                                     <%
-                                        beans.CommentBean bestCommentAuthor = (beans.CommentBean) pageContext.getAttribute("bestComment"); 
-                                        if (bestCommentAuthor != null) {
-                                            request.setAttribute("userBean", bestCommentAuthor); // CommentBean을 userBean으로 임시 사용
-                                        }
+                                        request.setAttribute("userBean", bestComment);
                                     %>
                                     <jsp:include page="/UI/JSP/PointProc.jsp" /> 
-                                    <span class="font-bold text-primary">
-                                        <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
-                                        <c:out value="${bestComment.nickname}" />
-                                    </span>
+                                    <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
                                     <% request.removeAttribute("userBean"); %>
-
+                                    <span class="font-bold text-primary"><%= bestComment.getNickname() %></span>
                                     <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">BEST</span>
-                                    <c:if test="${not empty bestComment.judgment}">
-                                        <c:set var="judgmentColor" value="${bestComment.judgment == '참' ? 'green' : (bestComment.judgment == '거짓' ? 'red' : 'yellow')}" />
-                                        <span class="px-2 py-1 bg-${judgmentColor}-100 text-${judgmentColor}-800 rounded text-sm">${bestComment.judgment}</span>
-                                    </c:if>
                                 </div>
                                 <div class="flex items-center space-x-2">
-                                    <span class="text-sm text-gray-500">${bestComment.formattedDate}</span>
-                                    <c:if test="${not empty loggedInUser}"><span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(${bestComment.comment_id})">🚨</span></c:if>
+                                    <span class="text-sm text-gray-500"><%= bestComment.getCreated_at() %></span>
+                                    <c:if test="${not empty loggedInUser}">
+                                        <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= bestComment.getComment_id() %>)">🚨</span>
+                                    </c:if>
+                                    <%
+                                        String bestType = bestComment.getJudgment() != null ? bestComment.getJudgment() : "";
+                                        String bestBadgeColor = "";
+                                        if("참".equals(bestType)) bestBadgeColor = "bg-green-100 text-green-800";
+                                        else if("거짓".equals(bestType)) bestBadgeColor = "bg-red-100 text-red-800";
+                                        else if("모호".equals(bestType)) bestBadgeColor = "bg-yellow-100 text-yellow-800";
+                                    %>
+                                    <% if(!"".equals(bestType)) { %>
+                                    <span class="px-3 py-1.5 <%= bestBadgeColor %> rounded text-base font-medium"><%= bestType %></span>
+                                    <% } %>
                                 </div>
                             </div>
-                            <div class="text-gray-900 mb-3 font-medium"><c:out value="${bestComment.content}" escapeXml="false" /></div>
                             
-                            <%-- [추가] BEST 댓글 첨부파일 표시 --%>
-                            <c:if test="${not empty bestComment.attache}">
-                                <div class="mt-2 p-2 bg-gray-100 border border-gray-300 rounded-md inline-flex items-center space-x-2 text-sm text-gray-700">
-                                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L18 14"></path>
-                                    </svg>
-                                    <a href="<%= request.getContextPath() %>/comment_file/${bestComment.attache}" class="hover:underline" target="_blank">
-                                        첨부파일 다운로드
-                                    </a>
+                            <div class="mb-3">
+                                <p class="text-gray-900 font-medium"><c:out value="${bestComment.content}" escapeXml="false" /></p>
+                                
+                                <c:if test="${not empty bestComment.attache}">
+                                    <div class="mt-2 p-2 bg-gray-100 border border-gray-300 rounded-md inline-flex items-center space-x-2 text-sm text-gray-700">
+                                        <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L18 14"></path>
+                                        </svg>
+                                        <a href="<%= request.getContextPath() %>/comment_file/${bestComment.attache}" class="hover:underline" target="_blank">
+                                            첨부파일 다운로드
+                                        </a>
+                                    </div>
+                                </c:if>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-4 text-sm">
+                                    <c:choose>
+                                        <c:when test="${loggedInUser != null}">
+                                            <c:choose>
+                                                <c:when test="${likeMap[bestComment.comment_id]}">
+                                                    <button onclick="upvoteComment(${bestComment.comment_id}, ${post.postId})" 
+                                                            class="flex items-center space-x-1 transition-colors text-red-500 font-semibold">
+                                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                        </svg>
+                                                        <span>추천 ${bestComment.upvotes}</span>
+                                                    </button>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <button onclick="upvoteComment(${bestComment.comment_id}, ${post.postId})" 
+                                                            class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                        </svg>
+                                                        <span>추천 ${bestComment.upvotes}</span>
+                                                    </button>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <div class="flex items-center space-x-1 text-gray-600">
+                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span>추천 ${bestComment.upvotes}</span>
+                                            </div>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </div>
-                            </c:if>
-                            
-                            <div class="flex items-center space-x-4 text-sm">
-                                <c:choose>
-                                    <c:when test="${loggedInUser != null}">
-                                        <c:choose>
-                                            <c:when test="${likeMap[bestComment.comment_id]}">
-                                                <button onclick="upvoteComment(${bestComment.comment_id}, ${post.postId})" 
-                                                        class="flex items-center space-x-1 transition-colors text-red-500 font-semibold">
-                                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                                    </svg>
-                                                    <span>추천 ${bestComment.upvotes}</span>
-                                                </button>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <button onclick="upvoteComment(${bestComment.comment_id}, ${post.postId})" 
-                                                        class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                                    </svg>
-                                                    <span>추천 ${bestComment.upvotes}</span>
-                                                </button>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <div class="flex items-center space-x-1 text-gray-600">
-                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                            </svg>
-                                            <span>추천 ${bestComment.upvotes}</span>
-                                        </div>
-                                    </c:otherwise>
-                                </c:choose>
                                 <c:if test="${not empty loggedInUser}">
-                                    <button onclick="toggleReplyForm(${bestComment.comment_id})" class="text-gray-600 hover:text-primary font-medium">답글쓰기</button>
+                                    <button onclick="toggleReplyForm(${bestComment.comment_id})" class="text-gray-600 hover:text-primary font-medium text-sm">답글쓰기</button>
                                 </c:if>
                             </div>
 
@@ -424,86 +410,98 @@
                             <div class="mt-4 ml-8 space-y-3">
                                 <c:set var="replyListKey" value="reply_${bestComment.comment_id}" />
                                 <c:forEach var="reply" items="${requestScope[replyListKey]}">
-                                    
-                                    <%-- [수정 3-1] 답글 작성자 CommentBean 설정 --%>
                                     <%
                                         beans.CommentBean currentReply = (beans.CommentBean) pageContext.getAttribute("reply"); 
                                         if (currentReply != null) {
-                                            request.setAttribute("userBean", currentReply); // CommentBean을 userBean으로 임시 사용
+                                            request.setAttribute("userBean", currentReply);
                                         }
                                     %>
                                     <jsp:include page="/UI/JSP/PointProc.jsp" /> 
 
                                     <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: ${reply.layer * 20}px;">
                                         <div class="flex justify-between items-start mb-2">
-                                            <div class="flex items-center space-x-2">
+                                            <div class="flex items-center space-x-1">
                                                 <span class="font-semibold text-sm text-gray-700">
                                                     <c:forEach begin="1" end="${reply.layer}">↳ </c:forEach>
-                                                    <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
+                                                </span>
+                                                <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
+                                                <span class="font-semibold text-sm text-gray-700">
                                                     <c:out value="${reply.nickname}" />
                                                 </span>
-                                                <c:if test="${not empty reply.judgment}">
-                                                    <c:set var="replyJudgmentColor" value="${reply.judgment == '참' ? 'green' : (reply.judgment == '거짓' ? 'red' : 'yellow')}" />
-                                                    <span class="px-2 py-1 bg-${replyJudgmentColor}-100 text-${replyJudgmentColor}-800 rounded text-xs">${reply.judgment}</span>
-                                                </c:if>
                                             </div>
-                                            <% request.removeAttribute("userBean"); %>
                                             <div class="flex items-center space-x-2">
-                                                <span class="text-xs text-gray-500">${reply.formattedDate}</span>
+                                                <span class="text-xs text-gray-500">${reply.created_at}</span>
                                                 <c:if test="${not empty loggedInUser}">
                                                     <span class="text-gray-500 cursor-pointer text-xs" onclick="openCommentReportModal(${reply.comment_id})">🚨</span>
                                                 </c:if>
+                                                <c:if test="${not empty reply.judgment}">
+                                                    <%
+                                                        beans.CommentBean replyBean = (beans.CommentBean) pageContext.getAttribute("reply");
+                                                        String replyType = replyBean != null && replyBean.getJudgment() != null ? replyBean.getJudgment() : "";
+                                                        String replyBadgeColor = "";
+                                                        if("참".equals(replyType)) replyBadgeColor = "bg-green-100 text-green-800";
+                                                        else if("거짓".equals(replyType)) replyBadgeColor = "bg-red-100 text-red-800";
+                                                        else if("모호".equals(replyType)) replyBadgeColor = "bg-yellow-100 text-yellow-800";
+                                                    %>
+                                                    <% if(!"".equals(replyType)) { %>
+                                                    <span class="px-2.5 py-1 <%= replyBadgeColor %> rounded text-sm font-medium"><%= replyType %></span>
+                                                    <% } %>
+                                                </c:if>
                                             </div>
+                                        </div><% request.removeAttribute("userBean"); %>
+                                        
+                                        <div class="mb-2">
+                                            <p class="text-sm text-gray-900"><c:out value="${reply.content}" escapeXml="false" /></p>
+                                            
+                                            <c:if test="${not empty reply.attache}">
+                                                <div class="mt-1 text-xs text-gray-500 flex items-center space-x-1">
+                                                    <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L18 14"></path>
+                                                    </svg>
+                                                    <a href="<%= request.getContextPath() %>/comment_file/${reply.attache}" class="hover:underline" target="_blank">
+                                                        첨부파일 다운로드
+                                                    </a>
+                                                </div>
+                                            </c:if>
                                         </div>
-                                        <p class="text-sm text-gray-900"><c:out value="${reply.content}" escapeXml="false" /></p>
                                         
-                                        <%-- [추가] 답글 첨부파일 표시 --%>
-                                        <c:if test="${not empty reply.attache}">
-                                            <div class="mt-1 text-xs text-gray-500 flex items-center space-x-1">
-                                                 <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L18 14"></path>
-                                                </svg>
-                                                <a href="<%= request.getContextPath() %>/comment_file/${reply.attache}" class="hover:underline" target="_blank">
-                                                    첨부파일 다운로드
-                                                </a>
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center space-x-3 text-xs">
+                                                <c:choose>
+                                                    <c:when test="${loggedInUser != null}">
+                                                        <c:choose>
+                                                            <c:when test="${likeMap[reply.comment_id]}">
+                                                                <button onclick="upvoteComment(${reply.comment_id}, ${post.postId})" 
+                                                                        class="flex items-center space-x-1 transition-colors text-red-500">
+                                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                                    </svg>
+                                                                    <span>추천 ${reply.upvotes}</span>
+                                                                </button>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <button onclick="upvoteComment(${reply.comment_id}, ${post.postId})" 
+                                                                        class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
+                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                                    </svg>
+                                                                    <span>추천 ${reply.upvotes}</span>
+                                                                </button>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <div class="flex items-center space-x-1 text-gray-600">
+                                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                            </svg>
+                                                            <span>추천 ${reply.upvotes}</span>
+                                                        </div>
+                                                    </c:otherwise>
+                                                </c:choose>
                                             </div>
-                                        </c:if>
-                                        
-                                        <div class="flex items-center space-x-3 mt-2 text-xs">
-                                            <c:choose>
-                                                <c:when test="${loggedInUser != null}">
-                                                    <c:choose>
-                                                        <c:when test="${likeMap[reply.comment_id]}">
-                                                            <button onclick="upvoteComment(${reply.comment_id}, ${post.postId})" 
-                                                                    class="flex items-center space-x-1 transition-colors text-red-500">
-                                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                                                </svg>
-                                                                <span>추천 ${reply.upvotes}</span>
-                                                            </button>
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <button onclick="upvoteComment(${reply.comment_id}, ${post.postId})" 
-                                                                    class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
-                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 20 20">
-                                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                                                </svg>
-                                                                <span>추천 ${reply.upvotes}</span>
-                                                            </button>
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <div class="flex items-center space-x-1 text-gray-600">
-                                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                                        </svg>
-                                                        <span>추천 ${reply.upvotes}</span>
-                                                    </div>
-                                                </c:otherwise>
-                                            </c:choose>
                                             <c:if test="${not empty loggedInUser}">
-                                                <button onclick="toggleReplyForm(${reply.comment_id})" class="text-gray-600 hover:text-primary">답글쓰기</button>
+                                                <button onclick="toggleReplyForm(${reply.comment_id})" class="text-gray-600 hover:text-primary text-xs">답글쓰기</button>
                                             </c:if>
                                         </div>
 
@@ -533,88 +531,96 @@
                 <div class="space-y-4 pt-4">
                     <c:choose>
                         <c:when test="${not empty commentList}">
-                             <c:forEach var="comment" items="${commentList}">
-                                 
-                                <%-- [수정 4-1] 일반 댓글 작성자 CommentBean 설정 (반복문 내부) --%>
+                            <c:forEach var="comment" items="${commentList}">
                                 <%
-                                    // comment 객체(CommentBean)를 pointProc.jsp가 사용할 수 있도록 userBean으로 임시 설정
                                     beans.CommentBean currentComment = (beans.CommentBean) pageContext.getAttribute("comment"); 
                                     if (currentComment != null) {
-                                        request.setAttribute("userBean", currentComment); // CommentBean을 userBean으로 임시 사용
+                                        request.setAttribute("userBean", currentComment);
                                     }
                                 %>
                                 <jsp:include page="/UI/JSP/PointProc.jsp" /> 
 
-                                <!-- 베스트 댓글은 제외 -->
                                 <c:if test="${empty bestComment || comment.comment_id != bestComment.comment_id}">
                                     <div class="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
                                         <div class="flex justify-between items-start mb-2">
                                             <div class="flex items-center space-x-2">
-                                                <span class="font-semibold">
-                                                    <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
+                                                <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
+                                                <span class="font-semibold text-gray-900">
                                                     <c:out value="${comment.nickname}" />
                                                 </span>
-                                                <% request.removeAttribute("userBean"); %>
-
+                                            </div>
+                                            <% request.removeAttribute("userBean"); %>
+                                            <div class="flex items-center space-x-2">
+                                                <span class="text-sm text-gray-500">${comment.created_at}</span>
+                                                <c:if test="${not empty loggedInUser}"><span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(${comment.comment_id})">🚨</span></c:if>
                                                 <c:if test="${not empty comment.judgment}">
-                                                    <c:set var="judgmentColor" value="${comment.judgment == '참' ? 'green' : (comment.judgment == '거짓' ? 'red' : 'yellow')}" />
-                                                    <span class="px-2 py-1 bg-${judgmentColor}-100 text-${judgmentColor}-800 rounded text-sm">${comment.judgment}</span>
+                                                    <%
+                                                        beans.CommentBean commentBean = (beans.CommentBean) pageContext.getAttribute("comment");
+                                                        String commentType = commentBean != null && commentBean.getJudgment() != null ? commentBean.getJudgment() : "";
+                                                        String commentBadgeColor = "";
+                                                        if("참".equals(commentType)) commentBadgeColor = "bg-green-100 text-green-800";
+                                                        else if("거짓".equals(commentType)) commentBadgeColor = "bg-red-100 text-red-800";
+                                                        else if("모호".equals(commentType)) commentBadgeColor = "bg-yellow-100 text-yellow-800";
+                                                    %>
+                                                    <% if(!"".equals(commentType)) { %>
+                                                    <span class="px-3 py-1.5 <%= commentBadgeColor %> rounded text-base font-medium"><%= commentType %></span>
+                                                    <% } %>
                                                 </c:if>
                                             </div>
-                                            <div class="flex items-center space-x-2">
-                                                <span class="text-sm text-gray-500">${comment.formattedDate}</span>
-                                                <c:if test="${not empty loggedInUser}"><span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(${comment.comment_id})">🚨</span></c:if>
-                                            </div>
                                         </div>
-                                        <div class="text-gray-900 mb-3"><c:out value="${comment.content}" escapeXml="false" /></div>
                                         
-                                        <%-- [추가] 일반 댓글 첨부파일 표시 --%>
-                                        <c:if test="${not empty comment.attache}">
-                                            <div class="mt-2 p-2 bg-gray-100 border border-gray-300 rounded-md inline-flex items-center space-x-2 text-sm text-gray-700">
-                                                <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L18 14"></path>
-                                                </svg>
-                                                <a href="<%= request.getContextPath() %>/comment_file/${comment.attache}" class="hover:underline" target="_blank">
-                                                    첨부파일 다운로드
-                                                </a>
+                                        <div class="mb-3">
+                                            <p class="text-gray-900"><c:out value="${comment.content}" escapeXml="false" /></p>
+                                            
+                                            <c:if test="${not empty comment.attache}">
+                                                <div class="mt-2 p-2 bg-gray-100 border border-gray-300 rounded-md inline-flex items-center space-x-2 text-sm text-gray-700">
+                                                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L18 14"></path>
+                                                    </svg>
+                                                    <a href="<%= request.getContextPath() %>/comment_file/${comment.attache}" class="hover:underline" target="_blank">
+                                                        첨부파일 다운로드
+                                                    </a>
+                                                </div>
+                                            </c:if>
+                                        </div>
+                                        
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center space-x-4 text-sm">
+                                                <c:choose>
+                                                    <c:when test="${loggedInUser != null}">
+                                                        <c:choose>
+                                                            <c:when test="${likeMap[comment.comment_id]}">
+                                                                <button onclick="upvoteComment(${comment.comment_id}, ${post.postId})" 
+                                                                        class="flex items-center space-x-1 transition-colors text-red-500">
+                                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                                    </svg>
+                                                                    <span>추천 ${comment.upvotes}</span>
+                                                                </button>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <button onclick="upvoteComment(${comment.comment_id}, ${post.postId})" 
+                                                                        class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                                    </svg>
+                                                                    <span>추천 ${comment.upvotes}</span>
+                                                                </button>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <div class="flex items-center space-x-1 text-gray-600">
+                                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                            </svg>
+                                                            <span>추천 ${comment.upvotes}</span>
+                                                        </div>
+                                                    </c:otherwise>
+                                                </c:choose>
                                             </div>
-                                        </c:if>
-                                        
-                                        <div class="flex items-center space-x-4 text-sm">
-                                            <c:choose>
-                                                <c:when test="${loggedInUser != null}">
-                                                    <c:choose>
-                                                        <c:when test="${likeMap[comment.comment_id]}">
-                                                            <button onclick="upvoteComment(${comment.comment_id}, ${post.postId})" 
-                                                                    class="flex items-center space-x-1 transition-colors text-red-500">
-                                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                                                </svg>
-                                                                <span>추천 ${comment.upvotes}</span>
-                                                            </button>
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <button onclick="upvoteComment(${comment.comment_id}, ${post.postId})" 
-                                                                    class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
-                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 20 20">
-                                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                                                </svg>
-                                                                <span>추천 ${comment.upvotes}</span>
-                                                            </button>
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <div class="flex items-center space-x-1 text-gray-600">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                                        </svg>
-                                                        <span>추천 ${comment.upvotes}</span>
-                                                    </div>
-                                                </c:otherwise>
-                                            </c:choose>
                                             <c:if test="${not empty loggedInUser}">
-                                                <button onclick="toggleReplyForm(${comment.comment_id})" class="text-gray-600 hover:text-primary">답글쓰기</button>
+                                                <button onclick="toggleReplyForm(${comment.comment_id})" class="text-gray-600 hover:text-primary text-sm">답글쓰기</button>
                                             </c:if>
                                         </div>
 
@@ -638,86 +644,99 @@
                                         <div class="mt-4 ml-8 space-y-3">
                                             <c:set var="replyListKey" value="reply_${comment.comment_id}" />
                                             <c:forEach var="reply" items="${requestScope[replyListKey]}">
-                                                
-                                                <%-- [수정 5-1] 일반 댓글 답글 작성자 CommentBean 설정 (반복문 내부) --%>
                                                 <%
                                                     beans.CommentBean currentReply = (beans.CommentBean) pageContext.getAttribute("reply"); 
                                                     if (currentReply != null) {
-                                                        request.setAttribute("userBean", currentReply); // CommentBean을 userBean으로 임시 사용
+                                                        request.setAttribute("userBean", currentReply);
                                                     }
                                                 %>
                                                 <jsp:include page="/UI/JSP/PointProc.jsp" /> 
 
                                                 <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: ${reply.layer * 20}px;">
                                                     <div class="flex justify-between items-start mb-2">
-                                                        <div class="flex items-center space-x-2">
+                                                        <div class="flex items-center space-x-1">
                                                             <span class="font-semibold text-sm text-gray-700">
                                                                 <c:forEach begin="1" end="${reply.layer}">↳ </c:forEach>
-                                                                <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
+                                                            </span>
+                                                            <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
+                                                            <span class="font-semibold text-sm text-gray-700">
                                                                 <c:out value="${reply.nickname}" />
                                                             </span>
-                                                            <c:if test="${not empty reply.judgment}">
-                                                                <c:set var="replyJudgmentColor" value="${reply.judgment == '참' ? 'green' : (reply.judgment == '거짓' ? 'red' : 'yellow')}" />
-                                                                <span class="px-2 py-1 bg-${replyJudgmentColor}-100 text-${replyJudgmentColor}-800 rounded text-xs">${reply.judgment}</span>
-                                                            </c:if>
                                                         </div>
-                                                        <% request.removeAttribute("userBean"); %>
                                                         <div class="flex items-center space-x-2">
-                                                            <span class="text-xs text-gray-500">${reply.formattedDate}</span>
+                                                            <span class="text-xs text-gray-500">${reply.created_at}</span>
                                                             <c:if test="${not empty loggedInUser}">
                                                                 <span class="text-gray-500 cursor-pointer text-xs" onclick="openCommentReportModal(${reply.comment_id})">🚨</span>
                                                             </c:if>
+                                                            <c:if test="${not empty reply.judgment}">
+                                                                <%
+                                                                    beans.CommentBean replyBean2 = (beans.CommentBean) pageContext.getAttribute("reply");
+                                                                    String replyType2 = replyBean2 != null && replyBean2.getJudgment() != null ? replyBean2.getJudgment() : "";
+                                                                    String replyBadgeColor2 = "";
+                                                                    if("참".equals(replyType2)) replyBadgeColor2 = "bg-green-100 text-green-800";
+                                                                    else if("거짓".equals(replyType2)) replyBadgeColor2 = "bg-red-100 text-red-800";
+                                                                    else if("모호".equals(replyType2)) replyBadgeColor2 = "bg-yellow-100 text-yellow-800";
+                                                                %>
+                                                                <% if(!"".equals(replyType2)) { %>
+                                                                <span class="px-2.5 py-1 <%= replyBadgeColor2 %> rounded text-sm font-medium"><%= replyType2 %></span>
+                                                                <% } %>
+                                                            </c:if>
                                                         </div>
                                                     </div>
-                                                    <p class="text-sm text-gray-900"><c:out value="${reply.content}" escapeXml="false" /></p>
+                                                    <% request.removeAttribute("userBean"); %>
                                                     
-                                                    <%-- [추가] 답글 첨부파일 표시 --%>
-                                                    <c:if test="${not empty reply.attache}">
-                                                        <div class="mt-1 text-xs text-gray-500 flex items-center space-x-1">
-                                                             <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L18 14"></path>
-                                                            </svg>
-                                                            <a href="<%= request.getContextPath() %>/comment_file/${reply.attache}" class="hover:underline" target="_blank">
-                                                                첨부파일 다운로드
-                                                            </a>
+                                                    <div class="mb-2">
+                                                        <p class="text-sm text-gray-900"><c:out value="${reply.content}" escapeXml="false" /></p>
+                                                        
+                                                        <c:if test="${not empty reply.attache}">
+                                                            <div class="mt-1 text-xs text-gray-500 flex items-center space-x-1">
+                                                                <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L18 14"></path>
+                                                                </svg>
+                                                                <a href="<%= request.getContextPath() %>/comment_file/${reply.attache}" class="hover:underline" target="_blank">
+                                                                    첨부파일 다운로드
+                                                                </a>
+                                                            </div>
+                                                        </c:if>
+                                                    </div>
+                                                    
+                                                    <div class="flex items-center justify-between">
+                                                        <div class="flex items-center space-x-3 text-xs">
+                                                            <c:choose>
+                                                                <c:when test="${loggedInUser != null}">
+                                                                    <c:choose>
+                                                                        <c:when test="${likeMap[reply.comment_id]}">
+                                                                            <button onclick="upvoteComment(${reply.comment_id}, ${post.postId})" 
+                                                                                    class="flex items-center space-x-1 transition-colors text-red-500">
+                                                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                                                </svg>
+                                                                                <span>추천 ${reply.upvotes}</span>
+                                                                            </button>
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <button onclick="upvoteComment(${reply.comment_id}, ${post.postId})" 
+                                                                                    class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
+                                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 20 20">
+                                                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                                                </svg>
+                                                                                <span>추천 ${reply.upvotes}</span>
+                                                                            </button>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <div class="flex items-center space-x-1 text-gray-600">
+                                                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                                        </svg>
+                                                                        <span>추천 ${reply.upvotes}</span>
+                                                                    </div>
+                                                                </c:otherwise>
+                                                            </c:choose>
                                                         </div>
-                                                    </c:if>
-                                                    
-                                                    <div class="flex items-center space-x-3 mt-2 text-xs">
-                                                        <c:choose>
-                                                            <c:when test="${loggedInUser != null}">
-                                                                <c:choose>
-                                                                    <c:when test="${likeMap[reply.comment_id]}">
-                                                                        <button onclick="upvoteComment(${reply.comment_id}, ${post.postId})" 
-                                                                                class="flex items-center space-x-1 transition-colors text-red-500">
-                                                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                                                            </svg>
-                                                                            <span>추천 ${reply.upvotes}</span>
-                                                                        </button>
-                                                                    </c:when>
-                                                                    <c:otherwise>
-                                                                        <button onclick="upvoteComment(${reply.comment_id}, ${post.postId})" 
-                                                                                class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
-                                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 20 20">
-                                                                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                                                            </svg>
-                                                                            <span>추천 ${reply.upvotes}</span>
-                                                                        </button>
-                                                                    </c:otherwise>
-                                                                </c:choose>
-                                                            </c:when>
-                                                            <c:otherwise>
-                                                                <div class="flex items-center space-x-1 text-gray-600">
-                                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                                                                    </svg>
-                                                                    <span>추천 ${reply.upvotes}</span>
-                                                                </div>
-                                                            </c:otherwise>
-                                                        </c:choose>
                                                         <c:if test="${not empty loggedInUser}">
-                                                            <button onclick="toggleReplyForm(${reply.comment_id})" class="text-gray-600 hover:text-primary">답글쓰기</button>
+                                                            <button onclick="toggleReplyForm(${reply.comment_id})" class="text-gray-600 hover:text-primary text-xs">답글쓰기</button>
                                                         </c:if>
                                                     </div>
 
@@ -797,19 +816,9 @@
             var content = form.content.value.replace(/<p>&nbsp;<\/p>/gi, "").trim();
             if(form.judgment.value === "") { alert("판정을 선택해주세요."); return; }
             if (content === "") { alert("내용을 입력해주세요."); oEditors.getById["ir1"].exec("FOCUS"); return; }
-            
-            // [수정]: 파일 첨부가 있을 경우 폼을 전송합니다.
-            var fileInput = document.getElementById('comment-file');
-            if (fileInput && fileInput.files.length > 0) {
-                 // 파일이 있으면 multipart 폼 전송
-                 form.submit();
-            } else {
-                 // 파일이 없으면 일반 폼 전송 (SmartEditor 사용 시)
-                 form.submit();
-            }
+            form.submit();
         }
         
-        // 댓글 추천 기능
         function upvoteComment(commentId, postId) {
             <c:choose>
                 <c:when test="${loggedInUser == null}">
@@ -835,12 +844,10 @@
                     .catch(error => {
                         console.error('Error:', error);
                         alert('추천 처리 중 오류가 발생했습니다.');
-                    });
-                </c:otherwise>
+                    });</c:otherwise>
             </c:choose>
         }
         
-        // 게시글 신고 모달
         function openReportModal() { 
             document.getElementById('reportModal').classList.remove('hidden'); 
         }
@@ -877,7 +884,6 @@
             form.submit();
         }
         
-        // 댓글 신고 모달
         function openCommentReportModal(commentId) {
             document.getElementById('commentIdToReport').value = commentId;
             document.getElementById('commentReportModal').classList.remove('hidden');
@@ -916,13 +922,11 @@
             form.submit();
         }
         
-        // 모달 외부 클릭시 닫기
         window.addEventListener('click', function(e) {
             if (e.target == document.getElementById('reportModal')) closeReportModal();
             if (e.target == document.getElementById('commentReportModal')) closeCommentReportModal();
         });
 
-        // 답글 폼 토글 함수
         function toggleReplyForm(commentId) {
             var replyForm = document.getElementById('replyForm_' + commentId);
             if (replyForm) {
@@ -938,7 +942,6 @@
             }
         }
 
-        // 답글 폼 제출 처리
         document.addEventListener('submit', function(e) {
             if (e.target.classList.contains('reply-form')) {
                 var textarea = e.target.querySelector('textarea[name="content"]');
@@ -953,7 +956,6 @@
             }
         });
         
-        // [추가] 파일 선택 초기화
         function clearFiles() {
             document.getElementById('comment-file').value = '';
             document.getElementById('selected-files-display').classList.add('hidden');
@@ -961,7 +963,6 @@
             document.getElementById('file-list-detail').innerHTML = '';
         }
         
-        // [추가] 파일 첨부 핸들러: 단일 파일 정보 상세 표시
         function handleFileSelect(event) {
             const fileInput = event.target;
             const files = fileInput.files;
@@ -975,10 +976,8 @@
                 
                 fileListDetail.innerHTML = '';
                 const file = files[0];
-                // 파일 크기를 KB 단위로 표시 (소수점 첫째 자리까지)
                 const fileSizeKB = (file.size / 1024).toFixed(1); 
                 
-                // UI 구조에 맞게 상세 정보를 표시
                 fileListDetail.innerHTML = `
                     <div class="flex items-center space-x-2 w-full">
                         <svg class="w-4 h-4 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -999,7 +998,6 @@
             window.location.href = '${pageContext.request.contextPath}/info/watch.do?id=' + postId + '&sort=' + sort;
         }
 
-        // [추가] 초기화 및 이벤트 리스너 설정
         document.addEventListener('DOMContentLoaded', function() {
             const fileInput = document.getElementById('comment-file');
             if (fileInput) {

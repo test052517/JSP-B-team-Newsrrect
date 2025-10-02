@@ -5,6 +5,10 @@
 <%@ page import="mgr.DBConnectionMgr" %>
 <%@ page import="beans.UserBean" %>
 <%@ page import="java.sql.*" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -31,6 +35,8 @@
     <jsp:include page="../Common/AdminHeader.jsp" />
 
     <%
+    	String contextPath = request.getContextPath();
+    
         // 차단 처리 로직
         String action = request.getParameter("action");
         if ("block".equals(action)) {
@@ -106,12 +112,14 @@
             DBConnectionMgr pool = DBConnectionMgr.getInstance();
             con = pool.getConnection("user");
             
-            String sql = "SELECT u.user_id, u.nickname, u.introduce, u.created_at, u.ban_count, u.report_count, " +
-                        "u.is_active, b.ban_end_date " +
-                        "FROM user u " +
-                        "LEFT JOIN (SELECT banned_user_id, MAX(ban_end_date) as ban_end_date FROM ban GROUP BY banned_user_id) b " +
-                        "ON u.user_id = b.banned_user_id " +
-                        "WHERE u.user_id = ? OR u.nickname = ?";
+            String sql = "SELECT u.user_id, u.nickname, u.introduce, u.created_at, u.ban_count, u.report_count, u.profileImage, " +
+                    "u.is_active, b.ban_end_date " +
+                    "FROM user u " +
+                    "LEFT JOIN (SELECT banned_user_id, MAX(ban_end_date) as ban_end_date FROM ban GROUP " + 
+                    "BY banned_user_id) b " +
+                    "ON u.user_id = b.banned_user_id " +
+                    "WHERE u.user_id = ? OR u.nickname = ?";
+            
             pstmt = con.prepareStatement(sql);
             pstmt.setString(1, username);
             pstmt.setString(2, username);
@@ -128,16 +136,9 @@
                 user.put("isActive", Integer.valueOf(rs.getInt("is_active")));
                 String banEndDate = rs.getString("ban_end_date");
                 user.put("blockEndDate", banEndDate != null ? banEndDate : "없음");
-            } else {
-                user.put("userId", Integer.valueOf(0));
-                user.put("nickname", username);
-                user.put("intro", "안녕하세요. AI와 최신 기술에 관심이 많습니다.");
-                user.put("joinDate", "2024-08-01");
-                user.put("reportCount", Integer.valueOf(2));
-                user.put("blockCount", Integer.valueOf(1));
-                user.put("isActive", Integer.valueOf(1));
-                user.put("blockEndDate", "2025-09-29");
-            }
+                String profileImage = rs.getString("profileImage");
+                user.put("profileImage", profileImage != null ? profileImage : "");
+            } 
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -150,34 +151,58 @@
                 } catch(Exception e) {}
             }
         }
+	
+        List<Map<String, String>> posts = new ArrayList<Map<String, String>>(); 
+     	// 사용자 ID가 유효할 때만 통계 및 활동 내역 조회
+        Integer targetUserId = (Integer)user.get("userId"); // 유저 정보 조회 로직에서 추출된 userId
 
-        List<Map<String, String>> posts = new ArrayList<Map<String, String>>();
-        Map<String, String> post1 = new HashMap<String, String>();
-        post1.put("type", "정보 검증");
-        post1.put("title", "최신 AI 모델의 성능 검증 요청");
-        post1.put("date", "2025-09-25");
-        posts.add(post1);
-        
-        Map<String, String> post2 = new HashMap<String, String>();
-        post2.put("type", "소통");
-        post2.put("title", "플랫폼 개선 아이디어 제안합니다.");
-        post2.put("date", "2025-09-23");
-        posts.add(post2);
+        if (targetUserId != null && targetUserId.intValue() > 0) {
+            
+            // MyPageMgr 객체 생성
+            mgr.MyPageMgr mgr = new mgr.MyPageMgr(); 
 
-        List<Map<String, String>> comments = new ArrayList<Map<String, String>>();
-        Map<String, String> comment1 = new HashMap<String, String>();
-        comment1.put("type", "정보 검증");
-        comment1.put("content", "정말 유용한 정보였습니다. 감사합니다.");
-        comment1.put("originalAuthor", "user2");
-        comment1.put("date", "2025-09-25");
-        comments.add(comment1);
+            try {
+                // 1. 통계 데이터 조회
+                beans.MyPageStatsBean userStats = mgr.getStats(targetUserId.intValue());
+                pageContext.setAttribute("userStats", userStats); // pageContext로 JSP에 전달
+
+                // 2. 최근 게시글 목록 조회
+                List<beans.PostBean> recentPosts = mgr.getRecentPosts(targetUserId.intValue());
+                pageContext.setAttribute("recentPosts", recentPosts);
+
+                // 3. 최근 댓글 목록 조회
+                List<beans.CommentBean> recentComments = mgr.getRecentComments(targetUserId.intValue());
+                pageContext.setAttribute("recentComments", recentComments);
+                
+            } catch (Exception e) {
+                // 데이터 로드 오류 처리 (선택 사항)
+                System.err.println("관리자 화면 데이터 로드 오류: " + e.getMessage());
+            }
+        }
         
-        Map<String, String> comment2 = new HashMap<String, String>();
-        comment2.put("type", "소통");
-        comment2.put("content", "UI가 직관적이어서 사용하기 편합니다.");
-        comment2.put("originalAuthor", "user5");
-        comment2.put("date", "2025-09-22");
-        comments.add(comment2);
+        if (targetUserId != null && targetUserId.intValue() > 0) {
+            
+            // MyPageMgr 객체 생성
+            mgr.MyPageMgr mgr = new mgr.MyPageMgr(); 
+
+            try {
+                // 1. 통계 데이터 조회
+                beans.MyPageStatsBean userStats = mgr.getStats(targetUserId.intValue());
+                pageContext.setAttribute("userStats", userStats); // pageContext로 JSP에 전달
+
+                // 2. 최근 게시글 목록 조회
+                List<beans.PostBean> recentPosts = mgr.getRecentPosts(targetUserId.intValue());
+                pageContext.setAttribute("recentPosts", recentPosts);
+
+                // 3. 최근 댓글 목록 조회
+                List<beans.CommentBean> recentComments = mgr.getRecentComments(targetUserId.intValue());
+                pageContext.setAttribute("recentComments", recentComments);
+                
+            } catch (Exception e) {
+                // 데이터 로드 오류 처리 (선택 사항)
+                System.err.println("관리자 화면 데이터 로드 오류: " + e.getMessage());
+            }
+        }
     %>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -190,9 +215,28 @@
                 <div class="bg-gray-100 rounded-lg p-6 mb-6">
                     <div class="flex items-start space-x-6">
                         <div class="flex-shrink-0">
-                            <div class="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center">
-                                <span class="text-gray-500">프로필</span>
-                            </div>
+                            <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center">
+					        <%
+					            // Map에서 profileImage 값 추출
+					            String profileImage = (String)user.get("profileImage");
+					            
+					            // 이미지 경로 생성. 빈 문자열일 경우 기본 이미지 경로로 설정
+					            String imageSrc;
+					            String defaultImageSrc = contextPath + "/UI/JSP/IMAGES/default_profile.png";
+					            
+					            if (profileImage != null && !profileImage.isEmpty()) {
+					                imageSrc = contextPath + "/uploads/profiles/" + profileImage;
+					            } else {
+					                imageSrc = defaultImageSrc;
+					            }
+					        %>
+					        
+					        <img src="<%= imageSrc %>"
+					            alt="프로필 이미지" 
+					            class="w-full h-full object-cover rounded-full"
+					            onerror="this.onerror=null;this.src='<%= defaultImageSrc %>';"
+						                />
+                            </div> 
                         </div>
                         
                         <div class="flex-1">
@@ -248,68 +292,124 @@
         </div>
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-xl font-semibold text-gray-900">게시글 (<%= posts.size() %>)</h2>
-            </div>
-            
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">구분</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">제목</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">날짜</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        <% if (posts.isEmpty()) { %>
-                            <tr><td colspan="3" class="text-center py-10 text-gray-500">작성한 게시글이 없습니다.</td></tr>
-                        <% } else { 
-                            for (Map<String, String> post : posts) { %>
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= post.get("type") %></td>
-                            <td class="px-6 py-4 text-sm text-gray-900"><a href="#" class="hover:underline"><%= post.get("title") %></a></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= post.get("date") %></td>
-                        </tr>
-                        <% } 
-                        } %>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+	    <div class="px-6 py-4 border-b border-gray-200">
+	        <h2 class="text-xl font-semibold text-gray-900">게시글 (<c:out value="${fn:length(recentPosts)}" default="0" />)</h2>
+	    </div>
+	    
+	    <div class="overflow-x-auto">
+	        <table class="min-w-full divide-y divide-gray-200">
+	            <thead class="bg-gray-50">
+	                <tr>
+	                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">번호</th>
+	                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">제목</th>
+	                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">작성일</th>
+	                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">글 유형</th>
+	                </tr>
+	            </thead>
+	            <tbody class="bg-white divide-y divide-gray-200">
+	                <c:choose>
+	                    <c:when test="${not empty recentPosts}">
+	                        <c:forEach var="post" items="${recentPosts}" varStatus="status">
+	                            <tr class="hover:bg-gray-50">
+	                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+	                                    <c:out value="${fn:length(recentPosts) - status.index}" />
+	                                </td>
+	                                <td class="px-6 py-4 text-sm text-gray-900">
+	                                    <c:choose>
+	                                        <c:when test="${post.type eq '정보'}">
+	                                            <%-- 경로 수정: Context Path와 절대 경로 삽입 --%>
+	                                            <a href="<%= contextPath %>/UI/JSP/User/InfoWatch.jsp?id=${post.postId}" class="hover:underline">
+	                                                <c:out value="${post.title}" />
+	                                            </a>
+	                                        </c:when>
+	                                        <c:when test="${post.type eq '소통'}">
+	                                            <%-- 경로 수정: Context Path와 절대 경로 삽입 --%>
+	                                            <a href="<%= contextPath %>/UI/JSP/User/CommuWatch.jsp?id=${post.postId}" class="hover:underline">
+	                                                <c:out value="${post.title}" />
+	                                            </a>
+	                                        </c:when>
+	                                        <c:otherwise><c:out value="${post.title}" /></c:otherwise>
+	                                    </c:choose>
+	                                </td>
+	                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+	                                    <c:out value="${post.formattedDate}" />
+	                                </td>
+	                                <td class="px-6 py-4 whitespace-nowrap">
+	                                    <span class="px-2 py-1 text-xs font-semibold rounded-full 
+	                                                  <c:if test='${post.type eq "정보"}'>bg-blue-100 text-blue-800</c:if>
+	                                                  <c:if test='${post.type eq "소통"}'>bg-green-100 text-green-800</c:if>">
+	                                        <c:out value="${post.type}" />
+	                                    </span>
+	                                </td>
+	                            </tr>
+	                        </c:forEach>
+	                    </c:when>
+	                    <c:otherwise>
+	                        <tr><td colspan="4" class="text-center py-10 text-gray-500">작성한 게시글이 없습니다.</td></tr>
+	                    </c:otherwise>
+	                </c:choose>
+	            </tbody>
+	        </table>
+	    </div>
+	</div>
 
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-xl font-semibold text-gray-900">댓글 (<%= comments.size() %>)</h2>
-            </div>
-            
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">구분</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">내용</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">원글 작성자</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">날짜</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        <% if (comments.isEmpty()) { %>
-                            <tr><td colspan="4" class="text-center py-10 text-gray-500">작성한 댓글이 없습니다.</td></tr>
-                        <% } else { 
-                            for (Map<String, String> comment : comments) { %>
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= comment.get("type") %></td>
-                            <td class="px-6 py-4 text-sm text-gray-900"><a href="#" class="hover:underline"><%= comment.get("content") %></a></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= comment.get("originalAuthor") %></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= comment.get("date") %></td>
-                        </tr>
-                        <% } 
-                        } %>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900">댓글 (<c:out value="${fn:length(recentComments)}" default="0" />)</h2>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">구분</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">내용</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">원글 제목</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">날짜</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <c:choose>
+                    <c:when test="${not empty recentComments}">
+                        <c:forEach var="comment" items="${recentComments}" varStatus="status">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <c:out value="${comment.originalPostType}" />
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <c:choose>
+                                        <c:when test="${comment.originalPostType eq '정보'}">
+                                            <a href="InfoWatch.jsp?id=${comment.originalPostId}" class="hover:underline">
+                                                <c:out value="${fn:substring(comment.content, 0, 30)}" />...
+                                            </a>
+                                        </c:when>
+                                        <c:when test="${comment.originalPostType eq '소통'}">
+                                            <a href="CommuWatch.jsp?id=${comment.originalPostId}" class="hover:underline">
+                                                <c:out value="${fn:substring(comment.content, 0, 30)}" />...
+                                            </a>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:out value="${fn:substring(comment.content, 0, 30)}" />...
+                                        </c:otherwise>
+                                    </c:choose>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <c:out value="${comment.originalPostTitle}" />
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <c:out value="${comment.formattedDate}" />
+                                </td>
+                            </tr>
+                        </c:forEach>
+                    </c:when>
+                    <c:otherwise>
+                        <tr><td colspan="4" class="text-center py-10 text-gray-500">작성한 댓글이 없습니다.</td></tr>
+                    </c:otherwise>
+                </c:choose>
+            </tbody>
+        </table>
+    </div>
+</div>
     </main>
 
     <jsp:include page="../Common/Footer.jsp" />
