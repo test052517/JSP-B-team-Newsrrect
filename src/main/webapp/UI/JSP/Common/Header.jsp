@@ -1,13 +1,12 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%
-		// 세션에서 User 정보 가져옴
 		beans.UserBean user = (beans.UserBean)session.getAttribute("loggedInUser");
 
 		if (user != null) {
 		    session.setAttribute("user", user);
 		} else {
-		    session.removeAttribute("user"); // 혹시 모를 잔여 세션 제거
+		    session.removeAttribute("user"); 
 		}
 %>
 <header class="bg-white shadow-sm border-b border-gray-200">
@@ -44,8 +43,8 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-center space-x-20 py-4">
             <a href="${pageContext.request.contextPath}/info/watch.do" 
-               class="nav-link text-primary hover:text-white hover:bg-[#7d8ff9] px-3 py-2 text-sm font-medium font-paperozi-medium rounded transition-all duration-200 ease-in-out">
-               정보 검증 게시판
+               id="infoWatchLink" class="nav-link text-primary hover:text-white hover:bg-[#7d8ff9] px-3 py-2 text-sm font-medium font-paperozi-medium rounded transition-all duration-200 ease-in-out">
+                정보 검증 게시판
             </a>
             <a href="<%= request.getContextPath() %>/UI/JSP/User/CommuBoard.jsp" 
                class="nav-link text-primary hover:text-white hover:bg-[#7d8ff9] px-3 py-2 text-sm font-medium font-paperozi-medium rounded transition-all duration-200 ease-in-out">
@@ -103,18 +102,24 @@
         const myPageLink = document.getElementById('myPageLink');
         const isLoggedIn = <%= user != null %>;
         
+        const handleAccessCheck = function(e) {
+            if (!isLoggedIn) {
+                e.preventDefault(); // 기본 이동 동작 차단
+                
+                const loginUrl = '<%= request.getContextPath() %>/UI/JSP/Login.jsp';
+                
+                alert('로그인이 필요한 서비스입니다.');
+                window.location.href = loginUrl; // 로그인 페이지로 이동
+            }
+        };
+
         if (myPageLink) {
-            myPageLink.addEventListener('click', function(e) {
-                if (!isLoggedIn) {
-                    e.preventDefault(); // 기본 이동 동작 차단
-                    
-                    const loginUrl = '<%= request.getContextPath() %>/UI/JSP/Login.jsp';
-                    
-                    alert('로그인이 필요한 서비스입니다.');
-                    window.location.href = loginUrl; // 로그인 페이지로 이동
-                }
-            });
+            myPageLink.addEventListener('click', handleAccessCheck); // 기존 로직을 함수로 대체
         }
+        
+/*         if (infoWatchLink) { // 🚨 추가
+            infoWatchLink.addEventListener('click', handleAccessCheck);
+        } */
         
         navLinks.forEach(link => {
             // 링크의 href 속성 값이 현재 URL에 포함되어 있는지 확인

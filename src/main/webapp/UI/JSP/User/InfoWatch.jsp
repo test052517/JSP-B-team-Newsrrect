@@ -247,7 +247,7 @@
                 </div>
             </div>
         </div>
-
+		
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="p-6">
                 <c:if test="${not empty loggedInUser}">

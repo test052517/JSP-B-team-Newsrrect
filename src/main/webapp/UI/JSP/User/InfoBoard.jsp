@@ -33,11 +33,15 @@
     </script>
 </head>
 <body class="bg-white min-h-screen">
-        	<%if(user.getRole().equals("관리자")){%>
+    	<% 
+    	    if (user != null && user.getRole().equals("관리자")) { 
+    	%>
         <jsp:include page="../Common/AdminHeader.jsp" />
-    	<%}else{ %>
+    	<% 
+    	    } else { 
+    	%>
     	<jsp:include page ="../Common/Header.jsp"/>
-    	<%} %>
+    	<%}%>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="mb-6">
