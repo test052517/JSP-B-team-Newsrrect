@@ -242,4 +242,27 @@ public class CommentMgr {
         return flag;
     }
     
+    public int getCommentOwnerId(int commentId) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        int ownerId = 0;
+        String sql = "SELECT user_id FROM comment WHERE comment_id = ?";
+
+        try {
+            conn = pool.getConnection("user");
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, commentId);
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                ownerId = rs.getInt("user_id");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(conn, pstmt, rs);
+        }
+        return ownerId;
+    }
 }

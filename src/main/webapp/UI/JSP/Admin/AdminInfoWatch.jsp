@@ -259,7 +259,10 @@
 							    <% request.removeAttribute("userBean"); %>
 							    <%-- [추가] 게시글 작성자 Point 이미지 삽입 끝 --%>
 							    
-							    <span><%= post.getNickname() %></span>
+							    <a href="<%= request.getContextPath() %>/UI/JSP/Admin/AdminUserWatch.jsp?user=<%= post.getUserId() %>" 
+   class="hover:text-primary hover:underline transition-colors">
+    <span><%= post.getNickname() %></span>
+</a>
 							</div>
                                 <div class="flex items-center space-x-1">
                                     <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
@@ -452,7 +455,10 @@
                                 <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
                                 <% request.removeAttribute("userBean"); %>
                                 <%-- [추가] BEST 댓글 작성자 Point 이미지 삽입 끝 --%>
-                                <span class="font-bold text-primary"><%= bestComment.getNickname() %></span>
+                                <a href="<%= request.getContextPath() %>/UI/JSP/Admin/AdminUserWatch.jsp?user=<%= bestComment.getUser_id() %>" 
+   class="font-bold text-primary hover:text-primary-dark hover:underline transition-colors">
+    <%= bestComment.getNickname() %>
+</a>
                                 <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">BEST</span>
                             </div>
                             <div class="flex items-center space-x-2">
@@ -491,7 +497,7 @@
                                 <button onclick="upvoteComment(<%= bestComment.getComment_id() %>, <%= postId %>)" 
                                         class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 0 1 5.656 0L10 6.343l1.172-1.171a4 4 0 1 1 5.656 5.656L10 17.657l-6.828-6.829a4 4 0 0 1 0-5.656z" clip-rule="evenodd"></path>
                                     </svg>
                                     <span>추천 <%= bestComment.getUpvotes() %></span>
                                 </button>
@@ -529,28 +535,24 @@
                                     boolean isReplyLiked = likeMap.get(reply.getComment_id()) != null && likeMap.get(reply.getComment_id());
                             %>
                                 <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: <%= reply.getLayer() * 20 %>px;">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <span class="font-semibold text-sm text-gray-700">
-                                            <% for(int i = 0; i < reply.getLayer(); i++) { %>↳ <% } %>
-                                            <%-- [추가] BEST 댓글의 답글 작성자 Point 이미지 삽입 시작 --%>
-                                            <%
-                                                request.setAttribute("userBean", reply);
-                                            %>
-                                            <jsp:include page="/UI/JSP/PointProc.jsp" /> 
-                                            <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
-                                            <% request.removeAttribute("userBean"); %>
-                                            <%-- [추가] BEST 댓글의 답글 작성자 Point 이미지 삽입 끝 --%>
-                                            <%= reply.getNickname() %>
-                                        </span>
-                                        <div class="flex items-center space-x-2">
-                                            <span class="text-xs text-gray-500"><%= reply.getCreated_at() %></span>
-                                            <span class="text-gray-500 cursor-pointer text-xs" onclick="openCommentReportModal(<%= reply.getComment_id() %>)">🚨</span>
-                                            <% if(!"".equals(replyType)) { %>
-                                            <span class="px-2.5 py-1 <%= replyBadgeColor %> rounded text-sm font-medium"><%= replyType %></span>
-                                            <% } %>
-                                        </div>
-                                    </div>
-                                    <p class="text-sm text-gray-900"><%= reply.getContent() %></p>
+							    <div class="flex justify-between items-start mb-2">
+							        <div class="flex items-center space-x-1"> 
+							            <span class="font-semibold text-sm text-gray-700">
+							                <% for(int i = 0; i < reply.getLayer(); i++) { %>↳ <% } %>
+							            </span>
+							            <%-- [추가] BEST 댓글의 답글 작성자 Point 이미지 삽입 시작 --%>
+							            <%
+							                request.setAttribute("userBean", reply);
+							            %><jsp:include page="/UI/JSP/PointProc.jsp" /> 
+							            <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;"><%-- 이미지 뒤 줄 바꿈 제거 --%>
+							            <a href="<%= request.getContextPath() %>/UI/JSP/Admin/AdminUserWatch.jsp?user=<%= reply.getUser_id() %>" 
+							               class="font-semibold text-sm text-gray-700 hover:text-primary hover:underline transition-colors"><%= reply.getNickname() %></a><%-- 닉네임 링크 뒤 줄 바꿈 제거 --%>
+							            <% request.removeAttribute("userBean"); %><%-- [추가] BEST 댓글의 답글 작성자 Point 이미지 삽입 끝 --%>
+							        </div>
+							        <div class="flex items-center space-x-2">
+							        </div>
+							    </div>
+							    <p class="text-sm text-gray-900"><%= reply.getContent() %></p>
                                     
                                     <% if(reply.getAttache() != null && !reply.getAttache().isEmpty()) { %>
                                     <div class="mt-1 text-xs text-gray-500 flex items-center space-x-1">
@@ -568,7 +570,7 @@
                                             <button onclick="upvoteComment(<%= reply.getComment_id() %>, <%= postId %>)" 
                                                     class="flex items-center space-x-1 transition-colors text-red-500">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 0 1 5.656 0L10 6.343l1.172-1.171a4 4 0 1 1 5.656 5.656L10 17.657l-6.828-6.829a4 4 0 0 1 0-5.656z" clip-rule="evenodd"></path>
                                                 </svg>
                                                 <span>추천 <%= reply.getUpvotes() %></span>
                                             </button>
@@ -576,7 +578,7 @@
                                             <button onclick="upvoteComment(<%= reply.getComment_id() %>, <%= postId %>)" 
                                                     class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 0 1 5.656 0L10 6.343l1.172-1.171a4 4 0 1 1 5.656 5.656L10 17.657l-6.828-6.829a4 4 0 0 1 0-5.656z" clip-rule="evenodd"></path>
                                                 </svg>
                                                 <span>추천 <%= reply.getUpvotes() %></span>
                                             </button>
@@ -632,7 +634,10 @@
                                 <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
                                 <% request.removeAttribute("userBean"); %>
                                 <%-- [추가] 일반 댓글 작성자 Point 이미지 삽입 끝 --%>
-                                <span class="font-semibold text-gray-900"><%= comment.getNickname() %></span>
+                                <a href="<%= request.getContextPath() %>/UI/JSP/Admin/AdminUserWatch.jsp?user=<%= comment.getUser_id() %>" 
+								   class="font-semibold text-gray-900 hover:text-primary hover:underline transition-colors">
+								    <%= comment.getNickname() %>
+								</a>
                             </div>
                             <div class="flex items-center space-x-2">
                                 <span class="text-sm text-gray-500"><%= comment.getCreated_at() %></span>
@@ -662,7 +667,7 @@
                                 <button onclick="upvoteComment(<%= comment.getComment_id() %>, <%= postId %>)" 
                                         class="flex items-center space-x-1 transition-colors text-red-500">
                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 0 1 5.656 0L10 6.343l1.172-1.171a4 4 0 1 1 5.656 5.656L10 17.657l-6.828-6.829a4 4 0 0 1 0-5.656z" clip-rule="evenodd"></path>
                                     </svg>
                                     <span>추천 <%= comment.getUpvotes() %></span>
                                 </button>
@@ -670,7 +675,7 @@
                                 <button onclick="upvoteComment(<%= comment.getComment_id() %>, <%= postId %>)" 
                                         class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 0 1 5.656 0L10 6.343l1.172-1.171a4 4 0 1 1 5.656 5.656L10 17.657l-6.828-6.829a4 4 0 0 1 0-5.656z" clip-rule="evenodd"></path>
                                     </svg>
                                     <span>추천 <%= comment.getUpvotes() %></span>
                                 </button>
@@ -719,7 +724,10 @@
                                             <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
                                             <% request.removeAttribute("userBean"); %>
                                             <%-- [추가] 일반 댓글의 답글 작성자 Point 이미지 삽입 끝 --%>
-                                            <%= reply.getNickname() %>
+                                            <a href="<%= request.getContextPath() %>/UI/JSP/Admin/AdminUserWatch.jsp?user=<%= reply.getUser_id() %>" 
+											   class="hover:text-primary hover:underline transition-colors">
+											    <%= reply.getNickname() %>
+											</a>
                                         </span>
                                         <div class="flex items-center space-x-2">
                                             <span class="text-xs text-gray-500"><%= reply.getCreated_at() %></span>
@@ -747,7 +755,7 @@
                                             <button onclick="upvoteComment(<%= reply.getComment_id() %>, <%= postId %>)" 
                                                     class="flex items-center space-x-1 transition-colors text-red-500">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 0 1 5.656 0L10 6.343l1.172-1.171a4 4 0 1 1 5.656 5.656L10 17.657l-6.828-6.829a4 4 0 0 1 0-5.656z" clip-rule="evenodd"></path>
                                                 </svg>
                                                 <span>추천 <%= reply.getUpvotes() %></span>
                                             </button>
@@ -755,7 +763,7 @@
                                             <button onclick="upvoteComment(<%= reply.getComment_id() %>, <%= postId %>)" 
                                                     class="flex items-center space-x-1 transition-colors text-gray-600 hover:text-red-500">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 515.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 0 1 5.656 0L10 6.343l1.172-1.171a4 4 0 1 1 5.656 5.656L10 17.657l-6.828-6.829a4 4 0 0 1 0-5.656z" clip-rule="evenodd"></path>
                                                 </svg>
                                                 <span>추천 <%= reply.getUpvotes() %></span>
                                             </button>

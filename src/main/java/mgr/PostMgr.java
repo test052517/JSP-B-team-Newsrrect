@@ -26,7 +26,6 @@ public class PostMgr {
         String sql = null;
         try {
             con = pool.getConnection("user");
-            // priority 컬럼을 포함하여 INSERT SQL 문을 수정
             sql = "INSERT INTO post(user_id, type, title, content, status, view_count, created_at, report_count, recommand_count, priority,attache) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
             
             pstmt = con.prepareStatement(sql);
@@ -40,9 +39,8 @@ public class PostMgr {
             pstmt.setString(7, bean.getCreatedAt());
             pstmt.setInt(8, bean.getReportCount());
             pstmt.setInt(9, bean.getRecommandCount());
-            pstmt.setInt(10, bean.getPriority()); // priority 값 설정
-            
-            pstmt.setString(11,bean.getAttache() );
+            pstmt.setInt(10, bean.getPriority());
+            pstmt.setString(11, bean.getAttache());
             
             pstmt.executeUpdate();
         } catch (Exception e) {
@@ -86,8 +84,7 @@ public class PostMgr {
                 bean.setCreatedAt(rs.getString("created_at"));
                 bean.setReportCount(rs.getInt("report_count"));
                 bean.setRecommandCount(rs.getInt("recommand_count"));
-                if(hasColumn(rs, "attache"))bean.setAttache(rs.getString("attache"));
-                // priority 컬럼이 DB에 존재한다고 가정
+                if(hasColumn(rs, "attache")) bean.setAttache(rs.getString("attache"));
                 if (hasColumn(rs, "priority")) {
                     bean.setPriority(rs.getInt("priority"));
                 }
@@ -102,7 +99,7 @@ public class PostMgr {
     }
 
     /**
-     * 특정 게시글 조회 (getPost 메서드 - AdminInfoWatch.jsp에서 사용)
+     * 특정 게시글 조회
      */
     public PostBean getPost(int postId) {
         return getPostByPostID(postId);
@@ -198,7 +195,7 @@ public class PostMgr {
     }
     
     /**
-     * 게시글 거절 (상태를 '삭제'로 변경)
+     * 게시글 거절
      */
     public boolean rejectPost(int postId, String reason) {
         Connection conn = null;
@@ -243,7 +240,7 @@ public class PostMgr {
                 sql = baseQuery + "p.title LIKE ?" + orderLimit;
             } else if("author".equals(searchType)) {
                 sql = baseQuery + "u.nickname LIKE ?" + orderLimit;
-            } else { // 'all' or default
+            } else {
                 sql = baseQuery + "(p.title LIKE ? OR u.nickname LIKE ?)" + orderLimit;
             }
             
@@ -429,7 +426,7 @@ public class PostMgr {
                 sql += "p.content LIKE ? ";
             } else if("author".equals(searchType)) {
                 sql += "u.nickname LIKE ? ";
-            } else { // 'all' or default
+            } else {
                 sql += "(p.title LIKE ? OR p.content LIKE ? OR u.nickname LIKE ?) ";
             }
             
@@ -534,6 +531,7 @@ public class PostMgr {
             return false;
         }
     }
+    
     /**
      * 커뮤니티 게시글 목록 조회 (페이징)
      */
@@ -640,7 +638,7 @@ public class PostMgr {
                 sql += "p.content LIKE ? ";
             } else if("author".equals(searchType)) {
                 sql += "u.nickname LIKE ? ";
-            } else { // 'all' or default
+            } else {
                 sql += "(p.title LIKE ? OR p.content LIKE ? OR u.nickname LIKE ?) ";
             }
             
@@ -770,7 +768,7 @@ public class PostMgr {
     }
 
     /**
-     * 오늘의 인기 검증 게시물 카드(조회수 높은 순으로 6개, 조회수 동일하면 post_id 순서대로)
+     * 오늘의 인기 검증 게시물 카드
      */
     public Vector<PostBean> todayInfoCards(String type) {
         Connection conn = null;
@@ -900,7 +898,12 @@ public class PostMgr {
         }
         return count;
     }
-    // JSP 파일에 필요한 신규 메소드 1: 공지사항 목록 가져오기
+    
+    // ============== [ 소통 게시판 (Community) - 수정완료 ] ==============
+    
+    /**
+     * 소통 게시판의 공지사항(priority=1) 목록 가져오기
+     */
     public Vector<PostBean> getCommunityNotices() {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -910,7 +913,8 @@ public class PostMgr {
             conn = pool.getConnection("user");
             String sql = "SELECT p.*, u.nickname FROM post p " +
                          "JOIN user u ON p.user_id = u.user_id " +
-                         "WHERE p.priority = 1 ORDER BY p.post_id DESC";
+                         "WHERE p.type = '소통' AND p.status = '공개' AND p.priority = 1 " +
+                         "ORDER BY p.post_id DESC";
             pstmt = conn.prepareStatement(sql);
             rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -918,7 +922,7 @@ public class PostMgr {
                 bean.setPostId(rs.getInt("post_id"));
                 bean.setTitle(rs.getString("title"));
                 bean.setNickname(rs.getString("nickname"));
-                bean.setCreatedAt(rs.getString("created_at")); // getFormattedDate()는 PostBean에서 처리
+                bean.setCreatedAt(rs.getString("created_at"));
                 bean.setPriority(rs.getInt("priority"));
                 vlist.add(bean);
             }
@@ -930,7 +934,9 @@ public class PostMgr {
         return vlist;
     }
 
-    // JSP 파일에 필요한 신규 메소드 2: 일반 게시글 목록 가져오기 (페이징)
+    /**
+     * 소통 게시판의 일반 게시글(priority=0) 목록 가져오기 (페이징)
+     */
     public Vector<PostBean> getRegularCommunityPosts(int start, int pageSize) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -940,7 +946,8 @@ public class PostMgr {
             conn = pool.getConnection("user");
             String sql = "SELECT p.*, u.nickname FROM post p " +
                          "JOIN user u ON p.user_id = u.user_id " +
-                         "WHERE p.priority != 1 ORDER BY p.post_id DESC LIMIT ?, ?";
+                         "WHERE p.type = '소통' AND p.status = '공개' AND p.priority = 0 " +
+                         "ORDER BY p.post_id DESC LIMIT ?, ?";
             pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, start);
             pstmt.setInt(2, pageSize);
@@ -962,7 +969,9 @@ public class PostMgr {
         return vlist;
     }
 
-    // JSP 파일에 필요한 신규 메소드 3: 일반 게시글 총 개수 가져오기
+    /**
+     * 소통 게시판의 일반 게시글 총 개수 가져오기
+     */
     public int getRegularCommunityPostCount() {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -970,7 +979,7 @@ public class PostMgr {
         int totalCount = 0;
         try {
             conn = pool.getConnection("user");
-            String sql = "SELECT count(*) FROM post WHERE priority != 1";
+            String sql = "SELECT count(*) FROM post WHERE type = '소통' AND status = '공개' AND priority = 0";
             pstmt = conn.prepareStatement(sql);
             rs = pstmt.executeQuery();
             if (rs.next()) {
@@ -984,7 +993,9 @@ public class PostMgr {
         return totalCount;
     }
 
-    // JSP 파일에 필요한 신규 메소드 4: 일반 게시글 검색하기 (페이징)
+    /**
+     * 소통 게시판의 일반 게시글 검색하기 (페이징)
+     */
     public Vector<PostBean> searchRegularCommunityPosts(String searchType, String searchKeyword, int start, int pageSize) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -996,11 +1007,13 @@ public class PostMgr {
             if ("title".equals(searchType)) {
                 sql = "SELECT p.*, u.nickname FROM post p " +
                       "JOIN user u ON p.user_id = u.user_id " +
-                      "WHERE p.priority != 1 AND p.title LIKE ? ORDER BY p.post_id DESC LIMIT ?, ?";
-            } else { // "nickname"
+                      "WHERE p.type = '소통' AND p.status = '공개' AND p.priority = 0 AND p.title LIKE ? " +
+                      "ORDER BY p.post_id DESC LIMIT ?, ?";
+            } else {
                 sql = "SELECT p.*, u.nickname FROM post p " +
                       "JOIN user u ON p.user_id = u.user_id " +
-                      "WHERE p.priority != 1 AND u.nickname LIKE ? ORDER BY p.post_id DESC LIMIT ?, ?";
+                      "WHERE p.type = '소통' AND p.status = '공개' AND p.priority = 0 AND u.nickname LIKE ? " +
+                      "ORDER BY p.post_id DESC LIMIT ?, ?";
             }
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, "%" + searchKeyword + "%");
@@ -1008,7 +1021,7 @@ public class PostMgr {
             pstmt.setInt(3, pageSize);
             rs = pstmt.executeQuery();
             while (rs.next()) {
-                 PostBean bean = new PostBean();
+                PostBean bean = new PostBean();
                 bean.setPostId(rs.getInt("post_id"));
                 bean.setTitle(rs.getString("title"));
                 bean.setNickname(rs.getString("nickname"));
@@ -1024,7 +1037,9 @@ public class PostMgr {
         return vlist;
     }
 
-    // JSP 파일에 필요한 신규 메소드 5: 일반 게시글 검색 결과 총 개수 가져오기
+    /**
+     * 소통 게시판의 일반 게시글 검색 결과 총 개수 가져오기
+     */
     public int getSearchRegularCommunityPostCount(String searchType, String searchKeyword) {
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -1035,11 +1050,11 @@ public class PostMgr {
             String sql;
             if ("title".equals(searchType)) {
                 sql = "SELECT count(*) FROM post p " +
-                      "WHERE p.priority != 1 AND p.title LIKE ?";
-            } else { // "nickname"
+                      "WHERE p.type = '소통' AND p.status = '공개' AND p.priority = 0 AND p.title LIKE ?";
+            } else {
                 sql = "SELECT count(*) FROM post p " +
                       "JOIN user u ON p.user_id = u.user_id " +
-                      "WHERE p.priority != 1 AND u.nickname LIKE ?";
+                      "WHERE p.type = '소통' AND p.status = '공개' AND p.priority = 0 AND u.nickname LIKE ?";
             }
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, "%" + searchKeyword + "%");
@@ -1054,9 +1069,12 @@ public class PostMgr {
         }
         return totalCount;
     }
+    
     // ============== [ 정보 검증 게시판 (Verification) ] ==============
 
-    // 정보 검증 게시판의 공지사항(priority=1) 목록 가져오기
+    /**
+     * 정보 검증 게시판의 공지사항(priority=1) 목록 가져오기
+     */
     public Vector<PostBean> getVerificationNotices() {
         Connection con = null;
         PreparedStatement pstmt = null;
@@ -1085,14 +1103,16 @@ public class PostMgr {
         return vlist;
     }
 
-    // 정보 검증 게시판의 일반 게시글(priority!=1) 목록 가져오기 (페이징)
+    /**
+     * 정보 검증 게시판의 일반 게시글(priority=0) 목록 가져오기 (페이징)
+     */
     public Vector<PostBean> getRegularVerificationPosts(int start, int limit) {
         Connection con = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         Vector<PostBean> vlist = new Vector<>();
         String sql = "SELECT p.*, u.nickname FROM post p JOIN user u ON p.user_id = u.user_id " +
-                     "WHERE p.type = '정보' AND p.priority != 1 ORDER BY p.post_id DESC LIMIT ?, ?";
+                     "WHERE p.type = '정보' AND p.priority = 0 ORDER BY p.post_id DESC LIMIT ?, ?";
         try {
             con = pool.getConnection("user");
             pstmt = con.prepareStatement(sql);
@@ -1116,13 +1136,15 @@ public class PostMgr {
         return vlist;
     }
     
-    // 정보 검증 게시판의 일반 게시글 총 개수
+    /**
+     * 정보 검증 게시판의 일반 게시글 총 개수
+     */
     public int getRegularVerificationPostCount() {
         Connection con = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         int total = 0;
-        String sql = "SELECT count(*) FROM post WHERE type = '정보' AND priority != 1";
+        String sql = "SELECT count(*) FROM post WHERE type = '정보' AND priority = 0";
         try {
             con = pool.getConnection("user");
             pstmt = con.prepareStatement(sql);
@@ -1138,14 +1160,16 @@ public class PostMgr {
         return total;
     }
 
-    // 정보 검증 게시판의 일반 게시글 검색 (페이징)
+    /**
+     * 정보 검증 게시판의 일반 게시글 검색 (페이징)
+     */
     public Vector<PostBean> searchRegularVerificationPosts(String searchType, String keyword, int start, int limit) {
         Connection con = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         Vector<PostBean> vlist = new Vector<>();
         String sql = "SELECT p.*, u.nickname FROM post p JOIN user u ON p.user_id = u.user_id " +
-                     "WHERE p.type = '정보' AND p.priority != 1 AND %s LIKE ? " +
+                     "WHERE p.type = '정보' AND p.priority = 0 AND %s LIKE ? " +
                      "ORDER BY p.post_id DESC LIMIT ?, ?";
 
         String searchField = "title".equals(searchType) ? "p.title" : "u.nickname";
@@ -1175,14 +1199,16 @@ public class PostMgr {
         return vlist;
     }
     
-    // 정보 검증 게시판의 일반 게시글 검색 결과 총 개수
+    /**
+     * 정보 검증 게시판의 일반 게시글 검색 결과 총 개수
+     */
     public int getSearchRegularVerificationPostCount(String searchType, String keyword) {
         Connection con = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         int total = 0;
         String sql = "SELECT count(*) FROM post p JOIN user u ON p.user_id = u.user_id " +
-                     "WHERE p.type = '정보' AND p.priority != 1 AND %s LIKE ?";
+                     "WHERE p.type = '정보' AND p.priority = 0 AND %s LIKE ?";
 
         String searchField = "title".equals(searchType) ? "p.title" : "u.nickname";
         sql = String.format(sql, searchField);
@@ -1202,7 +1228,4 @@ public class PostMgr {
         }
         return total;
     }
-    
-
-
 }

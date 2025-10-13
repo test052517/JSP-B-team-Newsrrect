@@ -3,7 +3,6 @@ package mgr;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
 import beans.UserBean;
 
 public class UserMgr {
@@ -133,7 +132,12 @@ public class UserMgr {
         
         try {
             con = pool.getConnection("user");
-            String sql = "SELECT user_id, email, role, nickname, created_at, is_active, point FROM user WHERE user_id = ? AND is_active = 1";
+            
+            // introduce와 profileImage 추가
+            String sql = "SELECT user_id, email, role, nickname, created_at, is_active, point, " +
+                         "ban_count, report_count, attend, introduce, profileImage " +
+                         "FROM user WHERE user_id = ? AND is_active = 1";
+            
             pstmt = con.prepareStatement(sql);
             pstmt.setInt(1, userId);
             
@@ -145,11 +149,20 @@ public class UserMgr {
                 user.setEmail(rs.getString("email"));
                 user.setRole(rs.getString("role"));
                 user.setNickname(rs.getString("nickname"));
-                // 필요한 경우 추가 필드들도 설정
+                user.setCreatedAt(rs.getString("created_at"));
+                user.setIsActive(rs.getInt("is_active"));
+                user.setPoint(rs.getInt("point"));
+                user.setBanCount(rs.getInt("ban_count"));
+                user.setReportCount(rs.getInt("report_count"));
+                user.setAttend(rs.getString("attend"));
+                
+                // 이 두 줄 추가!
+                user.setIntroduce(rs.getString("introduce"));
+                user.setProfileImage(rs.getString("profileImage"));
             }
             
         } catch (Exception e) {
-            System.err.println("UserMgr.getUserById() 오류: " + e.getMessage());
+            System.err.println("UserMgr.getUserById() ì˜¤ë¥˜: " + e.getMessage());
             e.printStackTrace();
         } finally {
             pool.freeConnection(con, pstmt, rs);
@@ -347,5 +360,67 @@ public class UserMgr {
             pool.freeConnection(conn, pstmt, rs);
         }
         return result;
+    }
+    
+    /**
+     * 사용자의 총 포인트를 계산하고 DB에 업데이트합니다.
+     * 계산 공식: (BEST 댓글 선정 수 * 20) + (총 추천 수 / 10)
+     * @param userId 포인트를 업데이트할 사용자 ID
+     * @return 업데이트 성공 시 true
+     */
+    public boolean calculateAndUpdateTotalPoints(int userId) {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        boolean success = false;
+        
+        // BEST 댓글 선정 (+20점, upvotes >= 5개)
+        // 받은 댓글 추천 수 (+총 추천수/10)
+        String commentSql = 
+                "SELECT " +
+                "    SUM(CASE WHEN c.upvotes >= 5 THEN 20 ELSE 0 END) AS best_comment_points, " +
+                "    TRUNCATE(COALESCE(SUM(c.upvotes), 0) / 10, 0) AS upvote_points " +
+                "FROM comment c " +
+                "WHERE c.user_id = ? AND c.status != '삭제'";
+
+            String updateSql = "UPDATE user SET point = ? WHERE user_id = ?";
+        
+        try {
+            con = pool.getConnection("user");
+            
+            pstmt = con.prepareStatement(commentSql);
+            pstmt.setInt(1, userId);
+            rs = pstmt.executeQuery();
+            
+            int totalCalculatedPoints = 0;
+            
+            if (rs.next()) {
+                int bestCommentPoints = rs.getInt("best_comment_points");
+                int upvotePoints = rs.getInt("upvote_points");
+                
+                totalCalculatedPoints = bestCommentPoints + upvotePoints;
+
+                if (totalCalculatedPoints > 1000) {
+                    totalCalculatedPoints = 1000;
+                }
+            }
+            
+            rs.close();
+            pstmt.close();
+            
+            pstmt = con.prepareStatement(updateSql);
+            pstmt.setInt(1, totalCalculatedPoints);
+            pstmt.setInt(2, userId);
+            
+            success = pstmt.executeUpdate() > 0;
+            
+        } catch (Exception e) {
+            System.err.println("UserMgr.calculateAndUpdateTotalPoints() 오류: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            pool.freeConnection(con, pstmt, rs);
+        }
+        
+        return success;
     }
 }

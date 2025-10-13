@@ -85,7 +85,6 @@
     <title><c:out value="${post.title}" /> - 소통 게시판 - Newsrrect</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/styles.css">
     <script type="text/javascript" src="<%= request.getContextPath() %>/se2/js/HuskyEZCreator.js" charset="utf-8"></script>
     <script>
         tailwind.config = {
@@ -144,9 +143,12 @@
                                 %>
                                 <jsp:include page="/UI/JSP/PointProc.jsp" /> 
                                 <div class="flex items-center space-x-1">
-                                    <div class="w-3 h-3 bg-gray-600 rounded"></div>
+                                    
                                     <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
-                                    <span><c:out value="${post.nickname}" /></span>
+                                    <a href="<%= request.getContextPath() %>/UI/JSP/User/UserWatch.jsp?user=<c:out value="${post.userId}" />" 
+									   class="hover:text-primary hover:underline transition-colors">
+									    <span><c:out value="${post.nickname}" /></span>
+									</a>
                                 </div>
                                 <% request.removeAttribute("userBean"); %>
 
@@ -270,7 +272,7 @@
                 <c:if test="${not empty bestComment && bestComment.upvotes > 0}">
                     <div class="mb-8 bg-blue-100 rounded-lg p-4">
                         <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                            <span class="text-2xl mr-2"></span> BEST 댓글
+                            <span class="text-2xl mr-2">⭐</span> BEST 댓글
                         </h4>
                         <div class="space-y-4">
                             <div class="border border rounded-lg p-4 bg-white shadow-md">
@@ -286,7 +288,10 @@
                                         <jsp:include page="/UI/JSP/PointProc.jsp" /> 
                                         
                                         <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
-                                        <span class="font-bold text-primary"><c:out value="${bestComment.nickname}" /></span>
+                                        <a href="<%= request.getContextPath() %>/UI/JSP/User/UserWatch.jsp?user=${bestComment.user_id}" 
+										   class="font-bold text-primary hover:text-primary-dark hover:underline transition-colors">
+										    <c:out value="${bestComment.nickname}" />
+										</a>
                                         <% request.removeAttribute("userBean"); %>
 
                                         <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">BEST</span>
@@ -384,11 +389,16 @@
                                         <jsp:include page="/UI/JSP/PointProc.jsp" /> 
                                         <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: ${reply.layer * 20}px;">
                                             <div class="flex justify-between items-start mb-2">
-                                                <span class="font-semibold text-sm text-gray-700">
-                                                    <c:forEach begin="1" end="${reply.layer}">↳ </c:forEach>
-                                                    <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
-                                                    <c:out value="${reply.nickname}" />
-                                                </span>
+                                                <div class="flex items-center space-x-1">
+										    <span class="font-semibold text-sm text-gray-700">
+										        <c:forEach begin="1" end="${reply.layer}">↳ </c:forEach>
+										    </span>
+										    <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
+										    <a href="<%= request.getContextPath() %>/UI/JSP/User/UserWatch.jsp?user=${reply.user_id}" 
+										       class="font-semibold text-sm text-gray-700 hover:text-primary hover:underline transition-colors">
+										        <c:out value="${reply.nickname}" />
+										    </a>
+										</div>
                                                 <% request.removeAttribute("userBean"); %>
 
                                                 <div class="flex items-center space-x-2">
@@ -496,7 +506,10 @@
                                         <div class="flex justify-between items-start mb-2">
                                             <div class="flex items-center space-x-2">
                                                 <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
-                                                <span class="font-semibold"><c:out value="${comment.nickname}" /></span>
+                                                <a href="<%= request.getContextPath() %>/UI/JSP/User/UserWatch.jsp?user=${comment.user_id}" 
+												   class="font-semibold text-gray-900 hover:text-primary hover:underline transition-colors">
+												    <c:out value="${comment.nickname}" />
+												</a>
                                             </div>
                                             <% request.removeAttribute("userBean"); %>
 
@@ -590,14 +603,18 @@
                                                     }
                                                 %>
                                                 <jsp:include page="/UI/JSP/PointProc.jsp" /> 
-
                                                 <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: ${reply.layer * 20}px;">
                                                     <div class="flex justify-between items-start mb-2">
-                                                        <span class="font-semibold text-sm text-gray-700">
-                                                            <c:forEach begin="1" end="${reply.layer}">↳ </c:forEach>
+                                                        <div class="flex items-center space-x-1">
+                                                            <span class="font-semibold text-sm text-gray-700">
+                                                                <c:forEach begin="1" end="${reply.layer}">↳ </c:forEach>
+                                                            </span>
                                                             <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
-                                                            <c:out value="${reply.nickname}" />
-                                                        </span>
+                                                            <a href="<%= request.getContextPath() %>/UI/JSP/User/UserWatch.jsp?user=${reply.user_id}" 
+															   class="font-semibold text-sm text-gray-700 hover:text-primary hover:underline transition-colors">
+															    <c:out value="${reply.nickname}" />
+															</a>
+                                                        </div>
                                                         <% request.removeAttribute("userBean"); %>
 
                                                         <div class="flex items-center space-x-2">

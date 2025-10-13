@@ -171,7 +171,10 @@
                                     <jsp:include page="/UI/JSP/PointProc.jsp" /> 
                                     <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
                                     <% request.removeAttribute("userBean"); %>
-                                    <span><c:out value="${post.nickname}" /></span>
+                                    <a href="<%= request.getContextPath() %>/UI/JSP/User/UserWatch.jsp?user=<c:out value="${post.userId}" />" 
+									   class="hover:text-primary hover:underline transition-colors">
+									    <span><c:out value="${post.nickname}" /></span>
+									</a>
                                 </div>
 
                                 <div class="flex items-center space-x-1">
@@ -314,7 +317,10 @@
                                     <jsp:include page="/UI/JSP/PointProc.jsp" /> 
                                     <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
                                     <% request.removeAttribute("userBean"); %>
-                                    <span class="font-bold text-primary"><%= bestComment.getNickname() %></span>
+                                    <a href="<%= request.getContextPath() %>/UI/JSP/User/UserWatch.jsp?user=<%= bestComment.getUser_id() %>" 
+									   class="font-bold text-primary hover:text-primary-dark hover:underline transition-colors">
+									    <%= bestComment.getNickname() %>
+									</a>
                                     <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">BEST</span>
                                 </div>
                                 <div class="flex items-center space-x-2">
@@ -384,10 +390,10 @@
                                             </div>
                                         </c:otherwise>
                                     </c:choose>
-                                </div>
                                 <c:if test="${not empty loggedInUser}">
-                                    <button onclick="toggleReplyForm(${bestComment.comment_id})" class="text-gray-600 hover:text-primary font-medium text-sm">답글쓰기</button>
+                                    <button onclick="toggleReplyForm(${bestComment.comment_id})" class="text-gray-600 hover:text-primary font-medium">답글쓰기</button>
                                 </c:if>
+                                </div>
                             </div>
 
                             <c:if test="${not empty loggedInUser}">
@@ -425,9 +431,10 @@
                                                     <c:forEach begin="1" end="${reply.layer}">↳ </c:forEach>
                                                 </span>
                                                 <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
-                                                <span class="font-semibold text-sm text-gray-700">
-                                                    <c:out value="${reply.nickname}" />
-                                                </span>
+                                                <a href="<%= request.getContextPath() %>/UI/JSP/User/UserWatch.jsp?user=${reply.user_id}" 
+												   class="font-semibold text-sm text-gray-700 hover:text-primary hover:underline transition-colors">
+												    <c:out value="${reply.nickname}" />
+												</a>
                                             </div>
                                             <div class="flex items-center space-x-2">
                                                 <span class="text-xs text-gray-500">${reply.created_at}</span>
@@ -499,10 +506,10 @@
                                                         </div>
                                                     </c:otherwise>
                                                 </c:choose>
-                                            </div>
                                             <c:if test="${not empty loggedInUser}">
                                                 <button onclick="toggleReplyForm(${reply.comment_id})" class="text-gray-600 hover:text-primary text-xs">답글쓰기</button>
                                             </c:if>
+                                            </div>
                                         </div>
 
                                         <c:if test="${not empty loggedInUser}">
@@ -545,9 +552,10 @@
                                         <div class="flex justify-between items-start mb-2">
                                             <div class="flex items-center space-x-2">
                                                 <img src="${pointImagePath}" alt="레벨" style="width: 20px; height: 20px; vertical-align: middle;">
-                                                <span class="font-semibold text-gray-900">
-                                                    <c:out value="${comment.nickname}" />
-                                                </span>
+                                                <a href="<%= request.getContextPath() %>/UI/JSP/User/UserWatch.jsp?user=${comment.user_id}" 
+												   class="font-semibold text-gray-900 hover:text-primary hover:underline transition-colors">
+												    <c:out value="${comment.nickname}" />
+												</a>
                                             </div>
                                             <% request.removeAttribute("userBean"); %>
                                             <div class="flex items-center space-x-2">
@@ -618,10 +626,10 @@
                                                         </div>
                                                     </c:otherwise>
                                                 </c:choose>
-                                            </div>
                                             <c:if test="${not empty loggedInUser}">
                                                 <button onclick="toggleReplyForm(${comment.comment_id})" class="text-gray-600 hover:text-primary text-sm">답글쓰기</button>
                                             </c:if>
+                                            </div>
                                         </div>
 
                                         <c:if test="${not empty loggedInUser}">
@@ -659,9 +667,10 @@
                                                                 <c:forEach begin="1" end="${reply.layer}">↳ </c:forEach>
                                                             </span>
                                                             <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
-                                                            <span class="font-semibold text-sm text-gray-700">
-                                                                <c:out value="${reply.nickname}" />
-                                                            </span>
+                                                            <a href="<%= request.getContextPath() %>/UI/JSP/User/UserWatch.jsp?user=${reply.user_id}" 
+															   class="font-semibold text-sm text-gray-700 hover:text-primary hover:underline transition-colors">
+															    <c:out value="${reply.nickname}" />
+															</a>
                                                         </div>
                                                         <div class="flex items-center space-x-2">
                                                             <span class="text-xs text-gray-500">${reply.created_at}</span>
@@ -734,10 +743,10 @@
                                                                     </div>
                                                                 </c:otherwise>
                                                             </c:choose>
-                                                        </div>
                                                         <c:if test="${not empty loggedInUser}">
                                                             <button onclick="toggleReplyForm(${reply.comment_id})" class="text-gray-600 hover:text-primary text-xs">답글쓰기</button>
                                                         </c:if>
+                                                        </div>
                                                     </div>
 
                                                     <c:if test="${not empty loggedInUser}">

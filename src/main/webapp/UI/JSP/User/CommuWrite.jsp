@@ -2,6 +2,16 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%
 	beans.UserBean user = (beans.UserBean)session.getAttribute("loggedInUser");
+
+//user.equals(null) -> user == null 로 수정
+if (user == null) {
+%>
+<script>
+	alert('로그인이 필요한 서비스 입니다.');
+	location.href = '../Login.jsp'; // JavaScript 방식의 리다이렉트
+</script>
+<%
+}
 %>
 <!DOCTYPE html>
 <html lang="ko">

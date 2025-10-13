@@ -256,6 +256,15 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
                     .then(html => {
                         console.log('헤더 HTML 로딩 성공');
                         headerElement.innerHTML = html;
+                        const myPageLink = document.getElementById('myPageLink');
+                        if (myPageLink) {
+                            myPageLink.addEventListener('click', function(e) {
+                                e.preventDefault(); // 기본 이동 차단
+                                alert('로그인이 필요한 기능입니다.');
+                                // (현재 페이지 유지)
+                            });
+                            console.log('마이페이지 링크 이벤트 등록 완료');
+                        }
                     })
                     .catch(error => {
                         console.error('헤더 로드 실패:', error);
