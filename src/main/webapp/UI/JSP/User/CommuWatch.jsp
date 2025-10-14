@@ -168,9 +168,16 @@
                             </div>
                             <div class="flex items-center space-x-2">
                                 <span>${post.createdAt}</span>
-                                <c:if test="${loggedInUser != null}">
-                                    <button onclick="openReportModal(${post.postId})" class="text-gray-500 hover:text-red-500 transition-colors">🚨</button>
-                                </c:if>
+								<%
+								    boolean isPostAdmin = false;
+								    if (post != null) {
+								        UserBean postAuthor = userMgr.getUserById(post.getUserId());
+								        isPostAdmin = (postAuthor != null && "관리자".equals(postAuthor.getRole()));
+								    }
+								%>
+								<% if (loggedInUser != null && !isPostAdmin) { %>
+								    <button onclick="openReportModal(${post.postId})" class="text-gray-500 hover:text-red-500 transition-colors">🚨</button>
+								<% } %>
                             </div>
                         </div>
                     </div>
@@ -746,11 +753,20 @@
 
     <script>
         var oEditors = [];
+        var sLang = "ko_KR"; 
         
         nhn.husky.EZCreator.createInIFrame({
             oAppRef: oEditors,
             elPlaceHolder: "ir1",
             sSkinURI: "<%= request.getContextPath() %>/se2/SmartEditor2Skin.html",
+            htParams : {
+                bUseToolbar : true,
+                bUseVerticalResizer : true,
+                // HTML 모드 비활성화 유지
+                bUseModeChanger : false, 
+                I18N_LOCALE : sLang
+            },
+            // 💡 fOnAppLoad : function(){} 줄을 완전히 제거하세요.
             fCreator: "createSEditor2"
         });
         

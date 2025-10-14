@@ -816,7 +816,17 @@
     <script>
         var oEditors = [];
         if (document.getElementById("ir1")) {
-            nhn.husky.EZCreator.createInIFrame({ oAppRef: oEditors, elPlaceHolder: "ir1", sSkinURI: "<%= request.getContextPath() %>/se2/SmartEditor2Skin.html", htParams: { bUseToolbar: true, bUseVerticalResizer: true, bUseModeChanger: true }, fCreator: "createSEditor2" });
+            nhn.husky.EZCreator.createInIFrame({ 
+                oAppRef: oEditors, 
+                elPlaceHolder: "ir1", 
+                sSkinURI: "<%= request.getContextPath() %>/se2/SmartEditor2Skin.html", 
+                htParams: { 
+                    bUseToolbar: true, 
+                    bUseVerticalResizer: false, 
+                    bUseModeChanger: false,
+                }, 
+                fCreator: "createSEditor2" 
+            });
         }
         
         function submitContents() {

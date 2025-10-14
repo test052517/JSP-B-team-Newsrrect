@@ -611,18 +611,22 @@
     </div>
 
     <script>
-        var oEditors = [];
-        nhn.husky.EZCreator.createInIFrame({
-            oAppRef: oEditors,
-            elPlaceHolder: "ir1",
-            sSkinURI: "<%= request.getContextPath() %>/se2/SmartEditor2Skin.html",	
-            htParams : {
-                bUseToolbar : true,
-                bUseVerticalResizer : true,
-                bUseModeChanger : true,
-            },
-            fCreator: "createSEditor2"
-        });
+	    var oEditors = [];
+	    var sLang = "ko_KR"; 
+	    
+	    nhn.husky.EZCreator.createInIFrame({
+	        oAppRef: oEditors,
+	        elPlaceHolder: "ir1",
+	        sSkinURI: "<%= request.getContextPath() %>/se2/SmartEditor2Skin.html",
+	        htParams : {
+	            bUseToolbar : true,
+	            bUseVerticalResizer : true,
+	            // HTML 모드 비활성화 유지
+	            bUseModeChanger : false, 
+	            I18N_LOCALE : sLang
+	        },
+	        fCreator: "createSEditor2"
+	    });
         function submitContents() {
             oEditors.getById["ir1"].exec("UPDATE_CONTENTS_FIELD", []);
             var form = document.getElementById("commentForm");

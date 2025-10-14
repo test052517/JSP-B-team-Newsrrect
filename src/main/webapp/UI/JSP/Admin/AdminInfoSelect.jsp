@@ -97,47 +97,12 @@
                             <%= post.getContent() != null ? post.getContent().replace("\n", "<br>") : "" %>
                         </div>
                     </div>
-
-                    <div class="mb-6">
-                        <label class="block text-sm font-semibold text-gray-700 mb-3">게시글 통계</label>
-                        <div class="grid grid-cols-3 gap-4">
-                            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-xs text-blue-600 font-medium">조회수</p>
-                                        <p class="text-2xl font-bold text-blue-700 mt-1"><%= post.getViewCount() %></p>
-                                    </div>
-                                    <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                </div>
-                            </div>
-                            
-                            <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-xs text-green-600 font-medium">추천수</p>
-                                        <p class="text-2xl font-bold text-green-700 mt-1"><%= post.getRecommandCount() %></p>
-                                    </div>
-                                    <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path></svg>
-                                </div>
-                            </div>
-                            
-                            <div class="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-lg border border-red-200">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-xs text-red-600 font-medium">신고수</p>
-                                        <p class="text-2xl font-bold text-red-700 mt-1"><%= post.getReportCount() %></p>
-                                    </div>
-                                    <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </form>
         </div>
 
         <div class="flex justify-center space-x-4 mb-8">
-            <button onclick="approvePost()" class="group relative bg-green-600 text-white px-10 py-4 rounded-lg hover:bg-green-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+            <button onclick="approvePost()" class="group relative bg-[#7d8ff9] text-white px-10 py-4 rounded-lg hover:bg-[#392385] transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                 <span class="flex items-center space-x-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                     <span>승인</span>

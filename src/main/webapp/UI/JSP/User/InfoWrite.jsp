@@ -13,7 +13,6 @@
 	    <script src="https://cdn.tailwindcss.com"></script>
 	
 	    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/fonts.css">
-	    <link rel="stylesheet" href="<%= request.getContextPath() %>/UI/JSP/CSS/styles.css">
 	
 	    <script>
 	        tailwind.config = {
@@ -76,7 +75,7 @@
 	                        </label>
 	                        <textarea id="content" name="content" rows="15" 
 	                                  class="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-none" 
-	                                  placeholder="검증하고 싶은 정보의 내용을 자세히 작성해주세요.&#10;&#10;- 출처나 관련 링크가 있다면 함께 기재해주세요&#10;- 의문점이나 궁금한 부분을 명확히 적어주세요&#10;- 첨부 파일이 있다면 업로드해주세요"
+	                                  placeholder="• 검증하고 싶은 정보를 최소 50자 이상으로 작성해주세요&#10;• 출처나 관련 링크를 기재하되 텍스트와 같이 쓰면 정확도가 낮아지니 이 점 유의해주세요&#10;• 개인정보나 민감한 정보는 포함하지 마세요&#10;• 허위 정보 유포나 악의적인 목적의 글은 삭제될 수 있습니다"
 	                                  maxlength="2000"
 	                                  required></textarea>
 	                        <div class="text-sm text-gray-500 mt-1">
@@ -107,19 +106,6 @@
 	                                <div id="fileList" class="space-y-2"></div>
 	                            </div>
 	                        </div>
-	                    </div>
-	
-	
-	
-	                    <!-- 작성 가이드라인 -->
-	                    <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
-	                        <h4 class="text-sm font-medium text-blue-900 mb-2">📝 작성 가이드라인</h4>
-	                        <ul class="text-sm text-blue-800 space-y-1">
-	                            <li>• 검증하고 싶은 정보를 구체적으로 작성해주세요</li>
-	                            <li>• 출처나 관련 링크를 함께 제공하면 더 정확한 검증이 가능합니다</li>
-	                            <li>• 개인정보나 민감한 정보는 포함하지 마세요</li>
-	                            <li>• 허위 정보 유포나 악의적인 목적의 글은 삭제될 수 있습니다</li>
-	                        </ul>
 	                    </div>
 	
 	                    <!-- 버튼 -->
@@ -266,7 +252,7 @@
 	            .then(data => {
 	                if (data.success) {
 	                    alert('게시글이 성공적으로 작성되었습니다.');
-	                    location.href = contextPath + '/UI/JSP/User/InfoWatch.jsp?id=' + data.postId;
+	                    location.href = contextPath + '/info/watch.do';
 	                } else {
 	                    alert(data.message || '게시글 작성에 실패했습니다.');
 	                    submitBtn.disabled = false;
