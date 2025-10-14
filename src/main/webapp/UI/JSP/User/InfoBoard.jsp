@@ -68,7 +68,7 @@
                         </div>
                         <div class="text-sm text-gray-600">
                             <%-- [수정] 페이징의 기준은 일반 게시글이므로 totalRecord 사용 --%>
-                            전체 ${totalRecord}개 / ${nowPage} 페이지
+                            전체 <span class="text-primary font-bold">${totalRecord}</span>건 / <span class="text-primary font-bold">${nowPage}</span> 페이지
                         </div>
                     </div>
                 </form>
@@ -111,6 +111,12 @@
                             
 <c:if test="${not empty regularPostList}">
     <c:forEach var="post" items="${regularPostList}" varStatus="status">
+        
+        <c:url var="watchUrl" value="/info/watch.do">
+            <c:param name="id" value="${post.postId}" />
+            <c:param name="nowPage" value="${nowPage}" />
+        </c:url>
+        
         <a href="${watchUrl}" class="grid grid-cols-5 gap-4 py-4 px-4 hover:bg-blue-50 transition-colors duration-200 cursor-pointer group items-center">
             
             <div class="text-center text-sm text-gray-900">${totalRecord - ((nowPage - 1) * numPerPage) - status.index}</div>

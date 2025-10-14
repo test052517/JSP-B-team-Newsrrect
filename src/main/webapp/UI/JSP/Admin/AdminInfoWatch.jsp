@@ -280,7 +280,9 @@
                             </div>
                             <div class="flex items-center space-x-2">
                                 <span><%= post.getCreatedAt() %></span>
+                                <%if(post.getPriority()!=1){ %>
                                 <button onclick="openReportModal()" class="text-gray-500 hover:text-red-500 transition-colors">🚨</button>
+                                <%}%>
                             </div>
                         </div>
                     </div>
@@ -341,7 +343,9 @@
                         <p><%= post.getContent() != null ? post.getContent() : "" %></p>
                     </div>
                 </div>
-
+				
+				<!-- 공지사항일 경우 신뢰도 판정 제외 -->
+				<%if(post.getPriority()!=1){ %>
                 <div class="mb-6">
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-900 mb-2">신뢰도 <%= String.format("%.0f", credibilityScore) %>%</label>
@@ -365,6 +369,7 @@
                         </div>
                     </div>
                 </div>
+               <%} %>
             </div>
         </div>
 
@@ -378,12 +383,17 @@
                     <input type="hidden" name="nowPage" value="<%= request.getParameter("nowPage") != null ? request.getParameter("nowPage") : "1" %>">
                     <div class="mb-6">
                         <div class="mb-4">
-                            <select name="judgment" class="w-32 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                                <option value="">판정 선택</option>
-                                <option value="참">참</option>
-                                <option value="거짓">거짓</option>
-                                <option value="모호">모호</option>
-                            </select>
+<%if(post.getPriority() != 1){ %>
+    <select name="judgment" class="w-32 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+        <option value="">판정 선택</option>
+        <option value="참">참</option>
+        <option value="거짓">거짓</option>
+        <option value="모호">모호</option>
+    </select>
+<%} else { %>
+    <%-- 화면에는 보이지 않고, 폼 전송 시 'judgment' 이름으로 '모호' 값을 전송 --%>
+    <input type="hidden" name="judgment" value="모호">
+<%} %>
                         </div>
                         
                         <div class="mb-4">
@@ -464,7 +474,7 @@
                             <div class="flex items-center space-x-2">
                                 <span class="text-sm text-gray-500"><%= bestComment.getCreated_at() %></span>
                                 <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= bestComment.getComment_id() %>)">🚨</span>
-                                <% if(!"".equals(bestType)) { %>
+                                <% if(!"".equals(bestType)&&post.getPriority()!=1) { %>
                                 <span class="px-3 py-1.5 <%= bestBadgeColor %> rounded text-base font-medium"><%= bestType %></span>
                                 <% } %>
                             </div>
@@ -615,7 +625,9 @@
                             continue;
                         }
                         
+            
                         String type = comment.getJudgment() != null ? comment.getJudgment() : "";
+                        
                         String badgeColor = "";
                         if("참".equals(type)) badgeColor = "bg-green-100 text-green-800";
                         else if("거짓".equals(type)) badgeColor = "bg-red-100 text-red-800";
@@ -642,7 +654,7 @@
                             <div class="flex items-center space-x-2">
                                 <span class="text-sm text-gray-500"><%= comment.getCreated_at() %></span>
                                 <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= comment.getComment_id() %>)">🚨</span>
-                                <% if(!"".equals(type)) { %>
+                                <% if(!"".equals(type)&&post.getPriority()!=1) { %>
                                 <span class="px-3 py-1.5 <%= badgeColor %> rounded text-base font-medium"><%= type %></span>
                                 <% } %>
                             </div>

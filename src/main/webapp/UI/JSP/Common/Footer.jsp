@@ -1,5 +1,17 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%
+		// 세션에서 User 정보 가져옴
+		String role ="사용자";
+		try{
+			beans.UserBean user = (beans.UserBean)session.getAttribute("loggedInUser");
+			if(user.getRole()!=null)
+			role = user.getRole();
+			//System.out.println(role);	
+		}catch(Exception e){
+			//System.err.println("비로그인 상태");
+		}
+%>
 
 <footer class="bg-[#392385] text-white py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -17,29 +29,66 @@
                 <h5 class="font-semibold mb-3 font-paperozi-medium">주요 페이지</h5>
                 <ul class="space-y-2 text-sm text-white font-paperozi-regular">
                     <li>
+                    	<%if(role.equals("관리자")){ %>
+                    	   <a href="<%= request.getContextPath() %>/UI/JSP/Admin/AdminMainPage.jsp"
+                           class="hover:text-gray-300 transition-colors inline-block">
+                            메인 페이지
+                        </a>
+                    	<%} else{%>
                         <a href="<%= request.getContextPath() %>/UI/JSP/MainPage.jsp"
                            class="hover:text-gray-300 transition-colors inline-block">
                             메인 페이지
                         </a>
+                        <%}%>
                     </li>
                     <li>
+                    	<%if(role.equals("관리자")){ %>
+                    	    <a href="<%=request.getContextPath()%>/UI/JSP/Admin/AdminInfo.jsp"
+                           class="hover:text-gray-300 transition-colors inline-block">
+                            정보 검증 게시판
+                        </a>
+                    	
+                    	<%}else{ %>
                         <a href="${pageContext.request.contextPath}/info/watch.do"
                            class="hover:text-gray-300 transition-colors inline-block">
                             정보 검증 게시판
                         </a>
+                        <%}%>
                     </li>
                     <li>
+                    	<%if(role.equals("관리자")){ %>
+                    	 <a href="<%= request.getContextPath() %>/UI/JSP/Admin/AdminCommu.jsp"
+                           class="hover:text-gray-300 transition-colors inline-block">
+                            소통 게시판
+                        </a>
+                    	<%}else{%>
                         <a href="<%= request.getContextPath() %>/UI/JSP/User/CommuBoard.jsp"
                            class="hover:text-gray-300 transition-colors inline-block">
                             소통 게시판
                         </a>
+                        <%}%>
                     </li>
                     <li>
+                    	<%if(role.equals("관리자")){ %>
+                    		<a href="<%= request.getContextPath() %>/UI/JSP/Admin/AdminInfoBoard.jsp"
+                           class="hover:text-gray-300 transition-colors inline-block">
+                            정보 검증 게시판 관리
+                        </a>
+                    	<%}else{%>
                         <a href="<%= request.getContextPath() %>/Servlet/MyPageServlet"
                            class="hover:text-gray-300 transition-colors inline-block">
                             마이페이지
                         </a>
+                        <%}%>
                     </li>
+                    <%if(role.equals("관리자")){ %>
+                    <li>
+                    	<a href="<%= request.getContextPath() %>/UI/JSP/Admin/AdminUserReport.jsp"
+                           class="hover:text-gray-300 transition-colors inline-block">
+                           유저/신고 관리
+                        </a>
+                    </li>
+                    <%}%>
                 </ul>
             </div>
 

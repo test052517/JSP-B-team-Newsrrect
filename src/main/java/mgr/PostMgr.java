@@ -1081,7 +1081,7 @@ public class PostMgr {
         ResultSet rs = null;
         Vector<PostBean> vlist = new Vector<>();
         String sql = "SELECT p.*, u.nickname FROM post p JOIN user u ON p.user_id = u.user_id " +
-                     "WHERE p.type = '정보' AND p.priority = 1 ORDER BY p.post_id DESC";
+                "WHERE p.type = '정보' AND p.status = '공개' AND p.priority = 1 ORDER BY p.post_id DESC";
         try {
             con = pool.getConnection("user");
             pstmt = con.prepareStatement(sql);
@@ -1112,7 +1112,7 @@ public class PostMgr {
         ResultSet rs = null;
         Vector<PostBean> vlist = new Vector<>();
         String sql = "SELECT p.*, u.nickname FROM post p JOIN user u ON p.user_id = u.user_id " +
-                     "WHERE p.type = '정보' AND p.priority = 0 ORDER BY p.post_id DESC LIMIT ?, ?";
+                "WHERE p.type = '정보' AND p.status = '공개' AND p.priority = 0 ORDER BY p.post_id DESC LIMIT ?, ?";
         try {
             con = pool.getConnection("user");
             pstmt = con.prepareStatement(sql);
@@ -1144,7 +1144,7 @@ public class PostMgr {
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         int total = 0;
-        String sql = "SELECT count(*) FROM post WHERE type = '정보' AND priority = 0";
+        String sql = "SELECT count(*) FROM post WHERE type = '정보' AND status = '공개' AND priority = 0";
         try {
             con = pool.getConnection("user");
             pstmt = con.prepareStatement(sql);
@@ -1169,8 +1169,8 @@ public class PostMgr {
         ResultSet rs = null;
         Vector<PostBean> vlist = new Vector<>();
         String sql = "SELECT p.*, u.nickname FROM post p JOIN user u ON p.user_id = u.user_id " +
-                     "WHERE p.type = '정보' AND p.priority = 0 AND %s LIKE ? " +
-                     "ORDER BY p.post_id DESC LIMIT ?, ?";
+                "WHERE p.type = '정보' AND p.status = '공개' AND p.priority = 0 AND %s LIKE ? " + 
+                "ORDER BY p.post_id DESC LIMIT ?, ?";
 
         String searchField = "title".equals(searchType) ? "p.title" : "u.nickname";
         sql = String.format(sql, searchField);
@@ -1208,7 +1208,7 @@ public class PostMgr {
         ResultSet rs = null;
         int total = 0;
         String sql = "SELECT count(*) FROM post p JOIN user u ON p.user_id = u.user_id " +
-                     "WHERE p.type = '정보' AND p.priority = 0 AND %s LIKE ?";
+                "WHERE p.type = '정보' AND p.status = '공개' AND p.priority = 0 AND %s LIKE ?";
 
         String searchField = "title".equals(searchType) ? "p.title" : "u.nickname";
         sql = String.format(sql, searchField);

@@ -188,7 +188,9 @@
                             </div>
                             <div class="flex items-center space-x-2">
                                 <span>${post.createdAt}</span>
+                                <%if(post.getPriority()!=1){ %>
                                 <c:if test="${not empty loggedInUser}"><button onclick="openReportModal()" class="text-gray-500 hover:text-red-500">🚨</button></c:if>
+                                <%} %>
                             </div>
                         </div>
                     </div>
@@ -228,7 +230,8 @@
                 <div class="mb-6">
                     <div class="text-gray-900 leading-relaxed min-h-[100px]"><c:out value="${post.content}" escapeXml="false" /></div>
                 </div>
-
+				
+				<%if(post.getPriority()!=1){ %>
                 <div class="mb-6">
                     <div class="mb-2">
                         <label class="block text-sm font-medium text-gray-900 mb-2">신뢰도 ${reliability}%</label>
@@ -248,6 +251,7 @@
                         </div>
                     </div>
                 </div>
+                <%} %>
             </div>
         </div>
 		
@@ -259,10 +263,23 @@
                             <input type="hidden" name="postId" value="${post.postId}" />
                             <input type="hidden" name="sort" value="${sort}" />
                             <div class="mb-4">
-                                <select name="judgment" class="w-32 px-3 py-2 border border-gray-200 rounded-md">
-                                    <option value="">판정 선택</option><option value="참">참</option><option value="거짓">거짓</option><option value="모호">모호</option>
-                                </select>
-                            </div>
+								<%
+								if (post.getPriority() != 1) {
+								%>
+								<select name="judgment"
+									class="w-32 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+									<option value="">판정 선택</option>
+									<option value="참">참</option>
+									<option value="거짓">거짓</option>
+									<option value="모호">모호</option>
+								</select>
+								<%
+								} else {
+								%>
+								<%-- 화면에는 보이지 않고, 폼 전송 시 'judgment' 이름으로 '모호' 값을 전송 --%>
+								<input type="hidden" name="judgment" value="모호">
+								<%} %>
+							</div>
                             <div class="mb-4"><textarea name="content" id="ir1" rows="5" style="width:100%; display:none;"></textarea></div>
                             
                             <div class="mb-4">
@@ -335,7 +352,7 @@
                                         else if("거짓".equals(bestType)) bestBadgeColor = "bg-red-100 text-red-800";
                                         else if("모호".equals(bestType)) bestBadgeColor = "bg-yellow-100 text-yellow-800";
                                     %>
-                                    <% if(!"".equals(bestType)) { %>
+                                    <% if(!"".equals(bestType)&&post.getPriority()!=1) { %>
                                     <span class="px-3 py-1.5 <%= bestBadgeColor %> rounded text-base font-medium"><%= bestType %></span>
                                     <% } %>
                                 </div>
@@ -450,7 +467,7 @@
                                                         else if("거짓".equals(replyType)) replyBadgeColor = "bg-red-100 text-red-800";
                                                         else if("모호".equals(replyType)) replyBadgeColor = "bg-yellow-100 text-yellow-800";
                                                     %>
-                                                    <% if(!"".equals(replyType)) { %>
+                                                    <% if(!"".equals(replyType)&&post.getPriority()!=1) { %>
                                                     <span class="px-2.5 py-1 <%= replyBadgeColor %> rounded text-sm font-medium"><%= replyType %></span>
                                                     <% } %>
                                                 </c:if>
@@ -570,7 +587,7 @@
                                                         else if("거짓".equals(commentType)) commentBadgeColor = "bg-red-100 text-red-800";
                                                         else if("모호".equals(commentType)) commentBadgeColor = "bg-yellow-100 text-yellow-800";
                                                     %>
-                                                    <% if(!"".equals(commentType)) { %>
+                                                    <% if(!"".equals(commentType)&&post.getPriority()!=1) { %>
                                                     <span class="px-3 py-1.5 <%= commentBadgeColor %> rounded text-base font-medium"><%= commentType %></span>
                                                     <% } %>
                                                 </c:if>
