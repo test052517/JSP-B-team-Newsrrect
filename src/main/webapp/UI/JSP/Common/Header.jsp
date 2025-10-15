@@ -96,7 +96,7 @@
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+<%--     document.addEventListener('DOMContentLoaded', function() {
         const navLinks = document.querySelectorAll('nav a.nav-link');
         const currentPath = window.location.pathname;
         const myPageLink = document.getElementById('myPageLink');
@@ -132,5 +132,5 @@
                 link.classList.add('nav-active');
             }
         });
-    });
+    }); --%>
 </script>

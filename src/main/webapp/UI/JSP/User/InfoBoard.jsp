@@ -91,17 +91,23 @@
                             </div>
                         </c:when>
                         <c:otherwise>
+
 <c:if test="${not empty noticeList}">
     <c:forEach var="notice" items="${noticeList}">
         <c:url var="watchUrl" value="/info/watch.do">
             <c:param name="id" value="${notice.postId}" />
         </c:url>
         
-        <a href="${watchUrl}" class="grid grid-cols-5 gap-4 py-4 px-4 bg-blue-50/50 hover:bg-blue-100 transition-colors duration-200 cursor-pointer group items-center font-semibold"> 
+        <%-- [수정] AdminInfo.jsp와 동일한 스타일 적용 --%>
+        <a href="${watchUrl}" 
+           class="grid grid-cols-5 gap-4 py-4 px-4 hover:bg-blue-50 transition-colors duration-200 cursor-pointer group items-center font-semibold bg-blue-50/50"> 
             
-            <div class="text-center font-medium">
-                <span class="bg-primary text-white text-xs font-semibold px-2.5 py-1 rounded-full">공지</span>
+            <div class="text-sm text-center font-medium">
+                <%-- [수정] '공지' 배지 스타일 변경 --%>
+                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full">공지</span>
             </div>
+            
+            <%-- [수정] group-hover 효과를 위해 a 태그에 group 클래스 추가, 나머지 태그는 거의 동일 --%>
             <div class="col-span-2 text-sm text-gray-900 font-medium group-hover:text-primary transition-colors truncate">${notice.title}</div>  
             <div class="text-center text-sm text-gray-600">${notice.nickname}</div>
             <div class="text-center text-sm text-gray-600">${notice.formattedDate}</div>

@@ -39,19 +39,19 @@
 	if(userIdObj == null) {
 		response.sendRedirect(request.getContextPath() + "/UI/JSP/Login/Login.jsp");
 		return;
-}
+    }
 
 	String postIdStr = request.getParameter("postId");
 	if(postIdStr == null || postIdStr.equals("")) {
 		out.println("<script>alert('잘못된 접근입니다.'); history.back();</script>");
 		return;
-		}
+	}
 
 	int postId = Integer.parseInt(postIdStr);
 	String nowPage = request.getParameter("nowPage");
 	if (nowPage == null || nowPage.isEmpty()) {
 		nowPage = "1";
-		}
+	}
 
 	String sort = request.getParameter("sort");
 	if (sort == null) {
@@ -148,7 +148,9 @@
                             
                             <div class="flex items-center space-x-2">
                                 <span><%= post.getCreatedAt() %></span>
+                                <%if(post.getPriority()!=1){ %>
                                 <button onclick="openReportModal()" class="text-gray-500 hover:text-red-500 transition-colors">🚨</button>
+                                <%} %>
                             </div>
                         </div>
                     </div>
@@ -240,9 +242,17 @@
                                 </a>
                                 <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">BEST</span>
                             </div>
+                            <%-- [수정 1] BEST 댓글 신고 버튼 로직 --%>
                             <div class="flex items-center space-x-2">
                                 <span class="text-sm text-gray-500"><%= bestComment.getCreated_at() %></span>
+                                <%
+                                    UserBean bestCommentAuthor = userMgr.getUserById(bestComment.getUser_id());
+                                    if (bestComment != null || !"관리자".equals(bestComment.getRole())) {
+                                %>
                                 <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= bestComment.getComment_id() %>)">🚨</span>
+                                <%
+                                    }
+                                %>
                             </div>
                         </div>
                        
@@ -307,24 +317,34 @@
                                 %>
                                 <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: <%= reply.getLayer() * 20 %>px;">
                                     <div class="flex justify-between items-start mb-2">
-                                        <div class="flex items-center space-x-1"> <span class="font-semibold text-sm text-gray-700"><% for(int i = 0; i < reply.getLayer(); i++) { %>↳ <% } %></span><%-- 화살표 --%>
+                                        <div class="flex items-center space-x-1"> <span class="font-semibold text-sm text-gray-700"><% for(int i = 0; i < reply.getLayer(); i++) { %>↳ <% } %></span>
                                            
  											<%request.setAttribute("userBean", reply);%>
                                             <jsp:include page="/UI/JSP/PointProc.jsp" /> 
-                                            <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;"><%-- 포인트 이미지 --%>
-                                            
+                                            <img src="${pointImagePath}" alt="레벨" style="width: 15px; height: 15px; vertical-align: middle;">
+                                  
                                             <a href="<%= request.getContextPath() %>/UI/JSP/Admin/AdminUserWatch.jsp?user=<%= reply.getUser_id() %>" 
-                                               class="font-semibold text-sm text-gray-700 hover:text-primary hover:underline transition-colors"><%-- 닉네임 링크 --%>
+                                               class="font-semibold text-sm text-gray-700 hover:text-primary hover:underline transition-colors">
                                                 <%= reply.getNickname() %>
                                             </a>
-                                            <% request.removeAttribute("userBean");%><%-- [추가] BEST 댓글의 답글 작성자 Point 이미지 삽입 끝 --%>
+                                            <% request.removeAttribute("userBean");%>
                                         </div>
                        
-                 							<div class="flex items-center space-x-2">
+                 							<%-- [수정 2] BEST 댓글의 답글 신고 버튼 로직 --%>
+                                            <div class="flex items-center space-x-2">
+                                                <span class="text-xs text-gray-500"><%= reply.getCreated_at() %></span>
+                                                <%
+                                                    UserBean bestReplyAuthor = userMgr.getUserById(reply.getUser_id());
+                                                    if (!"관리자".equals(reply.getRole())) {
+                                                %>
+                                                <span class="text-gray-500 cursor-pointer text-xs" onclick="openCommentReportModal(<%= reply.getComment_id() %>)">🚨</span>
+                                                <%
+                                                    }
+                                                %>
                                             </div>
                                     </div>
                                     <p class="text-sm text-gray-900"><%= reply.getContent() %></p>
-                                    
+                                 
                                     <% if(reply.getAttache() != null && !reply.getAttache().isEmpty()) { %>
                                     <div class="mt-1 text-xs text-gray-500 flex items-center space-x-1">
                                         <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -377,7 +397,6 @@
                                 }
                             %>
                         </div>
-                
                     </div>
                 </div>
                 <% } %>
@@ -405,9 +424,17 @@
                     </a>
                 </div>
 
+                <%-- [수정 3] 일반 댓글 신고 버튼 로직 --%>
                 <div class="flex items-center space-x-2">
                     <span class="text-sm text-gray-500"><%= comment.getCreated_at() %></span>
+                    <%
+                        UserBean commentAuthor = userMgr.getUserById(comment.getUser_id());
+                        if (comment != null && !"관리자".equals(comment.getRole())) {
+                    %>
                     <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= comment.getComment_id() %>)">🚨</span>
+                    <%
+                        }
+                    %>
                 </div>
                             </div>
                       
@@ -485,8 +512,18 @@
                                                 </a>
                                                 <% request.removeAttribute("userBean");%>
                                             </div>
+                                            <%-- [수정 4] 일반 댓글의 답글 신고 버튼 로직 --%>
                                             <div class="flex items-center space-x-2">
-                                                </div>
+                                                <span class="text-xs text-gray-500"><%= reply.getCreated_at() %></span>
+                                                <%
+                                                    UserBean replyAuthor = userMgr.getUserById(reply.getUser_id());
+                                                    if (reply != null && !"관리자".equals(reply.getRole())) {
+                                                %>
+                                                <span class="text-gray-500 cursor-pointer text-xs" onclick="openCommentReportModal(<%= reply.getComment_id() %>)">🚨</span>
+                                                <%
+                                                    }
+                                                %>
+                                            </div>
   
                                       </div>
                                         <p class="text-sm text-gray-900"><%= reply.getContent() %></p>
@@ -610,10 +647,10 @@
         </div>
     </div>
 
+    
     <script>
 	    var oEditors = [];
-	    var sLang = "ko_KR"; 
-	    
+	    var sLang = "ko_KR";
 	    nhn.husky.EZCreator.createInIFrame({
 	        oAppRef: oEditors,
 	        elPlaceHolder: "ir1",

@@ -1,3 +1,4 @@
+<%@page import="java.io.Console"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="beans.PostBean" %>
 <%@ page import="mgr.PostMgr" %>
@@ -473,7 +474,9 @@
                             </div>
                             <div class="flex items-center space-x-2">
                                 <span class="text-sm text-gray-500"><%= bestComment.getCreated_at() %></span>
+                                <%if(!bestComment.getRole().equals("관리자")){%>
                                 <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= bestComment.getComment_id() %>)">🚨</span>
+                                <%} %>
                                 <% if(!"".equals(bestType)&&post.getPriority()!=1) { %>
                                 <span class="px-3 py-1.5 <%= bestBadgeColor %> rounded text-base font-medium"><%= bestType %></span>
                                 <% } %>
@@ -545,6 +548,7 @@
                                     boolean isReplyLiked = likeMap.get(reply.getComment_id()) != null && likeMap.get(reply.getComment_id());
                             %>
                                 <div class="border-l-2 border-primary pl-4 py-2" style="margin-left: <%= reply.getLayer() * 20 %>px;">
+							   
 							    <div class="flex justify-between items-start mb-2">
 							        <div class="flex items-center space-x-1"> 
 							            <span class="font-semibold text-sm text-gray-700">
@@ -560,8 +564,22 @@
 							            <% request.removeAttribute("userBean"); %><%-- [추가] BEST 댓글의 답글 작성자 Point 이미지 삽입 끝 --%>
 							        </div>
 							        <div class="flex items-center space-x-2">
-							        </div>
+							                <span class="text-xs text-gray-500"><%= reply.getCreated_at() %></span>
+										<%
+										// 1. UserMgr를 사용해 답글 작성자의 정보를 가져옵니다.
+										UserBean replyAuthor = userMgr.getUserById(reply.getUser_id());
+
+										// 2. 관리자가 아니고, 내 댓글이 아닐 경우에만 신고 버튼을 표시합니다.
+										if (replyAuthor != null && !"관리자".equals(replyAuthor.getRole()) && userIdObj.intValue() != replyAuthor.getUserId()) {
+										%>
+										<span class="text-gray-500 cursor-pointer text-xs"
+											onclick="openCommentReportModal(<%=reply.getComment_id()%>)">🚨</span>
+										<%
+										}
+										%>
+									</div>
 							    </div>
+							    
 							    <p class="text-sm text-gray-900"><%= reply.getContent() %></p>
                                     
                                     <% if(reply.getAttache() != null && !reply.getAttache().isEmpty()) { %>
@@ -653,7 +671,9 @@
                             </div>
                             <div class="flex items-center space-x-2">
                                 <span class="text-sm text-gray-500"><%= comment.getCreated_at() %></span>
+                                <%if(!comment.getRole().equals("관리자")){ %>
                                 <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= comment.getComment_id() %>)">🚨</span>
+                                <%} %>
                                 <% if(!"".equals(type)&&post.getPriority()!=1) { %>
                                 <span class="px-3 py-1.5 <%= badgeColor %> rounded text-base font-medium"><%= type %></span>
                                 <% } %>
@@ -743,7 +763,9 @@
                                         </span>
                                         <div class="flex items-center space-x-2">
                                             <span class="text-xs text-gray-500"><%= reply.getCreated_at() %></span>
+                                            <%if(!reply.getRole().equals("관리자")){ %>
                                             <span class="text-gray-500 cursor-pointer text-xs" onclick="openCommentReportModal(<%= reply.getComment_id() %>)">🚨</span>
+                                            <%} %>
                                             <% if(!"".equals(replyType)) { %>
                                             <span class="px-2.5 py-1 <%= replyBadgeColor %> rounded text-sm font-medium"><%= replyType %></span>
                                             <% } %>

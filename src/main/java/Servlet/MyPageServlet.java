@@ -37,22 +37,37 @@ public class MyPageServlet extends HttpServlet {
         System.out.println("[MyPageServlet] DEBUG: 추출된 userId 값: " + userId); 
         
      // **디버깅 코드 시작**
-        if (user == null) {
+       /* if (user == null) {
             System.out.println("[MyPageServlet] ERROR: loggedInUser 객체가 세션에 없습니다.");
             response.sendRedirect("JSP/Login.jsp");
             return;
-        }
+        }*/
 
         // **이 부분이 중요:** userId 값이 1 이상인지 확인!
-        if (userId <= 0) {
+       /* if (userId <= 0) {
             System.out.println("[MyPageServlet] ERROR: userId가 유효하지 않습니다: " + userId);
             response.sendRedirect("JSP/Login.jsp"); // 또는 에러 페이지
             return;
-        }
+        }*/
         
         // 로그인 체크: 사용자 정보가 없으면 로그인 페이지 등으로 리다이렉트 (필요에 따라 구현)
-        if (user == null) {
-            response.sendRedirect("JSP/Login.jsp"); // 로그인 페이지로 이동
+        if (user == null || userId <= 0) {
+            // 1. 이동할 목표 URL을 미리 만들어 둡니다. (sendRedirect와 동일한 방식)
+            String targetURL = request.getContextPath() + "/UI/JSP/Login.jsp";
+
+            // 2. 응답 형식을 설정합니다.
+            response.setContentType("text/html; charset=UTF-8");
+            PrintWriter out = response.getWriter();
+
+            // 3. alert와 location.href를 포함한 JavaScript 코드를 출력합니다.
+            out.println("<script>");
+            out.println("alert('로그인이 필요한 서비스 입니다.');");
+            // 위 alert의 '확인'을 누르면 아래 코드가 실행됩니다.
+            out.println("location.href='" + targetURL + "';"); 
+            out.println("</script>");
+
+            // 4. 자원을 해제하고 메서드 실행을 종료합니다.
+            out.flush();
             return;
         }
           

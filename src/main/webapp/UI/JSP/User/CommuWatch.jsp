@@ -306,7 +306,9 @@
                                     <div class="flex items-center space-x-2">
                                         <span class="text-sm text-gray-500">${bestComment.formattedDate}</span>
                                         <c:if test="${loggedInUser != null}">
+                                        	<%if(!bestComment.getRole().equals("관리자")){%>
                                             <span class="text-gray-500 cursor-pointer hover:text-red-500" onclick="openCommentReportModal(${bestComment.comment_id})">🚨</span>
+                                            <%}%>
                                         </c:if>
                                     </div>
                                 </div>
@@ -411,7 +413,9 @@
                                                 <div class="flex items-center space-x-2">
                                                     <span class="text-xs text-gray-500">${reply.formattedDate}</span>
                                                     <c:if test="${loggedInUser != null}">
+                                                    	<%if(!currentReply.getRole().equals("관리자")){ %>
                                                         <span class="text-gray-500 cursor-pointer text-xs hover:text-red-500" onclick="openCommentReportModal(${reply.comment_id})">🚨</span>
+                                                    	<%} %>
                                                     </c:if>
                                                 </div>
                                             </div>
@@ -523,7 +527,9 @@
                                             <div class="flex items-center space-x-2">
                                                 <span class="text-sm text-gray-500">${comment.formattedDate}</span>
                                                 <c:if test="${loggedInUser != null}">
+                                                <%if(!currentComment.getRole().equals("관리자")){ %>
                                                     <span class="text-gray-500 cursor-pointer hover:text-red-500" onclick="openCommentReportModal(${comment.comment_id})">🚨</span>
+                                                <%}%>
                                                 </c:if>
                                             </div>
                                         </div>
@@ -627,7 +633,9 @@
                                                         <div class="flex items-center space-x-2">
                                                             <span class="text-xs text-gray-500">${reply.formattedDate}</span>
                                                             <c:if test="${loggedInUser != null}">
+                                                            <%if(!currentReply.getRole().equals("관리자")){ %>
                                                                 <span class="text-gray-500 cursor-pointer text-xs hover:text-red-500" onclick="openCommentReportModal(${reply.comment_id})">🚨</span>
+                                                            <%}%>
                                                             </c:if>
                                                         </div>
                                                     </div>

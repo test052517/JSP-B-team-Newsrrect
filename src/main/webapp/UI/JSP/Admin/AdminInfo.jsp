@@ -141,12 +141,14 @@
                             if(noticeList != null && !noticeList.isEmpty()) {
                                 for(PostBean notice : noticeList) {
                     %>
-                    <div onclick="location.href='AdminInfoWatch.jsp?postId=<%= notice.getPostId() %>'" 
-                         class="grid grid-cols-5 gap-4 py-4 px-4 bg-blue-50 hover:bg-blue-100 transition-colors duration-200 cursor-pointer group">
+                     <div onclick="location.href='AdminCommuWatch.jsp?postId=<%= notice.getPostId() %>'" 
+                         class="grid grid-cols-5 gap-4 py-4 px-4 hover:bg-blue-50 transition-colors duration-200 cursor-pointer group items-center font-semibold bg-blue-50/50">
                         <div class="text-sm text-center font-medium">
-                            <span class="bg-primary text-white text-xs font-semibold px-2.5 py-1 rounded-full">공지</span>
+                            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full">공지</span>
                         </div>
-                        <div class="text-sm text-gray-900 font-medium col-span-2 group-hover:text-primary transition-colors truncate"><%= notice.getTitle() %></div>
+                        <div class="text-sm text-gray-900 font-medium col-span-2 group-hover:text-primary transition-colors">
+                            <%= notice.getTitle() %>
+                        </div>
                         <div class="text-sm text-gray-600 text-center"><%= notice.getNickname() %></div>
                         <div class="text-sm text-gray-600 text-center"><%= notice.getFormattedDate() %></div>
                     </div>

@@ -343,7 +343,9 @@
                                 <div class="flex items-center space-x-2">
                                     <span class="text-sm text-gray-500"><%= bestComment.getCreated_at() %></span>
                                     <c:if test="${not empty loggedInUser}">
+                                    <%if(!bestComment.getRole().equals("관리자")){ %>
                                         <span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(<%= bestComment.getComment_id() %>)">🚨</span>
+                                    <%}%>
                                     </c:if>
                                     <%
                                         String bestType = bestComment.getJudgment() != null ? bestComment.getJudgment() : "";
@@ -456,7 +458,9 @@
                                             <div class="flex items-center space-x-2">
                                                 <span class="text-xs text-gray-500">${reply.created_at}</span>
                                                 <c:if test="${not empty loggedInUser}">
+                                                <%if(!currentReply.getRole().equals("관리자")){ %>
                                                     <span class="text-gray-500 cursor-pointer text-xs" onclick="openCommentReportModal(${reply.comment_id})">🚨</span>
+                                               <%}%>
                                                 </c:if>
                                                 <c:if test="${not empty reply.judgment}">
                                                     <%
@@ -577,7 +581,9 @@
                                             <% request.removeAttribute("userBean"); %>
                                             <div class="flex items-center space-x-2">
                                                 <span class="text-sm text-gray-500">${comment.created_at}</span>
+                                                <%if(!currentComment.getRole().equals("관리자")){ %>
                                                 <c:if test="${not empty loggedInUser}"><span class="text-gray-500 cursor-pointer" onclick="openCommentReportModal(${comment.comment_id})">🚨</span></c:if>
+                                               <%} %>
                                                 <c:if test="${not empty comment.judgment}">
                                                     <%
                                                         beans.CommentBean commentBean = (beans.CommentBean) pageContext.getAttribute("comment");
@@ -692,7 +698,9 @@
                                                         <div class="flex items-center space-x-2">
                                                             <span class="text-xs text-gray-500">${reply.created_at}</span>
                                                             <c:if test="${not empty loggedInUser}">
+                                                            <%if(!currentReply.getRole().equals("관리자")){ %>
                                                                 <span class="text-gray-500 cursor-pointer text-xs" onclick="openCommentReportModal(${reply.comment_id})">🚨</span>
+                                                            <%}%>
                                                             </c:if>
                                                             <c:if test="${not empty reply.judgment}">
                                                                 <%
