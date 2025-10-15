@@ -60,37 +60,50 @@
                         <c:set scope="request" var="featuredPosts" value="<%=featuredPosts%>" />
                             <div class="carousel-track flex transition-transform duration-500 ease-in-out" id="carouselTrack">
                                 <!-- JSP에서 동적으로 생성된 카드들 -->
-                                <c:choose>
-                                    <c:when test="${not empty featuredPosts}">
-                                        <c:forEach var="featuredPost" items="${featuredPosts}" varStatus="status">
-                                           <c:url var="watchUrl" value="/info/watch.do">
-				                               <c:param name="id" value="${featuredPost.postId}" />
-				                            </c:url>
-                                        	<a href="${watchUrl}">
-                                            <div class="review-card flex-shrink-0" style="width: 500px; margin: 0 15px;">
-                                                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 h-full text-center">
-                                                    <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-6">
-                                                        ${featuredPost.viewCount}
-                                                    </div>
-                                                    <h3 class="text-xl font-semibold text-gray-900 mb-6">
-                                                        <c:out value="${featuredPost.title}"/>
-                                                    </h3>
-                                                    <p class="text-gray-700 leading-relaxed">
-                                                        <c:choose>
-													        <c:when test="${fn:length(featuredPost.content) > 100}">
-													            <c:out value="${fn:substring(featuredPost.content, 0, 100)}..."/>
-													        </c:when>
-													        <c:otherwise>
-													            <c:out value="${featuredPost.content}"/>
-													        </c:otherwise>
-													    </c:choose>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            </a>
-                                        </c:forEach>
-                                    </c:when>
-                                </c:choose>
+								<c:choose>
+								    <c:when test="${not empty featuredPosts}">
+								        <c:forEach var="featuredPost" items="${featuredPosts}" varStatus="status">
+								            <c:url var="watchUrl" value="/info/watch.do">
+								                <c:param name="id" value="${featuredPost.postId}" />
+								            </c:url>
+								            
+								            <c:set var="colorClass" value="bg-blue-200 text-blue-800" />
+								            <c:choose>
+								                <c:when test="${status.index eq 0}"><c:set var="colorClass" value="bg-blue-800 text-white" /></c:when>
+								                <c:when test="${status.index eq 1}"><c:set var="colorClass" value="bg-blue-600 text-white" /></c:when>
+								                <c:when test="${status.index eq 2}"><c:set var="colorClass" value="bg-blue-400 text-white" /></c:when>
+								                <c:when test="${status.index eq 3}"><c:set var="colorClass" value="bg-blue-300 text-blue-800" /></c:when>
+								                <c:when test="${status.index ge 4}"><c:set var="colorClass" value="bg-blue-200 text-blue-800" /></c:when>
+								            </c:choose>
+								            
+								            <a href="${watchUrl}">
+								                <div class="review-card flex-shrink-0" style="width: 500px; margin: 0 15px;">
+								                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 h-full text-center">
+								                        
+								                        <div class="w-16 h-16 ${colorClass} rounded-full flex items-center justify-center font-bold text-xl mx-auto mb-6">
+								                            ${featuredPost.viewCount}
+								                        </div>
+								                        <h3 class="text-xl font-semibold text-gray-900 mb-6">
+								                            <c:out value="${featuredPost.title}"/>
+								                        </h3>
+								                        <p class="text-gray-700 leading-relaxed">
+								                            <c:choose>
+								                                <c:when test="${fn:length(featuredPost.content) > 100}">
+								                                    <c:out value="${fn:substring(featuredPost.content, 0, 100)}..."/>
+								                                </c:when>
+								                                <c:otherwise>
+								                                    <c:out value="${featuredPost.content}"/>
+								                                </c:otherwise>
+								                            </c:choose>
+								                        </p>
+								                    </div>
+								                </div>
+								            </a>
+								        </c:forEach>
+								    </c:when>
+								    <c:otherwise>
+								        </c:otherwise>
+								</c:choose>
                             </div>
                         </div>
                         

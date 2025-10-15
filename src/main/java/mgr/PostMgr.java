@@ -779,7 +779,9 @@ public class PostMgr {
         try {
             conn = pool.getConnection("user");
             
-            String sql = "SELECT * FROM post WHERE type = ? AND status = '공개' order by view_count desc limit 6";
+            String sql = "SELECT p.*, u.nickname FROM post p JOIN user u ON p.user_id = u.user_id " + 
+                    "WHERE p.type = ? AND p.status = '공개' AND p.priority = 0 " + 
+                    "ORDER BY p.view_count DESC LIMIT 6";
            
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, type);
@@ -792,6 +794,7 @@ public class PostMgr {
                 post.setTitle(rs.getString("title"));
                 post.setContent(rs.getString("content"));
                 post.setViewCount(rs.getInt("view_count"));
+                post.setNickname(rs.getString("nickname")); 
                 vlist.add(post);
             }
         } catch(Exception e) {
