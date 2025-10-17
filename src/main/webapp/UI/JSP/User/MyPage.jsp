@@ -479,16 +479,6 @@
                 
                 const nickname = document.getElementById('nickname').value.trim();
                 const introduce = document.getElementById('introduce').value.trim();
-                
-                if (!nickname) {
-                    alert('닉네임을 입력해주세요.');
-                    return;
-                }
-
-                if (nickname.length < 2 || nickname.length > 20) {
-                    alert('닉네임은 2-20자 사이여야 합니다.');
-                    return;
-                }
 
                 if (introduce.length > 200) {
                     alert('자기소개는 200자 이하여야 합니다.');

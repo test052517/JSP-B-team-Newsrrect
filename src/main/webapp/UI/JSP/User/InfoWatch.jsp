@@ -113,7 +113,11 @@
         }
     }
     int totalVotes = trueCount + falseCount + ambiguousCount;
-    int reliability = (totalVotes == 0) ? 50 : (int)(((double)trueCount / totalVotes) * 100);
+    int reliability = 50;
+
+    if(totalVotes > 0) {
+    	reliability = (int) Math.round(((trueCount * 100.0) + (ambiguousCount * 50.0)) / totalVotes);
+    }
 
     pageContext.setAttribute("trueCount", trueCount);
     pageContext.setAttribute("falseCount", falseCount);

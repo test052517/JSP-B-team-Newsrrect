@@ -193,7 +193,6 @@
                     <c:url var="listUrl" value="CommuBoard.jsp">
                         <c:param name="nowPage" value="${nowPage}" />
                     </c:url>
-                    <a href="${listUrl}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors font-medium">목록</a>
                     
                     <c:if test="${loggedInUser != null && loggedInUser.userId == post.userId}">
                         <div class="flex space-x-2">

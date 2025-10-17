@@ -86,7 +86,7 @@
 								                        <h3 class="text-xl font-semibold text-gray-900 mb-6">
 								                            <c:out value="${featuredPost.title}"/>
 								                        </h3>
-								                        <p class="text-gray-700 leading-relaxed">
+								                        <p class="text-gray-700 leading-relaxed max-w-full break-words">
 								                            <c:choose>
 								                                <c:when test="${fn:length(featuredPost.content) > 100}">
 								                                    <c:out value="${fn:substring(featuredPost.content, 0, 100)}..."/>

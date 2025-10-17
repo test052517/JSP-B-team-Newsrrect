@@ -383,30 +383,49 @@ public class UserMgr {
                 "FROM comment c " +
                 "WHERE c.user_id = ? AND c.status != '삭제'";
 
-            String updateSql = "UPDATE user SET point = ? WHERE user_id = ?";
+        String basePointSql = 
+                "SELECT point - COALESCE((" + // 총 포인트에서 이전 댓글 포인트 합계를 뺌
+                "    SELECT SUM(CASE WHEN c2.upvotes >= 5 THEN 20 ELSE 0 END) + TRUNCATE(COALESCE(SUM(c2.upvotes), 0) / 10, 0) " +
+                "    FROM comment c2 WHERE c2.user_id = ? AND c2.status != '삭제'" +
+                "), 0) AS base_point " +
+                "FROM user WHERE user_id = ?";
+        
+        String updateSql = "UPDATE user SET point = ? WHERE user_id = ?";
         
         try {
             con = pool.getConnection("user");
+            int basePoints = 0;
+            int commentPoints = 0;
             
+            pstmt = con.prepareStatement(commentSql);
+            pstmt.setInt(1, userId); 
+            pstmt.setInt(2, userId); 
+            rs = pstmt.executeQuery();
+            
+            if(rs.next()) {
+                // 이 쿼리는 '이전 댓글 포인트'를 제외한 '기본 포인트'를 추정합니다.
+                basePoints = rs.getInt("base_point");
+            }
+            rs.close();
+            pstmt.close();
+
             pstmt = con.prepareStatement(commentSql);
             pstmt.setInt(1, userId);
             rs = pstmt.executeQuery();
             
-            int totalCalculatedPoints = 0;
-            
             if (rs.next()) {
                 int bestCommentPoints = rs.getInt("best_comment_points");
                 int upvotePoints = rs.getInt("upvote_points");
-                
-                totalCalculatedPoints = bestCommentPoints + upvotePoints;
-
-                if (totalCalculatedPoints > 1000) {
-                    totalCalculatedPoints = 1000;
-                }
+                commentPoints = bestCommentPoints + upvotePoints;
             }
-            
             rs.close();
             pstmt.close();
+            
+            int totalCalculatedPoints = basePoints + commentPoints; // 👈 기존 포인트 합산!
+
+            if (totalCalculatedPoints > 1000) {
+                totalCalculatedPoints = 1000;
+            }
             
             pstmt = con.prepareStatement(updateSql);
             pstmt.setInt(1, totalCalculatedPoints);
